@@ -224,141 +224,219 @@
         margin: 3px;
         font-weight: 500;
       }
-      @media (max-width: 1200px) {
-        .container {
-          grid-template-columns: 1fr;
-        }
-      }
-      .highlight-box ul li {
-        margin-bottom: 10px;
-        line-height: 1.7;
+
+      /* 对比表格样式 */
+      .comparison-table-wrapper {
+        overflow-x: auto;
+        margin: 20px 0;
       }
 
-      .highlight-box ul li strong {
-        color: #ff6b35;
-      }
-
-      /* 深度对比内容样式 */
-      .deep-dive-section {
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85em;
         background: white;
-        margin: 30px;
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
       }
 
-      .deep-dive-container {
-        max-width: 1400px;
-        margin: 0 auto;
+      .comparison-table thead {
+        background: linear-gradient(135deg, #ff9a56 0%, #ffb380 100%);
+        color: white;
       }
 
-      .deep-dive-title {
-        font-size: 32px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 12px;
-        text-align: center;
+      .comparison-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        border-right: 1px solid rgba(255, 255, 255, 0.3);
       }
 
-      .deep-dive-subtitle {
-        font-size: 16px;
+      .comparison-table th:last-child {
+        border-right: none;
+      }
+
+      .comparison-table td {
+        padding: 16px;
+        border-bottom: 1px solid #eee;
+        vertical-align: top;
+        line-height: 1.6;
+      }
+
+      .comparison-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .comparison-table tr:nth-child(even) {
+        background: #fafafa;
+      }
+
+      .comparison-table tr:hover {
+        background: #fff8f5;
+      }
+
+      .comparison-table code {
+        display: inline-block;
+        background: #f5f5f5;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 0.9em;
+        color: #d63384;
+        margin: 4px 0;
+      }
+
+      .comparison-table small {
+        display: block;
         color: #666;
-        text-align: center;
-        margin-bottom: 40px;
+        margin-top: 6px;
       }
 
-      .comparison-section {
-        margin-bottom: 50px;
-      }
-
-      .comparison-section h3 {
-        font-size: 24px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 24px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid #ff6b35;
-      }
-
-      .code-comparison {
+      /* 并排代码对比样式 */
+      .side-by-side-code {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 32px;
-        margin: 24px 0;
+        gap: 20px;
+        margin: 20px 0;
       }
 
-      .code-comparison-item {
+      .code-column {
         background: #fafafa;
         border-radius: 8px;
         overflow: hidden;
         border: 1px solid #e0e0e0;
       }
 
-      .code-comparison-item.light {
-        border: 2px solid #ff9a56;
-      }
-
-      .code-header {
+      .code-title {
         background: #f0f0f0;
-        padding: 12px 20px;
+        padding: 12px 16px;
         font-weight: 600;
-        font-size: 14px;
-        border-bottom: 1px solid #e0e0e0;
+        font-size: 0.9em;
+        border-bottom: 2px solid #ddd;
       }
 
-      .code-header-left {
+      .code-title-spring {
         background: #fff8f5;
         color: #ff6b35;
-        border-bottom: 1px solid #ffd6c2;
+        border-bottom: 2px solid #ffd6c2;
       }
 
-      .code-header-right {
+      .code-title-light {
         background: #fff8f5;
         color: #ff6b35;
-        border-bottom: 1px solid #ffd6c2;
+        border-bottom: 2px solid #ffd6c2;
       }
 
-      .code-content {
-        padding: 20px;
+      .code-block-small {
+        padding: 16px;
         font-family: "Consolas", "Monaco", monospace;
-        font-size: 13px;
-        line-height: 1.8;
+        font-size: 0.8em;
+        line-height: 1.6;
         overflow-x: auto;
       }
 
-      .keyword {
+      .code-block-small .keyword {
         color: #0000ff;
         font-weight: 600;
       }
 
-      .type {
+      .code-block-small .type {
         color: #2b91af;
       }
 
-      .method {
+      .code-block-small .method {
         color: #7453ff;
       }
 
-      .comment {
+      .code-block-small .comment {
         color: #008000;
       }
 
-      @media (max-width: 768px) {
-        .deep-dive-container {
-          padding: 20px;
-        }
+      /* 洞察框样式 */
+      .insight-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
+        border-left: 4px solid #667eea;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
 
-        .code-comparison {
+      .insight-box h4 {
+        color: #667eea;
+        font-size: 1em;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .insight-box p {
+        color: #555;
+        line-height: 1.8;
+      }
+
+      /* 高亮框样式 */
+      .highlight-box {
+        background: linear-gradient(135deg, #fff8f5 0%, #fff0e6 100%);
+        border-left: 4px solid #ff6b35;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .highlight-box h4 {
+        color: #ff6b35;
+        font-size: 1em;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .highlight-box ul {
+        margin-left: 20px;
+      }
+
+      .highlight-box li {
+        margin: 8px 0;
+        color: #555;
+        line-height: 1.7;
+      }
+
+      .highlight-box li strong {
+        color: #ff6b35;
+      }
+
+      /* 解释框样式 */
+      .explanation-box {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+      }
+
+      .explanation-box h4 {
+        color: #333;
+        font-size: 1em;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .explanation-box ol {
+        margin-left: 20px;
+      }
+
+      .explanation-box li {
+        margin: 8px 0;
+        color: #555;
+        line-height: 1.7;
+      }
+
+      .explanation-box li strong {
+        color: #ff6b35;
+      }
+
+      @media (max-width: 1200px) {
+        .container {
           grid-template-columns: 1fr;
-        }
-
-        .comparison-table {
-          font-size: 13px;
-        }
-
-        .comparison-table th,
-        .comparison-table td {
-          padding: 8px 12px;
         }
       }
     </style>
@@ -604,190 +682,296 @@
                 fill:#ffe6d9,stroke:#ff9a56
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 深度对比内容 -->
-    <div class="deep-dive-section">
-      <div class="deep-dive-container">
-        <h2 class="deep-dive-title">📚 源码深度对比：IOC 容器与三级缓存</h2>
-        <p class="deep-dive-subtitle">
-          通过对比学习法，深入理解 Spring IOC 的核心设计思想
-        </p>
+            <div class="section">
+              <h3>📊 详细对比：原生 Spring vs LightSSM</h3>
 
-        <div class="comparison-section">
-          <h3>一、三级缓存结构对比</h3>
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th style="width: 15%">维度</th>
-                <th style="width: 42%">原生 Spring</th>
-                <th style="width: 43%">LightSSM</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>一级缓存</strong></td>
-                <td>
-                  <code>singletonObjects</code><br />
-                  存储完整的、初始化完成的 Bean 实例<br />
-                  <small>包含所有生命周期回调执行完毕的对象</small>
-                </td>
-                <td>
-                  <code>singletonObjects</code><br />
-                  存储完整的 Bean 实例<br />
-                  <small>简化版本，仅存储最终对象</small>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>二级缓存</strong></td>
-                <td>
-                  <code>earlySingletonObjects</code><br />
-                  存储早期 Bean 引用（未完全初始化）<br />
-                  <small>用于解决循环依赖的临时缓存</small>
-                </td>
-                <td>
-                  <code>earlySingletonObjects</code><br />
-                  存储早期 Bean 引用<br />
-                  <small>从三级缓存工厂创建的早期对象</small>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>三级缓存</strong></td>
-                <td>
-                  <code>singletonFactories</code><br />
-                  存储 ObjectFactory 工厂对象<br />
-                  <small>延迟创建早期引用，支持 AOP 提前代理</small>
-                </td>
-                <td>
-                  <code>singletonFactories</code><br />
-                  存储 ObjectFactory 工厂<br />
-                  <small>简化版本，仅用于创建早期引用</small>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="comparison-section">
-          <h3>二、源码对比：getSingleton() 方法</h3>
-          <div class="code-comparison">
-            <div class="code-comparison-item">
-              <div class="code-header code-header-left">
-                原生 Spring - AbstractAutowireCapableBeanFactory
-              </div>
-              <div class="code-content">
-                <span class="keyword">protected</span> Object
-                <span class="method">getSingleton</span>(String beanName) {
-                Object singletonObject = <span class="keyword">this</span>
-                .singletonObjects.get(beanName);
-
-                <span class="keyword">if</span> (singletonObject ==
-                <span class="keyword">null</span> &&
-                isSingletonCurrentlyInCreation(beanName)) { singletonObject =
-                <span class="keyword">this</span>
-                .earlySingletonObjects.get(beanName);
-
-                <span class="keyword">if</span> (singletonObject ==
-                <span class="keyword">null</span>) { ObjectFactory&lt;?&gt;
-                factory = <span class="keyword">this</span>
-                .singletonFactories.get(beanName);
-
-                <span class="keyword">if</span> (factory !=
-                <span class="keyword">null</span>) { singletonObject =
-                factory.getObject();
-                <span class="keyword">this</span>.earlySingletonObjects
-                .put(beanName, singletonObject);
-                <span class="keyword">this</span>.singletonFactories
-                .remove(beanName); } } }
-                <span class="keyword">return</span> singletonObject; }
+              <h4>1. 三级缓存数据结构对比</h4>
+              <div class="comparison-table-wrapper">
+                <table class="comparison-table">
+                  <thead>
+                    <tr>
+                      <th>缓存级别</th>
+                      <th>原生 Spring</th>
+                      <th>LightSSM</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>一级缓存</strong></td>
+                      <td>
+                        <code>singletonObjects</code><br />
+                        存储完整初始化的 Bean<br />
+                        <small
+                          >• 已完成所有生命周期回调<br />• 已完成 Aware
+                          接口注入<br />• 已完成 BeanPostProcessor 处理</small
+                        >
+                      </td>
+                      <td>
+                        <code>singletonObjects</code><br />
+                        存储最终 Bean 实例<br />
+                        <small
+                          >• 完成基本初始化<br />• 完成依赖注入<br />• 调用
+                          init-method</small
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>二级缓存</strong></td>
+                      <td>
+                        <code>earlySingletonObjects</code><br />
+                        存储早期 Bean 引用<br />
+                        <small
+                          >• 已实例化但未完全初始化<br />• 用于解决循环依赖<br />•
+                          可能是 AOP 代理对象</small
+                        >
+                      </td>
+                      <td>
+                        <code>earlySingletonObjects</code><br />
+                        存储早期引用<br />
+                        <small
+                          >• 已实例化但未属性注入<br />• 解决 A 依赖 B，B 依赖
+                          A</small
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>三级缓存</strong></td>
+                      <td>
+                        <code>singletonFactories</code><br />
+                        存储 ObjectFactory<br />
+                        <small
+                          >• 延迟创建早期引用<br />• 支持 AOP 提前织入<br />•
+                          调用 getObject() 创建</small
+                        >
+                      </td>
+                      <td>
+                        <code>singletonFactories</code><br />
+                        存储 ObjectFactory<br />
+                        <small>• 简化版本<br />• 仅用于创建早期引用</small>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <div class="code-comparison-item light">
-              <div class="code-header code-header-right">
-                LightSSM - DefaultListableBeanFactory
+            <div class="section">
+              <h3>2. 源码逐行对比：getSingleton()</h3>
+
+              <div class="side-by-side-code">
+                <div class="code-column">
+                  <div class="code-title code-title-spring">
+                    原生 Spring 源码
+                  </div>
+                  <div class="code-block-small">
+                    <span class="comment"
+                      >// AbstractAutowireCapableBeanFactory</span
+                    >
+                    <span class="keyword">protected</span> Object
+                    <span class="method">getSingleton</span>(String beanName) {
+                    <span class="comment">// 1. 从一级缓存查找</span>
+                    Object singletonObject = <span class="keyword">this</span>
+                    .singletonObjects.get(beanName);
+
+                    <span class="comment">// 2. 一级缓存未命中且正在创建</span>
+                    <span class="keyword">if</span> (singletonObject ==
+                    <span class="keyword">null</span>
+                    && isSingletonCurrentlyInCreation(beanName)) {
+
+                    <span class="comment">// 3. 从二级缓存查找</span>
+                    singletonObject = <span class="keyword">this</span>
+                    .earlySingletonObjects.get(beanName);
+
+                    <span class="comment"
+                      >// 4. 二级缓存未命中，从三级缓存获取</span
+                    >
+                    <span class="keyword">if</span> (singletonObject ==
+                    <span class="keyword">null</span>) { ObjectFactory&lt;?&gt;
+                    factory = <span class="keyword">this</span>
+                    .singletonFactories.get(beanName);
+
+                    <span class="keyword">if</span> (factory !=
+                    <span class="keyword">null</span>) {
+                    <span class="comment">// 5. 通过工厂创建早期引用</span>
+                    singletonObject = factory.getObject();
+
+                    <span class="comment">// 6. 放入二级缓存</span>
+                    <span class="keyword">this</span>.earlySingletonObjects
+                    .put(beanName, singletonObject);
+
+                    <span class="comment">// 7. 移除三级缓存</span>
+                    <span class="keyword">this</span>.singletonFactories
+                    .remove(beanName); } } }
+                    <span class="keyword">return</span> singletonObject; }
+                  </div>
+                </div>
+
+                <div class="code-column">
+                  <div class="code-title code-title-light">LightSSM 源码</div>
+                  <div class="code-block-small">
+                    <span class="comment">// DefaultListableBeanFactory</span>
+                    <span class="keyword">protected</span> Object
+                    <span class="method">getSingleton</span>(String beanName) {
+                    <span class="comment">// 1. 从一级缓存查找</span>
+                    Object singletonObject = <span class="keyword">this</span>
+                    .singletonObjects.get(beanName);
+
+                    <span class="comment">// 2. 一级缓存未命中且正在创建</span>
+                    <span class="keyword">if</span> (singletonObject ==
+                    <span class="keyword">null</span>
+                    && isSingletonCurrentlyInCreation(beanName)) {
+
+                    <span class="comment">// 3. 从二级缓存查找</span>
+                    singletonObject = <span class="keyword">this</span>
+                    .earlySingletonObjects.get(beanName);
+
+                    <span class="comment"
+                      >// 4. 二级缓存未命中，从三级缓存获取</span
+                    >
+                    <span class="keyword">if</span> (singletonObject ==
+                    <span class="keyword">null</span>) { ObjectFactory&lt;?&gt;
+                    factory = <span class="keyword">this</span>
+                    .singletonFactories.get(beanName);
+
+                    <span class="keyword">if</span> (factory !=
+                    <span class="keyword">null</span>) {
+                    <span class="comment">// 5. 通过工厂创建早期引用</span>
+                    singletonObject = factory.getObject();
+
+                    <span class="comment">// 6. 放入二级缓存</span>
+                    <span class="keyword">this</span>.earlySingletonObjects
+                    .put(beanName, singletonObject);
+
+                    <span class="comment">// 7. 移除三级缓存</span>
+                    <span class="keyword">this</span>.singletonFactories
+                    .remove(beanName); } } }
+                    <span class="keyword">return</span> singletonObject; }
+                  </div>
+                </div>
               </div>
-              <div class="code-content">
-                <span class="keyword">protected</span> Object
-                <span class="method">getSingleton</span>(String beanName) {
-                Object singletonObject = <span class="keyword">this</span>
-                .singletonObjects.get(beanName);
 
-                <span class="keyword">if</span> (singletonObject ==
-                <span class="keyword">null</span> &&
-                isSingletonCurrentlyInCreation(beanName)) { singletonObject =
-                <span class="keyword">this</span>
-                .earlySingletonObjects.get(beanName);
+              <div class="insight-box">
+                <h4>💡 核心发现</h4>
+                <p>
+                  <strong
+                    >LightSSM 的 getSingleton() 实现与原生 Spring
+                    几乎完全一致！</strong
+                  >这证明了 Spring
+                  三级缓存设计的精妙之处。核心逻辑完全相同：一级缓存 → 二级缓存
+                  → 三级缓存工厂，层层递进，确保循环依赖能够正确解决。
+                </p>
+              </div>
+            </div>
 
-                <span class="keyword">if</span> (singletonObject ==
-                <span class="keyword">null</span>) { ObjectFactory&lt;?&gt;
-                factory = <span class="keyword">this</span>
-                .singletonFactories.get(beanName);
+            <div class="section">
+              <h3>3. Bean 创建完整流程对比</h3>
 
-                <span class="keyword">if</span> (factory !=
-                <span class="keyword">null</span>) { singletonObject =
-                factory.getObject();
-                <span class="keyword">this</span>.earlySingletonObjects
-                .put(beanName, singletonObject);
-                <span class="keyword">this</span>.singletonFactories
-                .remove(beanName); } } }
-                <span class="keyword">return</span> singletonObject; }
+              <div class="mermaid">
+                sequenceDiagram participant Spring as 原生 Spring participant
+                Light as LightSSM rect rgb(232, 240, 254) Note over
+                Spring,Light: 阶段 1：实例化 Spring->>Spring:
+                createBeanInstance()<br />反射创建对象实例 Light->>Light:
+                instantiateBean()<br />反射创建对象实例 end rect rgb(255, 243,
+                205) Note over Spring,Light: 阶段 2：提前暴露引用
+                Spring->>Spring: addSingletonFactory()<br />放入三级缓存
+                Light->>Light: addSingletonFactory()<br />放入三级缓存 end rect
+                rgb(255, 248, 245) Note over Spring,Light: 阶段 3：属性填充
+                Spring->>Spring: populateBean()<br />依赖注入 Light->>Light:
+                populateBean()<br />依赖注入 end rect rgb(248, 215, 218) Note
+                over Spring: 阶段 4：初始化（复杂） Spring->>Spring: • Aware
+                接口回调<br />• BeanPostProcessor.before()<br />•
+                InitializingBean<br />• init-method<br />•
+                BeanPostProcessor.after() Note over Light: 阶段
+                4：初始化（简化） Light->>Light: • InitializingBean<br />•
+                init-method end rect rgb(232, 240, 254) Note over Spring,Light:
+                阶段 5：注册完成 Spring->>Spring: addSingleton()<br />移入一级缓存
+                Light->>Light: addSingleton()<br />移入一级缓存 end
+              </div>
+            </div>
+
+            <div class="highlight-box">
+              <h4>🎯 面试核心：三级缓存的本质</h4>
+              <ul>
+                <li>
+                  <strong>一级缓存是目标</strong>：存储完整可用的 Bean
+                  实例，这是最终目标
+                </li>
+                <li>
+                  <strong>二级缓存是过渡</strong
+                  >：存储早期引用，解决"我依赖你，你依赖我"的死锁问题
+                </li>
+                <li>
+                  <strong>三级缓存是延迟</strong>：通过 ObjectFactory
+                  延迟创建早期引用，给 AOP 留出织入机会
+                </li>
+                <li>
+                  <strong>核心思想</strong
+                  >：提前暴露、延迟创建、缓存复用、分层管理
+                </li>
+                <li>
+                  <strong>为什么需要三级？</strong>如果只有两级，无法支持 AOP
+                  代理的提前织入。三级缓存通过工厂模式，让 AOP 可以在 Bean
+                  完全初始化之前就创建代理对象。
+                </li>
+              </ul>
+            </div>
+
+            <div class="section">
+              <h3>4. 循环依赖解决过程详解</h3>
+
+              <div class="mermaid">
+                flowchart TB A["开始：getBean(A)"] --> B["实例化 A"] B --> C["A
+                加入三级缓存<br />(singletonFactories)"] C --> D["A
+                属性注入：需要 B"] D --> E["getBean(B)"] E --> F["实例化 B"] F
+                --> G["B 加入三级缓存"] G --> H["B 属性注入：需要 A"] H -->
+                I["getBean(A) 触发循环"] I --> J["从三级缓存<br />获取 A
+                的工厂"] J --> K["factory.getObject()<br />创建 A 的早期引用"] K
+                --> L["A 的早期引用<br />放入二级缓存"] L --> M["移除 A
+                的三级缓存"] M --> N["B 注入 A 的早期引用"] N --> O["B
+                完成创建<br />放入一级缓存"] O --> P["A 注入 B"] P --> Q["A
+                完成创建<br />放入一级缓存"] Q --> R["结束：返回 A"] style A
+                fill:#ff9a56,color:#fff style R fill:#4caf50,color:#fff style J
+                fill:#ffe6d9,stroke:#ff9a56 style K fill:#fff0e6,stroke:#ff9a56
+                style O fill:#e8f0fe,stroke:#667eea style Q
+                fill:#e8f0fe,stroke:#667eea
+              </div>
+
+              <div class="explanation-box">
+                <h4>📝 详细步骤说明</h4>
+                <ol>
+                  <li>
+                    <strong>创建 A</strong>：实例化 A，将 A 的 ObjectFactory
+                    放入三级缓存
+                  </li>
+                  <li><strong>A 依赖 B</strong>：A 进行属性注入时发现需要 B</li>
+                  <li>
+                    <strong>创建 B</strong>：实例化 B，将 B 的 ObjectFactory
+                    放入三级缓存
+                  </li>
+                  <li>
+                    <strong>B 依赖 A</strong>：B 进行属性注入时发现需要
+                    A，触发循环依赖
+                  </li>
+                  <li>
+                    <strong>从三级缓存获取 A</strong>：找到 A 的
+                    ObjectFactory，调用 getObject() 创建 A 的早期引用
+                  </li>
+                  <li>
+                    <strong>转移缓存</strong>：将 A
+                    的早期引用放入二级缓存，移除三级缓存
+                  </li>
+                  <li>
+                    <strong>B 注入 A</strong>：B 成功注入 A 的早期引用，B
+                    完成创建
+                  </li>
+                  <li>
+                    <strong>A 注入 B</strong>：A 注入已完成的 B，A 完成创建
+                  </li>
+                </ol>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="comparison-section">
-          <h3>三、Bean 生命周期完整对比</h3>
-          <div class="mermaid">
-            sequenceDiagram participant Spring as 原生 Spring participant Light
-            as LightSSM rect rgb(232, 240, 254) Note over Spring: 实例化阶段
-            Spring->>Spring: 1. createBeanInstance()<br />反射创建对象
-            Light->>Light: 1. instantiateBean()<br />反射创建对象 end rect
-            rgb(255, 243, 205) Note over Spring: 提前暴露引用 Spring->>Spring:
-            2. addSingletonFactory()<br />放入三级缓存 Light->>Light: 2.
-            addSingletonFactory()<br />放入三级缓存 end rect rgb(255, 248, 245)
-            Note over Spring: 属性填充 Spring->>Spring: 3. populateBean()<br />依赖注入
-            Light->>Light: 3. populateBean()<br />依赖注入 end rect rgb(248,
-            215, 218) Note over Spring: 初始化阶段 Spring->>Spring: 4.
-            initializeBean()<br />• Aware 接口回调<br />•
-            BeanPostProcessor.before()<br />• init-method<br />•
-            BeanPostProcessor.after() Light->>Light: 4. initializeBean()<br />•
-            InitializingBean<br />• init-method end rect rgb(232, 240, 254) Note
-            over Spring: 注册完成 Spring->>Spring: 5. addSingleton()<br />移入一级缓存
-            Light->>Light: 5. addSingleton()<br />移入一级缓存 end
-          </div>
-        </div>
-
-        <div class="insight-box">
-          <h4>💡 核心洞察</h4>
-          <p>
-            <strong>LightSSM 的三级缓存实现与原生 Spring 几乎一致！</strong
-            >这证明了 Spring 的设计精髓：
-            通过三级缓存打破循环依赖的关键在于<strong>提前暴露早期引用</strong>。
-            原生 Spring 的复杂性在于支持 AOP 代理的提前织入（通过
-            BeanPostProcessor）， 而 LightSSM
-            去除了这个复杂机制，保留了最核心的循环依赖解决方案。
-          </p>
-        </div>
-
-        <div class="highlight-box">
-          <h4>🎯 面试加分点：三级缓存的本质</h4>
-          <ul>
-            <li><strong>一级缓存是目标</strong>：存储完整可用的 Bean</li>
-            <li>
-              <strong>二级缓存是过渡</strong
-              >：存储早期引用，解决"我依赖你，你依赖我"的死锁
-            </li>
-            <li>
-              <strong>三级缓存是延迟</strong>：通过工厂延迟创建早期引用，给 AOP
-              留出代理机会
-            </li>
-            <li><strong>核心思想</strong>：提前暴露、延迟创建、缓存复用</li>
-          </ul>
         </div>
       </div>
     </div>
