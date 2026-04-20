@@ -13,9 +13,9 @@ public class NoSuchBeanDefinitionException extends BeansException {
         this.requiredType = type;
     }
     
-    public NoSuchBeanDefinitionException(String message) {
+    public NoSuchBeanDefinitionException(Class<?> type, String message) {
         super(message);
-        this.requiredType = null;
+        this.requiredType = type;
     }
     
     public Class<?> getRequiredType() {

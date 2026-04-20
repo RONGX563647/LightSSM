@@ -1,5 +1,7 @@
 package com.lightframework.aop.core;
 
+import java.util.List;
+
 public class ProxyFactory {
     private AdvisedSupport advised;
     

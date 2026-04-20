@@ -167,7 +167,11 @@ public class DefaultListableBeanFactory implements ListableBeanFactory {
             if (singletonObject == null) {
                 ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
                 if (singletonFactory != null) {
-                    singletonObject = singletonFactory.getObject();
+                    try {
+                        singletonObject = singletonFactory.getObject();
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to create singleton bean: " + beanName, e);
+                    }
                     this.earlySingletonObjects.put(beanName, singletonObject);
                     this.singletonFactories.remove(beanName);
                     logger.debug("Exposed early singleton bean: {}", beanName);
