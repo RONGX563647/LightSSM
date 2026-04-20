@@ -20,17 +20,15 @@ import org.xml.sax.InputSource;
 import javax.sql.DataSource;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import java.util.List;
+import java.util.Properties;
 
 public class XMLConfigBuilder extends BaseBuilder {
 
     private Element root;
 
     public XMLConfigBuilder(Reader reader) {
-        // 1. 调用父类初始化Configuration
+        // 1. 调用父类初始化 Configuration
         super(new Configuration());
         // 2. dom4j 处理 xml
         SAXReader saxReader = new SAXReader();
@@ -71,7 +69,8 @@ public class XMLConfigBuilder extends BaseBuilder {
      * </plugins>
      */
     private void pluginElement(Element parent) throws Exception {
-        if (parent == null) return;
+        if (parent == null)
+            return;
         List<Element> elements = parent.elements();
         for (Element element : elements) {
             String interceptor = element.attributeValue("interceptor");
@@ -111,11 +110,13 @@ public class XMLConfigBuilder extends BaseBuilder {
             String id = e.attributeValue("id");
             if (environment.equals(id)) {
                 // 事务管理器
-                TransactionFactory txFactory = (TransactionFactory) typeAliasRegistry.resolveAlias(e.element("transactionManager").attributeValue("type")).newInstance();
+                TransactionFactory txFactory = (TransactionFactory) typeAliasRegistry
+                        .resolveAlias(e.element("transactionManager").attributeValue("type")).newInstance();
 
                 // 数据源
                 Element dataSourceElement = e.element("dataSource");
-                DataSourceFactory dataSourceFactory = (DataSourceFactory) typeAliasRegistry.resolveAlias(dataSourceElement.attributeValue("type")).newInstance();
+                DataSourceFactory dataSourceFactory = (DataSourceFactory) typeAliasRegistry
+                        .resolveAlias(dataSourceElement.attributeValue("type")).newInstance();
                 List<Element> propertyList = dataSourceElement.elements("property");
                 Properties props = new Properties();
                 for (Element property : propertyList) {
@@ -151,7 +152,7 @@ public class XMLConfigBuilder extends BaseBuilder {
             // XML 解析
             if (resource != null && mapperClass == null) {
                 InputStream inputStream = Resources.getResourceAsStream(resource);
-                // 在for循环里每个mapper都重新new一个XMLMapperBuilder，来解析
+                // 在 for 循环里每个 mapper 都重新 new 一个 XMLMapperBuilder，来解析
                 XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource);
                 mapperParser.parse();
             }

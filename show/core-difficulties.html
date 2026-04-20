@@ -388,34 +388,59 @@
             <div class="section">
               <h3>循环依赖解决流程</h3>
               <div class="mermaid">
-                flowchart TB A["创建 BeanA"] --> B["实例化 BeanA"] B -->
-                C["加入三级缓存"] C --> D["populateBean<br />发现依赖 BeanB"] D
-                --> E["创建 BeanB"] E --> F["实例化 BeanB"] F -->
-                G["加入三级缓存"] G --> H["populateBean<br />发现依赖 BeanA"] H
-                --> I["从三级缓存获取<br />factoryA.getObject()"] I -->
-                J["放入二级缓存"] J --> K["BeanB 完成创建"] K --> L["BeanA 注入
-                BeanB"] L --> M["BeanA 完成创建"] style C
-                fill:#fff0e6,stroke:#ff9a56 style I fill:#ffe6d9,stroke:#ff9a56
-                style K fill:#fff8f5,stroke:#ff9a56 style M
-                fill:#fff8f5,stroke:#ff9a56
+flowchart TB
+A["创建 BeanA"] --> B["实例化 BeanA"]
+B --> C["加入三级缓存"]
+C --> D["populateBean<br />发现依赖 BeanB"]
+D --> E["创建 BeanB"]
+E --> F["实例化 BeanB"]
+F --> G["加入三级缓存"]
+G --> H["populateBean<br />发现依赖 BeanA"]
+H --> I["从三级缓存获取<br />factoryA.getObject()"]
+I --> J["放入二级缓存"]
+J --> K["BeanB 完成创建"]
+K --> L["BeanA 注入 BeanB"]
+L --> M["BeanA 完成创建"]
+style C fill:#fff0e6,stroke:#ff9a56
+style I fill:#ffe6d9,stroke:#ff9a56
+style K fill:#fff8f5,stroke:#ff9a56
+style M fill:#fff8f5,stroke:#ff9a56
               </div>
             </div>
 
             <div class="section">
               <h3>AOP 代理类图</h3>
               <div class="mermaid">
-                classDiagram class ProxyFactory { -target -advisors
-                -useCglibProxy +getProxy() +createJdkProxy() +createCglibProxy()
-                } class AopProxy { &lt;&lt;interface&gt;&gt; +getProxy() } class
-                JdkDynamicAopProxy { -advised +getProxy() #invoke(proxy, method,
-                args) } class CglibAopProxy { -advised +getProxy()
-                #intercept(obj, method, args, proxy) } ProxyFactory --> AopProxy
-                AopProxy &lt;|-- JdkDynamicAopProxy AopProxy &lt;|--
-                CglibAopProxy style ProxyFactory
-                fill:#fffbf7,stroke:#ff9a56,stroke-width:2px style AopProxy
-                fill:#fff8f5,stroke:#ff9a56 style JdkDynamicAopProxy
-                fill:#fff0e6,stroke:#ff9a56 style CglibAopProxy
-                fill:#fff0e6,stroke:#ff9a56
+classDiagram
+class ProxyFactory {
+- target
+- advisors
+- useCglibProxy
++ getProxy()
++ createJdkProxy()
++ createCglibProxy()
+}
+class AopProxy {
+&lt;&lt;interface&gt;&gt;
++ getProxy()
+}
+class JdkDynamicAopProxy {
+- advised
++ getProxy()
+#invoke(proxy, method, args)
+}
+class CglibAopProxy {
+- advised
++ getProxy()
+#intercept(obj, method, args, proxy)
+}
+ProxyFactory --> AopProxy
+AopProxy &lt;|-- JdkDynamicAopProxy
+AopProxy &lt;|-- CglibAopProxy
+style ProxyFactory fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
+style AopProxy fill:#fff8f5,stroke:#ff9a56
+style JdkDynamicAopProxy fill:#fff0e6,stroke:#ff9a56
+style CglibAopProxy fill:#fff0e6,stroke:#ff9a56
               </div>
             </div>
 

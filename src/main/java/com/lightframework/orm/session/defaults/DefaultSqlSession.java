@@ -14,10 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class DefaultSqlSession implements SqlSession {
 
@@ -42,7 +44,8 @@ public class DefaultSqlSession implements SqlSession {
         if (list.size() == 1) {
             return list.get(0);
         } else if (list.size() > 1) {
-            throw new RuntimeException("Expected one result (or null) to be returned by selectOne(), but found: " + list.size());
+            throw new RuntimeException(
+                    "Expected one result (or null) to be returned by selectOne(), but found: " + list.size());
         } else {
             return null;
         }
@@ -53,7 +56,8 @@ public class DefaultSqlSession implements SqlSession {
         logger.info("执行查询 statement：{} parameter：{}", statement, JSON.toJSONString(parameter));
         MappedStatement ms = configuration.getMappedStatement(statement);
         try {
-            return executor.query(ms, parameter, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER, ms.getSqlSource().getBoundSql(parameter));
+            return executor.query(ms, parameter, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER,
+                    ms.getSqlSource().getBoundSql(parameter));
         } catch (SQLException e) {
             throw new RuntimeException("Error querying database.  Cause: " + e);
         }
@@ -102,10 +106,10 @@ public class DefaultSqlSession implements SqlSession {
     @Override
     public void close() {
         try {
-            //强制回滚关闭
+            // 强制回滚关闭
             executor.close(true);
         } finally {
-            //todo:
+            // todo:
         }
     }
 

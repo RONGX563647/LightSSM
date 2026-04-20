@@ -441,8 +441,8 @@
                 +selectOne(statement, param) +selectList(statement, param)
                 +insert(statement, param) +update(statement, param)
                 +delete(statement, param) +getMapper(mapperClass) +commit()
-                +rollback() +close() } class DefaultSqlSession { -configuration
-                -executor -autoCommit +selectOne(statement, param)
+                +rollback() +close() } class DefaultSqlSession { - configuration
+                - executor - autoCommit +selectOne(statement, param)
                 +selectList(statement, param) +getMapper(mapperClass) +commit()
                 +rollback() +close() } class Executor {
                 &lt;&lt;interface&gt;&gt; +update(ms, param) +query(ms, param,

@@ -426,50 +426,80 @@
             <div class="section">
               <h3>架构类图</h3>
               <div class="mermaid">
-                classDiagram class BeanFactory { &lt;&lt;interface&gt;&gt;
-                +Object getBean(String name) +T getBean(Class requiredType)
-                +boolean containsBean(String name) +boolean isSingleton(String
-                name) } class ListableBeanFactory { &lt;&lt;interface&gt;&gt;
-                +boolean containsBeanDefinition(String) +int
-                getBeanDefinitionCount() +String[] getBeanDefinitionNames()
-                +List getBeansOfType(Class type) } class
-                DefaultListableBeanFactory { -Map beanDefinitionMap -Map
-                singletonObjects -Map earlySingletonObjects -Map
-                singletonFactories -List beanPostProcessors +void
-                registerBeanDefinition(String, BeanDefinition) +Object
-                getBean(String name) #Object doGetBean(String, Class) #Object
-                getSingleton(String) #Object createBean(String, BeanDefinition)
-                #void populateBean(String, BeanDefinition, Object) #Object
-                resolveDependency(Class, String) } class BeanDefinition {
-                +String beanName +Class beanClass +String scope +boolean
-                isSingleton() } class BeanPostProcessor {
-                &lt;&lt;interface&gt;&gt; +Object
-                postProcessBeforeInitialization(Object, String) +Object
-                postProcessAfterInitialization(Object, String) } BeanFactory
-                &lt;|-- ListableBeanFactory ListableBeanFactory &lt;|--
-                DefaultListableBeanFactory DefaultListableBeanFactory *--
-                BeanDefinition DefaultListableBeanFactory *-- BeanPostProcessor
-                style BeanFactory fill:#fff8f5,stroke:#ff9a56,stroke-width:2px
-                style ListableBeanFactory fill:#fff8f5,stroke:#ff9a56 style
-                DefaultListableBeanFactory
-                fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
+classDiagram
+class BeanFactory {
+&lt;&lt;interface&gt;&gt;
++ Object getBean(String name)
++ T getBean(Class requiredType)
++ boolean containsBean(String name)
++ boolean isSingleton(String name)
+}
+class ListableBeanFactory {
+&lt;&lt;interface&gt;&gt;
++ boolean containsBeanDefinition(String)
++ int getBeanDefinitionCount()
++ String[] getBeanDefinitionNames()
++ List getBeansOfType(Class type)
+}
+class DefaultListableBeanFactory {
+- Map beanDefinitionMap
+- Map singletonObjects
+- Map earlySingletonObjects
+- Map singletonFactories
+- List beanPostProcessors
++ void registerBeanDefinition(String, BeanDefinition)
++ Object getBean(String name)
+# Object doGetBean(String, Class)
+# Object getSingleton(String)
+# Object createBean(String, BeanDefinition)
+# void populateBean(String, BeanDefinition, Object)
+# Object resolveDependency(Class, String)
+}
+class BeanDefinition {
++ String beanName
++ Class beanClass
++ String scope
++ boolean isSingleton()
+}
+class BeanPostProcessor {
+&lt;&lt;interface&gt;&gt;
++ Object postProcessBeforeInitialization(Object, String)
++ Object postProcessAfterInitialization(Object, String)
+}
+BeanFactory &lt;|-- ListableBeanFactory
+ListableBeanFactory &lt;|-- DefaultListableBeanFactory
+DefaultListableBeanFactory *-- BeanDefinition
+DefaultListableBeanFactory *-- BeanPostProcessor
+style BeanFactory fill:#fff8f5,stroke:#ff9a56,stroke-width:2px
+style ListableBeanFactory fill:#fff8f5,stroke:#ff9a56
+style DefaultListableBeanFactory fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
               </div>
             </div>
 
             <div class="section">
               <h3>三级缓存机制</h3>
               <div class="mermaid">
-                flowchart LR A["getBean(name)"] --> B["一级缓存<br />singletonObjects"]
-                B --> C{"命中？"} C -->|是 | D["返回 Bean"] C -->|否 |
-                E{"正在创建？"} E -->|否 | F["创建新 Bean"] E -->|是 |
-                G["二级缓存<br />earlySingletonObjects"] G --> H{"命中？"} H
-                -->|是 | D H -->|否 | I["三级缓存<br />singletonFactories"] I
-                --> J{"有工厂？"} J -->|否 | D J -->|是 |
-                K["factory.getObject()"] K --> L["放入二级缓存"] L -->
-                M["移除三级缓存"] M --> D style A fill:#ff9a56,color:#fff style
-                D fill:#ffb380,color:#fff style B fill:#fff8f5,stroke:#ff9a56
-                style G fill:#fff0e6,stroke:#ff9a56 style I
-                fill:#ffe6d9,stroke:#ff9a56
+flowchart LR
+A["getBean(name)"] --> B["一级缓存<br />singletonObjects"]
+B --> C{"命中？"}
+C -->|是 | D["返回 Bean"]
+C -->|否 | E{"正在创建？"}
+E -->|否 | F["创建新 Bean"]
+E -->|是 | G["二级缓存<br />earlySingletonObjects"]
+G --> H{"命中？"}
+H -->|是 | D
+H -->|否 | I["三级缓存<br />singletonFactories"]
+I --> J{"有工厂？"}
+J -->|否 | D
+J -->|是 | K["factory.getObject()"]
+K --> L["放入二级缓存"]
+L --> M["移除三级缓存"]
+M --> D
+style A fill:#ff9a56,color:#fff
+style D fill:#ffb380,color:#fff
+style B fill:#fff8f5,stroke:#ff9a56
+style G fill:#fff0e6,stroke:#ff9a56
+style I fill:#ffe6d9,stroke:#ff9a56
               </div>
             </div>
           </div>

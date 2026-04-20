@@ -453,23 +453,23 @@
             <div class="section">
               <h3>架构类图</h3>
               <div class="mermaid">
-                classDiagram class DispatcherServlet { -List handlerMappings
-                -List handlerAdapters -List viewResolvers +service(request,
-                response) #getHandler(request) #getHandlerAdapter(handler)
-                #render(mv, request, response) } class HandlerMapping {
-                &lt;&lt;interface&gt;&gt; +getHandler(request) } class
-                RequestMappingHandlerMapping { -Map handlerMap
-                +registerHandlerMethod(bean, method, mapping)
-                +getHandler(request) } class HandlerAdapter {
-                &lt;&lt;interface&gt;&gt; +supports(handler) +handle(request,
-                response, handler) } class RequestMappingHandlerAdapter {
-                +supports(handler) +handle(request, response, handler) } class
-                HandlerExecutionChain { -handler -interceptors
-                +applyPreHandle(request, response) +applyPostHandle(request,
-                response, mv) +triggerAfterCompletion(request, response, ex) }
-                class HandlerInterceptor { &lt;&lt;interface&gt;&gt;
-                +preHandle(request, response, handler) +postHandle(request,
-                response, handler, mv) +afterCompletion(request, response,
+                classDiagram class DispatcherServlet { - List handlerMappings -
+                List handlerAdapters - List viewResolvers + service(request,
+                response) # getHandler(request) # getHandlerAdapter(handler) #
+                render(mv, request, response) } class HandlerMapping {
+                &lt;&lt;interface&gt;&gt; + getHandler(request) } class
+                RequestMappingHandlerMapping { - Map handlerMap +
+                registerHandlerMethod(bean, method, mapping) +
+                getHandler(request) } class HandlerAdapter {
+                &lt;&lt;interface&gt;&gt; + supports(handler) + handle(request,
+                response, handler) } class RequestMappingHandlerAdapter { +
+                supports(handler) + handle(request, response, handler) } class
+                HandlerExecutionChain { - handler - interceptors +
+                applyPreHandle(request, response) + applyPostHandle(request,
+                response, mv) + triggerAfterCompletion(request, response, ex) }
+                class HandlerInterceptor { &lt;&lt;interface&gt;&gt; +
+                preHandle(request, response, handler) + postHandle(request,
+                response, handler, mv) + afterCompletion(request, response,
                 handler, ex) } DispatcherServlet o-- HandlerMapping
                 DispatcherServlet o-- HandlerAdapter HandlerMapping &lt;|--
                 RequestMappingHandlerMapping HandlerAdapter &lt;|--

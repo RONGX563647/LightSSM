@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LightSSM - 轻量级自研 SSM 框架</title>
+    <script src="mermaid.min.js"></script>
     <style>
       * {
         margin: 0;
@@ -250,6 +251,20 @@
         color: #ff6b35;
       }
 
+      .mermaid {
+        background: #fafbfc;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        display: flex;
+        justify-content: center;
+      }
+
+      .mermaid code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+      }
+
       @media (max-width: 768px) {
         .container {
           padding: 120px 24px 60px;
@@ -302,8 +317,10 @@
       <div class="section">
         <h2 class="section-title">核心价值</h2>
         <p class="content-text">
-          <strong>别人只会背原生 Spring 理论，你是原生 Spring 原理 +
-          自己手写精简框架对照理解。</strong><br />
+          <strong
+            >别人只会背原生 Spring 理论，你是原生 Spring 原理 +
+            自己手写精简框架对照理解。</strong
+          ><br />
           所有面试考点锚定你的项目，不再空洞，面试官深挖你完全接得住。
         </p>
       </div>
@@ -313,19 +330,32 @@
         <div class="features">
           <div class="feature-item">
             <h4>IOC/DI 容器</h4>
-            <p>支持 @Component、@Autowired 注解扫描与依赖注入，基于三级缓存解决循环依赖问题，支持 @Scope 配置单例/原型模式</p>
+            <p>
+              支持 @Component、@Autowired
+              注解扫描与依赖注入，基于三级缓存解决循环依赖问题，支持 @Scope
+              配置单例/原型模式
+            </p>
           </div>
           <div class="feature-item">
             <h4>SpringMVC 核心</h4>
-            <p>实现 DispatcherServlet、HandlerMapping、HandlerAdapter，支持 @RequestMapping、@ResponseBody、@RequestParam、@PathVariable</p>
+            <p>
+              实现 DispatcherServlet、HandlerMapping、HandlerAdapter，支持
+              @RequestMapping、@ResponseBody、@RequestParam、@PathVariable
+            </p>
           </div>
           <div class="feature-item">
             <h4>ORM 模块</h4>
-            <p>支持 XML SQL 映射配置、动态 SQL 拼接（OGNL 表达式）、参数自动绑定与 ResultSet 映射、插件拦截器机制</p>
+            <p>
+              支持 XML SQL 映射配置、动态 SQL 拼接（OGNL
+              表达式）、参数自动绑定与 ResultSet 映射、插件拦截器机制
+            </p>
           </div>
           <div class="feature-item">
             <h4>AOP 切面</h4>
-            <p>基于 JDK/CGLIB 双代理实现，支持 @Before、@After、@Around 通知织入，支持 AspectJ 表达式切入点</p>
+            <p>
+              基于 JDK/CGLIB 双代理实现，支持 @Before、@After、@Around
+              通知织入，支持 AspectJ 表达式切入点
+            </p>
           </div>
         </div>
       </div>
@@ -374,30 +404,62 @@
           <div class="code-block">
             <span class="keyword">public class</span>
             <span class="type">DefaultListableBeanFactory</span> {<br />
-            &nbsp;&nbsp;<span class="comment">// 一级缓存：完整 Bean 实例</span><br />
-            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String, Object&gt;
-            singletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();<br /><br />
-            &nbsp;&nbsp;<span class="comment">// 二级缓存：早期 Bean 引用</span><br />
-            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String, Object&gt;
-            earlySingletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();<br /><br />
-            &nbsp;&nbsp;<span class="comment">// 三级缓存：Bean 工厂</span><br />
-            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String, ObjectFactory&lt;?&gt;&gt;
-            singletonFactories = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();<br /><br />
+            &nbsp;&nbsp;<span class="comment">// 一级缓存：完整 Bean 实例</span
+            ><br />
+            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String,
+            Object&gt; singletonObjects =
+            <span class="keyword">new</span>
+            ConcurrentHashMap&lt;&gt;();<br /><br />
+            &nbsp;&nbsp;<span class="comment">// 二级缓存：早期 Bean 引用</span
+            ><br />
+            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String,
+            Object&gt; earlySingletonObjects =
+            <span class="keyword">new</span>
+            ConcurrentHashMap&lt;&gt;();<br /><br />
+            &nbsp;&nbsp;<span class="comment">// 三级缓存：Bean 工厂</span
+            ><br />
+            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String,
+            ObjectFactory&lt;?&gt;&gt; singletonFactories =
+            <span class="keyword">new</span>
+            ConcurrentHashMap&lt;&gt;();<br /><br />
             &nbsp;&nbsp;<span class="comment">// 三级缓存查找逻辑</span><br />
-            &nbsp;&nbsp;<span class="keyword">protected</span> Object getSingleton(String beanName) {<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;Object singletonObject = <span class="keyword">this</span>.singletonObjects.get(beanName);<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span> && isSingletonCurrentlyInCreation(beanName)) {<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;singletonObject = <span class="keyword">this</span>.earlySingletonObjects.get(beanName);<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span>) {<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ObjectFactory&lt;?&gt; factory = <span class="keyword">this</span>.singletonFactories.get(beanName);<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (factory != <span class="keyword">null</span>) {<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;singletonObject = factory.getObject();<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.earlySingletonObjects.put(beanName, singletonObject);<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.singletonFactories.remove(beanName);<br />
+            &nbsp;&nbsp;<span class="keyword">protected</span> Object
+            getSingleton(String beanName) {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;Object singletonObject =
+            <span class="keyword">this</span
+            >.singletonObjects.get(beanName);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>
+            (singletonObject == <span class="keyword">null</span> &&
+            isSingletonCurrentlyInCreation(beanName)) {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;singletonObject =
+            <span class="keyword">this</span
+            >.earlySingletonObjects.get(beanName);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>
+            (singletonObject == <span class="keyword">null</span>) {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ObjectFactory&lt;?&gt;
+            factory =
+            <span class="keyword">this</span
+            >.singletonFactories.get(beanName);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+              class="keyword"
+              >if</span
+            >
+            (factory != <span class="keyword">null</span>) {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;singletonObject
+            = factory.getObject();<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+              class="keyword"
+              >this</span
+            >.earlySingletonObjects.put(beanName, singletonObject);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+              class="keyword"
+              >this</span
+            >.singletonFactories.remove(beanName);<br />
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />
             &nbsp;&nbsp;&nbsp;&nbsp;}<br />
-            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> singletonObject;<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span>
+            singletonObject;<br />
             &nbsp;&nbsp;}<br />
             }
           </div>
@@ -446,5 +508,14 @@
         </p>
       </div>
     </div>
+
+    <script>
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default",
+        flowchart: { useMaxWidth: true, htmlLabels: true },
+        sequence: { useMaxWidth: true, showSequenceNumbers: false },
+      });
+    </script>
   </body>
 </html>
