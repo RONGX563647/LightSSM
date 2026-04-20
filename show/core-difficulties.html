@@ -455,6 +455,223 @@ style CglibAopProxy fill:#fff0e6,stroke:#ff9a56
                 </ul>
               </div>
             </div>
+
+            <div class="section">
+              <h3>📊 深度对比：AOP 实现原理</h3>
+              
+              <h4>1. 代理方式对比</h4>
+              <div class="comparison-table-wrapper">
+                <table class="comparison-table">
+                  <thead>
+                    <tr>
+                      <th>维度</th>
+                      <th>原生 Spring AOP</th>
+                      <th>LightSSM AOP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>JDK 代理</strong></td>
+                      <td>
+                        <code>JdkDynamicAopProxy</code><br/>
+                        基于接口代理<br/>
+                        <small>• 实现 InvocationHandler<br/>• invoke() 方法织入通知<br/>• 只能代理接口</small>
+                      </td>
+                      <td>
+                        <code>JdkDynamicAopProxy</code><br/>
+                        相同实现<br/>
+                        <small>• 简化版本<br/>• 仅支持 Before/After 通知</small>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>CGLIB 代理</strong></td>
+                      <td>
+                        <code>CglibAopProxy</code><br/>
+                        基于子类代理<br/>
+                        <small>• 实现 MethodInterceptor<br/>• intercept() 方法织入通知<br/>• 可代理具体类</small>
+                      </td>
+                      <td>
+                        <code>CglibAopProxy</code><br/>
+                        相同实现<br/>
+                        <small>• 简化版本<br/>• 无 final 方法支持</small>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>代理选择策略</strong></td>
+                      <td>
+                        优先 JDK 代理<br/>
+                        无接口时自动切换 CGLIB<br/>
+                        <small>• proxy-target-class 配置<br/>• 智能判断</small>
+                      </td>
+                      <td>
+                        手动指定<br/>
+                        或根据目标类判断<br/>
+                        <small>• 简化判断逻辑</small>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>2. 通知执行流程对比</h3>
+              
+              <div class="mermaid">
+sequenceDiagram
+    participant Client as 客户端
+    participant Proxy as 代理对象
+    chain as 拦截器链
+    target as 目标对象
+    
+    rect rgb(255, 248, 245)
+    Note over Client,target: 原生 Spring 执行流程
+    Client->>Proxy: 调用方法
+    Proxy->>chain: 获取拦截器链
+    chain->>chain: 执行 Before 通知
+    chain->>target: 执行目标方法
+    chain->>chain: 执行 After 通知
+    chain->>chain: 执行 AfterReturning 通知
+    chain-->>Proxy: 返回结果
+    Proxy-->>Client: 返回结果
+    end
+    
+    rect rgb(232, 240, 254)
+    Note over Client,target: LightSSM 执行流程
+    Client->>Proxy: 调用方法
+    Proxy->>Proxy: 查找匹配的 Advisor
+    Proxy->>Proxy: 执行 Before 通知
+    Proxy->>target: 执行目标方法
+    Proxy->>Proxy: 执行 AfterReturning 通知
+    Proxy-->>Client: 返回结果
+    end
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>3. 源码对比：JDK 动态代理</h3>
+              
+              <div class="side-by-side-code">
+                <div class="code-column">
+                  <div class="code-title code-title-spring">原生 Spring - JdkDynamicAopProxy</div>
+                  <div class="code-block-small">
+<span class="keyword">final class</span> <span class="type">JdkDynamicAopProxy</span>
+    <span class="keyword">implements</span> AopProxy, 
+    InvocationHandler {
+    
+    <span class="keyword">private final</span> AdvisedSupport advised;
+    
+    <span class="keyword">public</span> Object <span class="method">invoke</span>(
+    Object proxy, Method method, 
+    Object[] args) {
+        
+        <span class="comment">// 1. 获取拦截器链</span>
+        List&lt;MethodInterceptor&gt; 
+        interceptors = advised
+            .getInterceptorsAndDynamicMethodMatchers(
+                method, targetClass);
+        
+        <span class="comment">// 2. 创建调用链</span>
+        MethodInvocation invocation = 
+            new ReflectiveMethodInvocation(
+                proxy, target, method, 
+                args, targetClass, 
+                interceptors);
+        
+        <span class="comment">// 3. 执行调用链</span>
+        <span class="keyword">return</span> invocation.proceed();
+    }
+}
+                  </div>
+                </div>
+                
+                <div class="code-column">
+                  <div class="code-title code-title-light">LightSSM - JdkDynamicAopProxy</div>
+                  <div class="code-block-small">
+<span class="keyword">public class</span> <span class="type">JdkDynamicAopProxy</span>
+    <span class="keyword">implements</span> InvocationHandler {
+    
+    <span class="keyword">private</span> Object target;
+    <span class="keyword">private</span> List&lt;Advisor&gt; advisors;
+    
+    <span class="keyword">public</span> Object <span class="method">invoke</span>(
+    Object proxy, Method method, 
+    Object[] args) {
+        
+        <span class="comment">// 1. 查找匹配的 Advisor</span>
+        List&lt;Advisor&gt; matched = 
+            findMatchedAdvisors(method);
+        
+        <span class="comment">// 2. 执行 Before 通知</span>
+        <span class="keyword">for</span> (Advisor advisor : matched) {
+            advisor.getBeforeAdvice()
+                .before(method, args);
+        }
+        
+        <span class="comment">// 3. 执行目标方法</span>
+        Object result = method
+            .invoke(target, args);
+        
+        <span class="comment">// 4. 执行 AfterReturning 通知</span>
+        <span class="keyword">for</span> (Advisor advisor : matched) {
+            advisor.getAfterAdvice()
+                .afterReturning(result);
+        }
+        
+        <span class="keyword">return</span> result;
+    }
+}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="insight-box">
+                <h4>💡 AOP 本质洞察</h4>
+                <p><strong>AOP 的核心就三件事</strong>：1. <strong>在哪里拦截</strong>（Pointcut + AspectJ 表达式），2. <strong>用什么代理</strong>（JDK 接口代理 vs CGLIB 子类代理），3. <strong>执行什么逻辑</strong>（Before/After/Around 通知）。原生 Spring 的复杂性在于支持多种通知类型、Advisor 链管理、暴露连接点信息等高级特性。LightSSM 剥离了这些复杂性，让你看到 AOP 的骨架：<strong>代理 + 拦截 = AOP</strong>。</p>
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>4. 通知类型对比</h3>
+              
+              <div class="mermaid">
+flowchart LR
+    subgraph Spring["原生 Spring 通知类型"]
+        A1["Before<br/>前置通知"] 
+        A2["After<br/>后置通知"]
+        A3["AfterReturning<br/>返回通知"]
+        A4["AfterThrowing<br/>异常通知"]
+        A5["Around<br/>环绕通知"]
+    end
+    
+    subgraph Light["LightSSM 通知类型"]
+        B1["Before<br/>前置通知"]
+        B2["After<br/>后置通知"]
+        B3["AfterReturning<br/>返回通知"]
+    end
+    
+    style A1 fill:#e8f0fe,stroke:#667eea
+    style A2 fill:#fff3cd,stroke:#ffc107
+    style A3 fill:#d4edda,stroke:#28a745
+    style A4 fill:#f8d7da,stroke:#dc3545
+    style A5 fill:#ffe6d9,stroke:#ff9a56
+    style B1 fill:#e8f0fe,stroke:#667eea
+    style B2 fill:#fff3cd,stroke:#ffc107
+    style B3 fill:#d4edda,stroke:#28a745
+              </div>
+            </div>
+
+            <div class="highlight-box">
+              <h4>🎯 面试核心：AOP 的本质</h4>
+              <ul>
+                <li><strong>AOP 的本质</strong>：面向切面编程，将横切关注点（日志、事务、权限）与业务逻辑分离</li>
+                <li><strong>动态代理的本质</strong>：在运行时创建目标对象的代理，在方法调用前后织入通知</li>
+                <li><strong>JDK 代理 vs CGLIB</strong>：JDK 基于接口（InvocationHandler），CGLIB 基于继承（MethodInterceptor）</li>
+                <li><strong>Advisor 链的执行顺序</strong>：按照 order 排序，Before 正序执行，After 逆序执行</li>
+                <li><strong>Around 通知的威力</strong>：可以控制是否执行目标方法，可以修改返回值</li>
+              </ul>
+            </div>
+
           </div>
         </div>
       </div>

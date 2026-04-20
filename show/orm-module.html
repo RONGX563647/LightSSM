@@ -479,6 +479,234 @@
             </div>
           </div>
         </div>
+
+        <div class="flip-card-back">
+          <div class="flip-hint">🔄 点击返回</div>
+          <div class="column-title">深度对比</div>
+
+          <div class="section">
+            <h3>📊 详细对比：原生 MyBatis vs LightSSM 整合版</h3>
+            
+            <h4>1. 核心组件架构对比</h4>
+            <div class="comparison-table-wrapper">
+              <table class="comparison-table">
+                <thead>
+                  <tr>
+                    <th>组件</th>
+                    <th>原生 MyBatis</th>
+                    <th>LightSSM 整合版</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>SqlSessionFactory</strong></td>
+                    <td>
+                      <code>SqlSessionFactoryBuilder</code><br/>
+                      解析配置文件构建工厂<br/>
+                      <small>• 解析 mybatis-config.xml<br/>• 加载 Mapper XML<br/>• 单例模式，线程安全</small>
+                    </td>
+                    <td>
+                      <code>手动创建</code><br/>
+                      简化配置，直接注入<br/>
+                      <small>• 由 IOC 容器管理<br/>• 省略 XML 配置<br/>• 代码方式配置</small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Executor</strong></td>
+                    <td>
+                      <code>SimpleExecutor/ReuseExecutor</code><br/>
+                      执行 SQL，管理缓存<br/>
+                      <small>• 一级缓存（SqlSession 级别）<br/>• 二级缓存（Mapper 级别）<br/>• 支持插件拦截</small>
+                    </td>
+                    <td>
+                      <code>SimpleExecutor</code><br/>
+                      直接执行 JDBC<br/>
+                      <small>• 无二级缓存<br/>• 简化版本<br/>• 无插件支持</small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>StatementHandler</strong></td>
+                    <td>
+                      <code>PreparedStatementHandler</code><br/>
+                      创建和设置 PreparedStatement<br/>
+                      <small>• 参数设置（ParameterHandler）<br/>• 结果集处理（ResultSetHandler）<br/>• 支持 TypeHandler</small>
+                    </td>
+                    <td>
+                      <code>直接封装</code><br/>
+                      简化参数设置流程<br/>
+                      <small>• 简化 TypeHandler<br/>• 直接 JDBC 调用</small>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>2. SQL 执行流程对比</h3>
+            
+            <div class="mermaid">
+sequenceDiagram
+    participant User as 调用代码
+    participant MP as MapperProxy
+    participant SS as SqlSession
+    participant EX as Executor
+    participant SH as StatementHandler
+    participant RH as ResultSetHandler
+    
+    rect rgb(255, 248, 245)
+    Note over User,RH: 原生 MyBatis 流程
+    User->>MP: userDao.findById(1L)
+    MP->>SS: sqlSession.selectOne("findById", 1L)
+    SS->>EX: executor.query(ms, parameter)
+    EX->>SH: statementHandler.prepare(conn)
+    SH->>SH: statementHandler.parameterize(stmt)
+    EX->>SH: statementHandler.query(stmt)
+    SH->>RH: resultSetHandler.handleResultSets()
+    RH-->>SH: List~User~
+    SH-->>EX: 查询结果
+    EX-->>SS: 查询结果
+    SS-->>MP: User 对象
+    MP-->>User: 返回 User 对象
+    end
+    
+    rect rgb(232, 240, 254)
+    Note over User,RH: LightSSM 流程
+    User->>MP: userDao.findById(1L)
+    MP->>SS: sqlSession.selectOne("findById", 1L)
+    SS->>EX: executor.query(...)
+    EX->>EX: 直接 JDBC 调用
+    EX-->>SS: 查询结果
+    SS-->>MP: User 对象
+    MP-->>User: 返回 User 对象
+    end
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>3. 源码对比：Executor 执行器</h3>
+            
+            <div class="side-by-side-code">
+              <div class="code-column">
+                <div class="code-title code-title-spring">原生 MyBatis - BaseExecutor</div>
+                <div class="code-block-small">
+<span class="keyword">public abstract</span> <span class="keyword">class</span> <span class="type">BaseExecutor</span> 
+    <span class="keyword">implements</span> Executor {
+    
+    <span class="comment">// 一级缓存</span>
+    <span class="keyword">protected</span> PermittedCache cache;
+    
+    <span class="comment">// 事务管理</span>
+    <span class="keyword">protected</span> Transaction transaction;
+    
+    <span class="keyword">public</span> List&lt;E&gt; <span class="method">query</span>(
+    MappedStatement ms, Object parameter) {
+        
+        <span class="comment">// 1. 创建 CacheKey</span>
+        CacheKey key = createCacheKey(...);
+        
+        <span class="comment">// 2. 从一级缓存查找</span>
+        List&lt;E&gt; list = (List&lt;E&gt;) cache
+            .getObject(key);
+        
+        <span class="keyword">if</span> (list == <span class="keyword">null</span>) {
+            <span class="comment">// 3. 缓存未命中，查询数据库</span>
+            list = queryFromDatabase(
+                ms, parameter, key);
+        }
+        <span class="keyword">return</span> list;
+    }
+    
+    <span class="keyword">protected abstract</span> List&lt;E&gt; 
+    <span class="method">queryFromDatabase</span>(...);
+}
+                </div>
+              </div>
+              
+              <div class="code-column">
+                <div class="code-title code-title-light">LightSSM - SimpleExecutor</div>
+                <div class="code-block-small">
+<span class="keyword">public class</span> <span class="type">SimpleExecutor</span> 
+    <span class="keyword">implements</span> Executor {
+    
+    <span class="keyword">private</span> Configuration configuration;
+    <span class="keyword">private</span> Connection connection;
+    
+    <span class="keyword">public</span> List&lt;E&gt; <span class="method">query</span>(
+    MappedStatement ms, Object parameter) {
+        
+        <span class="comment">// 1. 获取 SQL</span>
+        String sql = ms.getSql();
+        
+        <span class="comment">// 2. 创建 PreparedStatement</span>
+        PreparedStatement stmt = connection
+            .prepareStatement(sql);
+        
+        <span class="comment">// 3. 设置参数</span>
+        setParameters(stmt, parameter);
+        
+        <span class="comment">// 4. 执行查询</span>
+        ResultSet rs = stmt
+            .executeQuery();
+        
+        <span class="comment">// 5. 处理结果集</span>
+        <span class="keyword">return</span> handleResultSet(rs);
+    }
+}
+                </div>
+              </div>
+            </div>
+            
+            <div class="insight-box">
+              <h4>💡 架构设计洞察</h4>
+              <p><strong>原生 MyBatis 的强大在于缓存机制和插件系统</strong>：一级缓存、二级缓存、插件拦截器等。而 <strong>LightSSM 的精髓在于理解本质</strong>：ORM 的核心就是"SQL 执行 + 结果集映射"。通过手写简化版，你能清晰看到 MyBatis 是如何将 JDBC 封装成 ORM 框架的。</p>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>4. MyBatis 整合到 Spring 的关键</h3>
+            
+            <div class="mermaid">
+flowchart TB
+    A["启动 Spring 容器"] --> B["扫描 Mapper 接口"]
+    B --> C["创建 MapperFactoryBean"]
+    C --> D["FactoryBean.getObject()"]
+    D --> E["创建 JdkDynamicAopProxy"]
+    E --> F["代理对象注入 Spring 容器"]
+    F --> G["调用 Mapper 方法"]
+    G --> H["InvocationHandler.invoke()"]
+    H --> I["执行 SqlSession 方法"]
+    I --> J["返回结果"]
+    
+    style A fill:#ff9a56,color:#fff
+    style F fill:#e8f0fe,stroke:#667eea
+    style J fill:#4caf50,color:#fff
+            </div>
+            
+            <div class="explanation-box">
+              <h4>📝 整合核心步骤</h4>
+              <ol>
+                <li><strong>扫描包路径</strong>：找到所有 Mapper 接口（@Mapper 扫描）</li>
+                <li><strong>创建 FactoryBean</strong>：为每个 Mapper 创建 MapperFactoryBean</li>
+                <li><strong>创建代理对象</strong>：FactoryBean.getObject() 返回 JdkDynamicAopProxy 代理</li>
+                <li><strong>注入 SqlSession</strong>：代理对象内部持有 SqlSession 引用</li>
+                <li><strong>方法调用</strong>：调用 Mapper 方法时，InvocationHandler.invoke() 执行 SqlSession 方法</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="highlight-box">
+            <h4>🎯 面试核心：MyBatis 的本质</h4>
+            <ul>
+              <li><strong>ORM 的本质</strong>：将 SQL 执行和结果集映射封装成对象操作</li>
+              <li><strong>Mapper 接口为什么不需要实现类？</strong>：使用 JDK 动态代理创建代理对象</li>
+              <li><strong>一级缓存的作用</strong>：同一个 SqlSession 中，相同 SQL 不重复查询</li>
+              <li><strong>二级缓存的作用</strong>：多个 SqlSession 共享缓存（需要手动开启）</li>
+              <li><strong>插件原理</strong>：基于责任链模式，拦截 Executor、StatementHandler 等方法</li>
+            </ul>
+          </div>
+
+        </div>
       </div>
     </div>
 
