@@ -1,499 +1,501 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ORM 模块架构 - LightSSM</title>
     <script src="mermaid.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
-            background: #fafafa;
-            line-height: 1.6;
-            color: #333;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+        background: #fafafa;
+        line-height: 1.6;
+        color: #333;
+      }
+      .nav {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 140px;
+        height: 100vh;
+        background: white;
+        border-right: 1px solid #e9ecef;
+        padding: 15px 0;
+        overflow-y: auto;
+      }
+      .nav ul {
+        list-style: none;
+      }
+      .nav li {
+        margin-bottom: 5px;
+      }
+      .nav a {
+        display: block;
+        color: #555;
+        text-decoration: none;
+        font-size: 0.8em;
+        padding: 6px 12px;
+        transition: all 0.3s;
+        font-weight: 500;
+        border-left: 3px solid transparent;
+      }
+      .nav a:hover {
+        background: #fff8f5;
+        color: #ff9a56;
+        border-left-color: #ff9a56;
+      }
+      .nav a.active {
+        background: #fff8f5;
+        color: #ff9a56;
+        border-left-color: #ff9a56;
+      }
+      .nav-home {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-home a {
+        color: #ff9a56;
+        font-weight: 600;
+      }
+      .header {
+        margin-left: 140px;
+        background: linear-gradient(135deg, #ff9a56 0%, #ffb380 100%);
+        color: white;
+        padding: 20px 30px;
+      }
+      .container {
+        max-width: calc(100% - 140px);
+        margin-left: 140px;
+        padding: 30px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+      }
+      .column {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f0f0f0;
+      }
+      .column-title {
+        font-size: 1.4em;
+        color: #ff9a56;
+        border-left: 3px solid #ff9a56;
+        padding-left: 12px;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+      .flip-card {
+        background-color: transparent;
+        perspective: 1000px;
+        height: 100%;
+        cursor: pointer;
+      }
+      .flip-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: left;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+      }
+      .flip-card.flipped .flip-card-inner {
+        transform: rotateY(180deg);
+      }
+      .flip-card-front,
+      .flip-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f0f0f0;
+        overflow-y: auto;
+        padding: 25px;
+      }
+      .flip-card-front {
+        background: white;
+      }
+      .flip-card-back {
+        background: white;
+        transform: rotateY(180deg);
+      }
+      .flip-hint {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        background: #fff0e6;
+        color: #ff9a56;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 500;
+      }
+      .mermaid {
+        background: #fafafa;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+        text-align: center;
+        white-space: pre-wrap;
+      }
+      .mermaid code {
+        white-space: pre;
+      }
+      .code-block {
+        background: #f8f9fa;
+        color: #333;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-x: auto;
+        margin: 10px 0;
+        border: 1px solid #e9ecef;
+        white-space: pre;
+      }
+      .code-block .keyword {
+        color: #d73a49;
+        font-weight: bold;
+      }
+      .code-block .type {
+        color: #005cc5;
+      }
+      .code-block .string {
+        color: #032f62;
+      }
+      .code-block .comment {
+        color: #6a737d;
+        font-style: italic;
+      }
+      .code-block .method {
+        color: #6f42c1;
+      }
+      .comparison-box {
+        background: #fff8f5;
+        border-left: 3px solid #ff9a56;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 0 6px 6px 0;
+      }
+      .comparison-box h4 {
+        color: #ff9a56;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+      }
+      .comparison-box p {
+        margin: 8px 0;
+        font-size: 0.95em;
+      }
+      .comparison-box ul {
+        margin-left: 20px;
+        margin-top: 8px;
+      }
+      .comparison-box li {
+        margin: 5px 0;
+        font-size: 0.95em;
+      }
+      .section {
+        margin-bottom: 25px;
+      }
+      .section h3 {
+        color: #555;
+        margin: 20px 0 10px 0;
+        font-size: 1.2em;
+        font-weight: 600;
+      }
+      .tag {
+        display: inline-block;
+        padding: 3px 10px;
+        background: #fff0e6;
+        color: #ff9a56;
+        border-radius: 12px;
+        font-size: 0.85em;
+        margin: 3px;
+        font-weight: 500;
+      }
+      @media (max-width: 1200px) {
+        .container {
+          grid-template-columns: 1fr;
         }
-        .nav {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 180px;
-            height: 100vh;
-            background: white;
-            border-right: 1px solid #e9ecef;
-            padding: 15px 0;
-            overflow-y: auto;
-        }
-        .nav ul {
-            list-style: none;
-        }
-        .nav li {
-            margin-bottom: 5px;
-        }
-        .nav a {
-            display: block;
-            color: #555;
-            text-decoration: none;
-            font-size: 0.85em;
-            padding: 8px 15px;
-            transition: all 0.3s;
-            font-weight: 500;
-            border-left: 3px solid transparent;
-        }
-        .nav a:hover {
-            background: #fff8f5;
-            color: #ff9a56;
-            border-left-color: #ff9a56;
-        }
-        .nav a.active {
-            background: #fff8f5;
-            color: #ff9a56;
-            border-left-color: #ff9a56;
-        }
-        .header {
-            margin-left: 180px;
-            background: linear-gradient(135deg, #ff9a56 0%, #ffb380 100%);
-            color: white;
-            padding: 20px 30px;
-        }
-        .container { 
-            max-width: calc(100% - 180px);
-            margin-left: 180px;
-            padding: 30px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-        .column {
-            background: white;
-            border-radius: 8px;
-            padding: 25px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid #f0f0f0;
-        }
-        .column-title {
-            font-size: 1.4em;
-            color: #ff9a56;
-            border-left: 3px solid #ff9a56;
-            padding-left: 12px;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        .flip-card {
-            background-color: transparent;
-            perspective: 1000px;
-            height: 100%;
-            cursor: pointer;
-        }
-        .flip-card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: left;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-        .flip-card.flipped .flip-card-inner {
-            transform: rotateY(180deg);
-        }
-        .flip-card-front, .flip-card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid #f0f0f0;
-            overflow-y: auto;
-            padding: 25px;
-        }
-        .flip-card-front {
-            background: white;
-        }
-        .flip-card-back {
-            background: white;
-            transform: rotateY(180deg);
-        }
-        .flip-hint {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: #fff0e6;
-            color: #ff9a56;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-        .mermaid {
-            background: #fafafa;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            text-align: center;
-            white-space: pre-wrap;
-        }
-        .mermaid code {
-            white-space: pre;
-        }
-        .code-block {
-            background: #f8f9fa;
-            color: #333;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            overflow-x: auto;
-            margin: 10px 0;
-            border: 1px solid #e9ecef;
-            white-space: pre;
-        }
-        .code-block .keyword { color: #d73a49; font-weight: bold; }
-        .code-block .type { color: #005cc5; }
-        .code-block .string { color: #032f62; }
-        .code-block .comment { color: #6a737d; font-style: italic; }
-        .code-block .method { color: #6f42c1; }
-        .comparison-box {
-            background: #fff8f5;
-            border-left: 3px solid #ff9a56;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 6px 6px 0;
-        }
-        .comparison-box h4 { 
-            color: #ff9a56; 
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-        .comparison-box p { margin: 8px 0; font-size: 0.95em; }
-        .comparison-box ul { margin-left: 20px; margin-top: 8px; }
-        .comparison-box li { margin: 5px 0; font-size: 0.95em; }
-        .section { margin-bottom: 25px; }
-        .section h3 { 
-            color: #555; 
-            margin: 20px 0 10px 0; 
-            font-size: 1.2em;
-            font-weight: 600;
-        }
-        .tag {
-            display: inline-block;
-            padding: 3px 10px;
-            background: #fff0e6;
-            color: #ff9a56;
-            border-radius: 12px;
-            font-size: 0.85em;
-            margin: 3px;
-            font-weight: 500;
-        }
-        @media (max-width: 1200px) { 
-            .container { grid-template-columns: 1fr; } 
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="nav">
-        <ul>
-            <li><a href="ioc-container.html">IoC 容器</a></li>
-            <li><a href="mvc-framework.html">MVC 框架</a></li>
-            <li><a href="orm-module.html" class="active">ORM 模块</a></li>
-            <li><a href="core-difficulties.html">核心难点</a></li>
-            <li><a href="interview-topics.html">面试考点</a></li>
-        </ul>
+      <ul>
+        <li class="nav-home"><a href="index.html">← 返回主页</a></li>
+        <li><a href="ioc-container.html">IoC 容器</a></li>
+        <li><a href="mvc-framework.html">MVC 框架</a></li>
+        <li><a href="orm-module.html" class="active">ORM 模块</a></li>
+        <li><a href="core-difficulties.html">核心难点</a></li>
+        <li><a href="interview-topics.html">面试考点</a></li>
+      </ul>
     </div>
 
-    <div class="header">
-    </div>
+    <div class="header"></div>
 
     <div class="container">
-        <!-- 第一列：核心组件与职责 -->
-        <div class="column">
-            <div class="column-title">核心组件与职责</div>
-            
-            <div class="section">
-                <h3>核心设计模式</h3>
-                <div>
-                    <span class="tag">门面模式</span>
-                    <span class="tag">模板方法</span>
-                    <span class="tag">代理模式</span>
-                    <span class="tag">建造者模式</span>
-                </div>
-            </div>
+      <!-- 第一列：核心组件与职责 -->
+      <div class="column">
+        <div class="column-title">核心组件与职责</div>
 
-            <div class="section">
-                <h3>ORM 组件职责</h3>
-                <div class="comparison-box">
-                    <h4>SqlSession</h4>
-                    <p><strong>职责：</strong>数据库会话门面，提供统一的数据库操作接口。</p>
-                    <p><strong>类比：</strong>类似于银行的柜台窗口，客户通过窗口办理各种业务。</p>
-                </div>
-
-                <div class="comparison-box">
-                    <h4>Executor</h4>
-                    <p><strong>职责：</strong>SQL 执行器，负责 SQL 的实际执行，包括查询、更新、事务管理等。</p>
-                    <p><strong>实现：</strong>BaseExecutor 使用模板方法模式定义执行流程。</p>
-                </div>
-
-                <div class="comparison-box">
-                    <h4>StatementHandler</h4>
-                    <p><strong>职责：</strong>SQL 语句处理器，负责创建 PreparedStatement、设置参数、执行查询。</p>
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>SQL 执行 8 步曲</h3>
-                <div class="comparison-box">
-                    <ul>
-                        <li><strong>1.</strong> Mapper 接口方法调用</li>
-                        <li><strong>2.</strong> MapperProxy 代理拦截</li>
-                        <li><strong>3.</strong> SqlSession.selectOne()</li>
-                        <li><strong>4.</strong> Executor.query()</li>
-                        <li><strong>5.</strong> StatementHandler.prepare()</li>
-                        <li><strong>6.</strong> ParameterHandler.setParameters()</li>
-                        <li><strong>7.</strong> JDBC 执行查询</li>
-                        <li><strong>8.</strong> ResultSetHandler 转换结果</li>
-                    </ul>
-                </div>
-            </div>
+        <div class="section">
+          <h3>核心设计模式</h3>
+          <div>
+            <span class="tag">门面模式</span>
+            <span class="tag">模板方法</span>
+            <span class="tag">代理模式</span>
+            <span class="tag">建造者模式</span>
+          </div>
         </div>
 
-        <!-- 第二列：可翻转的代码/图表卡片 -->
-        <div class="flip-card" onclick="this.classList.toggle('flipped')">
-            <div class="flip-card-inner">
-                <!-- 正面：代码实现 -->
-                <div class="flip-card-front">
-                    <div class="flip-hint">🔄 点击翻转</div>
-                    <div class="column-title">LightSSM 源码实现</div>
-                    
-                    <div class="section">
-                        <h3>1. Executor 模板方法</h3>
-                        <div class="code-block">
-<span class="comment">// 模板方法：定义查询流程</span>
-<span class="keyword">class</span> <span class="type">BaseExecutor</span> {
-    query(ms, parameter, rowBounds) {
-        <span class="comment">// 1. 获取 BoundSql</span>
-        boundSql = ms.getBoundSql(parameter)
-        
-        <span class="comment">// 2. 创建 CacheKey（一级缓存）</span>
-        key = createCacheKey(ms, parameter, rowBounds, boundSql)
-        
-        <span class="comment">// 3. 查询本地缓存</span>
-        cachedResult = localCache.get(key)
-        <span class="keyword">if</span> cachedResult != <span class="keyword">null</span>:
-            <span class="keyword">return</span> cachedResult
-        
-        <span class="comment">// 4. 执行数据库查询（子类实现）</span>
-        result = doQuery(ms, parameter, rowBounds, boundSql)
-        
-        <span class="comment">// 5. 缓存结果</span>
-        localCache.put(key, result)
-        <span class="keyword">return</span> result
-    }
-    
-    <span class="keyword">abstract</span> doQuery(ms, parameter, rowBounds, boundSql)
-}
+        <div class="section">
+          <h3>ORM 组件职责</h3>
+          <div class="comparison-box">
+            <h4>SqlSession</h4>
+            <p>
+              <strong>职责：</strong>数据库会话门面，提供统一的数据库操作接口。
+            </p>
+            <p>
+              <strong>类比：</strong
+              >类似于银行的柜台窗口，客户通过窗口办理各种业务。
+            </p>
+          </div>
 
-<span class="comment">// 简单执行器实现</span>
-<span class="keyword">class</span> <span class="type">SimpleExecutor</span> <span class="keyword">extends</span> <span class="type">BaseExecutor</span> {
-    doQuery(ms, parameter, rowBounds, boundSql) {
-        result = <span class="keyword">new</span> List()
-        conn = transaction.getConnection()
-        
-        sh = newStatementHandler(ms, boundSql)
-        stmt = sh.prepare(conn)
-        sh.parameterize(stmt)
-        result = sh.query(stmt)
-        <span class="keyword">return</span> result
-    }
-}
-                        </div>
-                    </div>
+          <div class="comparison-box">
+            <h4>Executor</h4>
+            <p>
+              <strong>职责：</strong>SQL 执行器，负责 SQL
+              的实际执行，包括查询、更新、事务管理等。
+            </p>
+            <p>
+              <strong>实现：</strong>BaseExecutor 使用模板方法模式定义执行流程。
+            </p>
+          </div>
 
-                    <div class="section">
-                        <h3>2. Mapper 代理机制</h3>
-                        <div class="code-block">
-<span class="comment">// Mapper 代理：动态代理实现</span>
-<span class="keyword">class</span> <span class="type">MapperProxy</span> <span class="keyword">implements</span> <span class="type">InvocationHandler</span> {
-    sqlSession = SqlSession
-    mapperInterface = Class
-    methodCache = Map&lt;Method, MapperMethod&gt;
-    
-    invoke(proxy, method, args) {
-        <span class="keyword">if</span> method.declaringClass == Object.class:
-            <span class="keyword">return</span> method.invoke(<span class="keyword">this</span>, args)
-        
-        mapperMethod = methodCache.computeIfAbsent(method)
-        <span class="keyword">return</span> mapperMethod.execute(sqlSession, args)
-    }
-}
+          <div class="comparison-box">
+            <h4>StatementHandler</h4>
+            <p>
+              <strong>职责：</strong>SQL 语句处理器，负责创建
+              PreparedStatement、设置参数、执行查询。
+            </p>
+          </div>
+        </div>
 
-<span class="keyword">class</span> <span class="type">MapperMethod</span> {
-    execute(sqlSession, args) {
-        <span class="keyword">switch</span> (command.type) {
-            <span class="keyword">case</span> SELECT:
+        <div class="section">
+          <h3>SQL 执行 8 步曲</h3>
+          <div class="comparison-box">
+            <ul>
+              <li><strong>1.</strong> Mapper 接口方法调用</li>
+              <li><strong>2.</strong> MapperProxy 代理拦截</li>
+              <li><strong>3.</strong> SqlSession.selectOne()</li>
+              <li><strong>4.</strong> Executor.query()</li>
+              <li><strong>5.</strong> StatementHandler.prepare()</li>
+              <li><strong>6.</strong> ParameterHandler.setParameters()</li>
+              <li><strong>7.</strong> JDBC 执行查询</li>
+              <li><strong>8.</strong> ResultSetHandler 转换结果</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第二列：可翻转的代码/图表卡片 -->
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-card-inner">
+          <!-- 正面：代码实现 -->
+          <div class="flip-card-front">
+            <div class="flip-hint">🔄 点击翻转</div>
+            <div class="column-title">LightSSM 源码实现</div>
+
+            <div class="section">
+              <h3>1. Executor 模板方法</h3>
+              <div class="code-block">
+                <span class="comment">// 模板方法：定义查询流程</span>
+                <span class="keyword">class</span>
+                <span class="type">BaseExecutor</span> { query(ms, parameter,
+                rowBounds) {
+                <span class="comment">// 1. 获取 BoundSql</span>
+                boundSql = ms.getBoundSql(parameter)
+
+                <span class="comment">// 2. 创建 CacheKey（一级缓存）</span>
+                key = createCacheKey(ms, parameter, rowBounds, boundSql)
+
+                <span class="comment">// 3. 查询本地缓存</span>
+                cachedResult = localCache.get(key)
+                <span class="keyword">if</span> cachedResult !=
+                <span class="keyword">null</span>:
+                <span class="keyword">return</span> cachedResult
+
+                <span class="comment">// 4. 执行数据库查询（子类实现）</span>
+                result = doQuery(ms, parameter, rowBounds, boundSql)
+
+                <span class="comment">// 5. 缓存结果</span>
+                localCache.put(key, result)
+                <span class="keyword">return</span> result }
+
+                <span class="keyword">abstract</span> doQuery(ms, parameter,
+                rowBounds, boundSql) }
+
+                <span class="comment">// 简单执行器实现</span>
+                <span class="keyword">class</span>
+                <span class="type">SimpleExecutor</span>
+                <span class="keyword">extends</span>
+                <span class="type">BaseExecutor</span> { doQuery(ms, parameter,
+                rowBounds, boundSql) { result =
+                <span class="keyword">new</span> List() conn =
+                transaction.getConnection() sh = newStatementHandler(ms,
+                boundSql) stmt = sh.prepare(conn) sh.parameterize(stmt) result =
+                sh.query(stmt) <span class="keyword">return</span> result } }
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>2. Mapper 代理机制</h3>
+              <div class="code-block">
+                <span class="comment">// Mapper 代理：动态代理实现</span>
+                <span class="keyword">class</span>
+                <span class="type">MapperProxy</span>
+                <span class="keyword">implements</span>
+                <span class="type">InvocationHandler</span> { sqlSession =
+                SqlSession mapperInterface = Class methodCache = Map&lt;Method,
+                MapperMethod&gt; invoke(proxy, method, args) {
+                <span class="keyword">if</span> method.declaringClass ==
+                Object.class:
+                <span class="keyword">return</span> method.invoke(<span
+                  class="keyword"
+                  >this</span
+                >, args) mapperMethod = methodCache.computeIfAbsent(method)
+                <span class="keyword">return</span>
+                mapperMethod.execute(sqlSession, args) } }
+
+                <span class="keyword">class</span>
+                <span class="type">MapperMethod</span> { execute(sqlSession,
+                args) { <span class="keyword">switch</span> (command.type) {
+                <span class="keyword">case</span> SELECT:
                 <span class="keyword">if</span> method.returnsList():
-                    <span class="keyword">return</span> sqlSession.selectList(command.name, args)
+                <span class="keyword">return</span>
+                sqlSession.selectList(command.name, args)
                 <span class="keyword">else</span>:
-                    <span class="keyword">return</span> sqlSession.selectOne(command.name, args)
-            <span class="keyword">case</span> INSERT:
-                <span class="keyword">return</span> sqlSession.insert(command.name, args)
-            <span class="keyword">case</span> UPDATE:
-                <span class="keyword">return</span> sqlSession.update(command.name, args)
-            <span class="keyword">case</span> DELETE:
-                <span class="keyword">return</span> sqlSession.delete(command.name, args)
-        }
-    }
-}
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <h3>3. 结果集映射</h3>
-                        <div class="code-block">
-<span class="comment">// 结果集处理器：ResultSet -&gt; Java 对象</span>
-<span class="keyword">class</span> <span class="type">DefaultResultSetHandler</span> {
-    handleResultSets(stmt) {
-        result = <span class="keyword">new</span> List()
-        rs = stmt.getResultSet()
-        
-        <span class="keyword">while</span> rs.next():
-            resultObject = createResultObject(rs)
-            applyAutomaticMappings(resultObject, rs)
-            applyPropertyMappings(resultObject, rs)
-            result.add(resultObject)
-        
-        <span class="keyword">return</span> result
-    }
-    
-    applyAutomaticMappings(obj, rs) {
-        meta = rs.getMetaData()
-        <span class="keyword">for</span> i <span class="keyword">in</span> 1..meta.getColumnCount():
-            columnName = meta.getColumnName(i)
-            propertyName = camelCase(columnName)
-            th = typeHandlerRegistry.getTypeHandler(rs.getObject(columnName).class)
-            value = th.getResult(rs, columnName)
-            setProperty(obj, propertyName, value)
-    }
-}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 背面：图表 -->
-                <div class="flip-card-back">
-                    <div class="flip-hint">🔄 点击返回</div>
-                    <div class="column-title">架构图表</div>
-                    
-                    <div class="section">
-                        <h3>架构类图</h3>
-                        <div class="mermaid">
-classDiagram
-    class SqlSession {
-        &lt;&lt;interface&gt;&gt;
-        +selectOne(statement, param)
-        +selectList(statement, param)
-        +insert(statement, param)
-        +update(statement, param)
-        +delete(statement, param)
-        +getMapper(mapperClass)
-        +commit()
-        +rollback()
-        +close()
-    }
-    
-    class DefaultSqlSession {
-        -configuration
-        -executor
-        -autoCommit
-        +selectOne(statement, param)
-        +selectList(statement, param)
-        +getMapper(mapperClass)
-        +commit()
-        +rollback()
-        +close()
-    }
-    
-    class Executor {
-        &lt;&lt;interface&gt;&gt;
-        +update(ms, param)
-        +query(ms, param, rowBounds)
-        +commit(required)
-        +rollback(required)
-        +close(rollback)
-    }
-    
-    class BaseExecutor {
-        #configuration
-        #transaction
-        #query(ms, param, rowBounds)
-        #doQuery(ms, param, rowBounds, boundSql)
-        #doUpdate(ms, param)
-    }
-    
-    class SimpleExecutor {
-        +doQuery(ms, param, rowBounds, boundSql)
-        +doUpdate(ms, param)
-    }
-    
-    SqlSession &lt;|-- DefaultSqlSession
-    Executor &lt;|-- BaseExecutor
-    BaseExecutor &lt;|-- SimpleExecutor
-    DefaultSqlSession o-- Executor
-    
-    style SqlSession fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
-    style Executor fill:#fff8f5,stroke:#ff9a56
-    style DefaultSqlSession fill:#fff0e6,stroke:#ff9a56
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <h3>SQL 查询时序</h3>
-                        <div class="mermaid">
-sequenceDiagram
-    participant User as 调用代码
-    participant MP as MapperProxy
-    participant SS as SqlSession
-    participant EX as Executor
-    participant SH as StatementHandler
-    participant RH as ResultSetHandler
-    
-    User->>MP: userDao.findById(1L)
-    MP->>SS: sqlSession.selectOne("findById", 1L)
-    SS->>EX: executor.query(ms, parameter)
-    EX->>SH: statementHandler.prepare(conn)
-    SH->>SH: statementHandler.parameterize(stmt)
-    EX->>SH: statementHandler.query(stmt)
-    SH->>RH: resultSetHandler.handleResultSets()
-    RH-->>SH: List~User~
-    SH-->>EX: 查询结果
-    EX-->>SS: 查询结果
-    SS-->>MP: User 对象
-    MP-->>User: 返回 User 对象
-    
-    style SS fill:#fffbf7,stroke:#ff9a56
-    style EX fill:#fff0e6,stroke:#ff9a56
-                        </div>
-                    </div>
-                </div>
+                <span class="keyword">return</span>
+                sqlSession.selectOne(command.name, args)
+                <span class="keyword">case</span> INSERT:
+                <span class="keyword">return</span>
+                sqlSession.insert(command.name, args)
+                <span class="keyword">case</span> UPDATE:
+                <span class="keyword">return</span>
+                sqlSession.update(command.name, args)
+                <span class="keyword">case</span> DELETE:
+                <span class="keyword">return</span>
+                sqlSession.delete(command.name, args) } } }
+              </div>
             </div>
+
+            <div class="section">
+              <h3>3. 结果集映射</h3>
+              <div class="code-block">
+                <span class="comment"
+                  >// 结果集处理器：ResultSet -&gt; Java 对象</span
+                >
+                <span class="keyword">class</span>
+                <span class="type">DefaultResultSetHandler</span> {
+                handleResultSets(stmt) { result =
+                <span class="keyword">new</span> List() rs = stmt.getResultSet()
+
+                <span class="keyword">while</span> rs.next(): resultObject =
+                createResultObject(rs) applyAutomaticMappings(resultObject, rs)
+                applyPropertyMappings(resultObject, rs) result.add(resultObject)
+
+                <span class="keyword">return</span> result }
+                applyAutomaticMappings(obj, rs) { meta = rs.getMetaData()
+                <span class="keyword">for</span> i
+                <span class="keyword">in</span> 1..meta.getColumnCount():
+                columnName = meta.getColumnName(i) propertyName =
+                camelCase(columnName) th =
+                typeHandlerRegistry.getTypeHandler(rs.getObject(columnName).class)
+                value = th.getResult(rs, columnName) setProperty(obj,
+                propertyName, value) } }
+              </div>
+            </div>
+          </div>
+
+          <!-- 背面：图表 -->
+          <div class="flip-card-back">
+            <div class="flip-hint">🔄 点击返回</div>
+            <div class="column-title">架构图表</div>
+
+            <div class="section">
+              <h3>架构类图</h3>
+              <div class="mermaid">
+                classDiagram class SqlSession { &lt;&lt;interface&gt;&gt;
+                +selectOne(statement, param) +selectList(statement, param)
+                +insert(statement, param) +update(statement, param)
+                +delete(statement, param) +getMapper(mapperClass) +commit()
+                +rollback() +close() } class DefaultSqlSession { -configuration
+                -executor -autoCommit +selectOne(statement, param)
+                +selectList(statement, param) +getMapper(mapperClass) +commit()
+                +rollback() +close() } class Executor {
+                &lt;&lt;interface&gt;&gt; +update(ms, param) +query(ms, param,
+                rowBounds) +commit(required) +rollback(required)
+                +close(rollback) } class BaseExecutor { #configuration
+                #transaction #query(ms, param, rowBounds) #doQuery(ms, param,
+                rowBounds, boundSql) #doUpdate(ms, param) } class SimpleExecutor
+                { +doQuery(ms, param, rowBounds, boundSql) +doUpdate(ms, param)
+                } SqlSession &lt;|-- DefaultSqlSession Executor &lt;|--
+                BaseExecutor BaseExecutor &lt;|-- SimpleExecutor
+                DefaultSqlSession o-- Executor style SqlSession
+                fill:#fffbf7,stroke:#ff9a56,stroke-width:2px style Executor
+                fill:#fff8f5,stroke:#ff9a56 style DefaultSqlSession
+                fill:#fff0e6,stroke:#ff9a56
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>SQL 查询时序</h3>
+              <div class="mermaid">
+                sequenceDiagram participant User as 调用代码 participant MP as
+                MapperProxy participant SS as SqlSession participant EX as
+                Executor participant SH as StatementHandler participant RH as
+                ResultSetHandler User->>MP: userDao.findById(1L) MP->>SS:
+                sqlSession.selectOne("findById", 1L) SS->>EX: executor.query(ms,
+                parameter) EX->>SH: statementHandler.prepare(conn) SH->>SH:
+                statementHandler.parameterize(stmt) EX->>SH:
+                statementHandler.query(stmt) SH->>RH:
+                resultSetHandler.handleResultSets() RH-->>SH: List~User~
+                SH-->>EX: 查询结果 EX-->>SS: 查询结果 SS-->>MP: User 对象
+                MP-->>User: 返回 User 对象 style SS fill:#fffbf7,stroke:#ff9a56
+                style EX fill:#fff0e6,stroke:#ff9a56
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <script>
-        mermaid.initialize({ 
-            startOnLoad: true,
-            theme: 'base',
-            themeVariables: {
-                primaryColor: '#fff8f5',
-                primaryTextColor: '#333',
-                primaryBorderColor: '#ff9a56',
-                lineColor: '#ff9a56',
-                secondaryColor: '#ffe6d9',
-                tertiaryColor: '#fff0e6'
-            },
-            flowchart: { useMaxWidth: true, htmlLabels: true }
-        });
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          primaryColor: "#fff8f5",
+          primaryTextColor: "#333",
+          primaryBorderColor: "#ff9a56",
+          lineColor: "#ff9a56",
+          secondaryColor: "#ffe6d9",
+          tertiaryColor: "#fff0e6",
+        },
+        flowchart: { useMaxWidth: true, htmlLabels: true },
+      });
     </script>
-</body>
+  </body>
 </html>

@@ -1,501 +1,520 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LightSSM 架构总览</title>
     <script src="https://cdn.bootcdn.net/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
-            background: #f5f7fa;
-            line-height: 1.6;
-            color: #333;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+        background: #f5f7fa;
+        line-height: 1.6;
+        color: #333;
+      }
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+      .header p {
+        font-size: 1.2em;
+        opacity: 0.9;
+      }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px 20px;
+      }
+      .section {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+      .section h2 {
+        color: #667eea;
+        border-left: 4px solid #667eea;
+        padding-left: 15px;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+      }
+      .section h3 {
+        color: #555;
+        margin: 20px 0 10px 0;
+        font-size: 1.3em;
+      }
+      .mermaid {
+        background: #fafbfc;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      .code-block {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        overflow-x: auto;
+        margin: 15px 0;
+      }
+      .code-block .keyword {
+        color: #569cd6;
+      }
+      .code-block .type {
+        color: #4ec9b0;
+      }
+      .code-block .string {
+        color: #ce9178;
+      }
+      .code-block .comment {
+        color: #6a9955;
+      }
+      .code-block .method {
+        color: #dcdcaa;
+      }
+      .code-block .annotation {
+        color: #d16969;
+      }
+      .highlight-box {
+        background: #e8f0fe;
+        border-left: 4px solid #667eea;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
+      .highlight-box h4 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e1e5e9;
+      }
+      .card h4 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e1e5e9;
+      }
+      th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #555;
+      }
+      tr:hover {
+        background: #f8f9fa;
+      }
+      @media (max-width: 900px) {
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
         }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .header p { font-size: 1.2em; opacity: 0.9; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
-        .section {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-        .section h2 {
-            color: #667eea;
-            border-left: 4px solid #667eea;
-            padding-left: 15px;
-            margin-bottom: 20px;
-            font-size: 1.8em;
-        }
-        .section h3 { color: #555; margin: 20px 0 10px 0; font-size: 1.3em; }
-        .mermaid {
-            background: #fafbfc;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        .code-block {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            overflow-x: auto;
-            margin: 15px 0;
-        }
-        .code-block .keyword { color: #569cd6; }
-        .code-block .type { color: #4ec9b0; }
-        .code-block .string { color: #ce9178; }
-        .code-block .comment { color: #6a9955; }
-        .code-block .method { color: #dcdcaa; }
-        .code-block .annotation { color: #d16969; }
-        .highlight-box {
-            background: #e8f0fe;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        .highlight-box h4 { color: #667eea; margin-bottom: 10px; }
-        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e1e5e9;
-        }
-        .card h4 { color: #667eea; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e1e5e9; }
-        th { background: #f8f9fa; font-weight: 600; color: #555; }
-        tr:hover { background: #f8f9fa; }
-        @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h1>LightSSM 架构总览</h1>
-        <p>轻量级 Java EE 框架 - 包结构 / 组件关系 / 模块依赖</p>
+      <h1>LightSSM 架构总览</h1>
+      <p>轻量级 Java EE 框架 - 包结构 / 组件关系 / 模块依赖</p>
     </div>
 
     <div class="container">
-        <!-- 1. 包结构图 -->
-        <div class="section">
-            <h2>一、包结构图 (Package Diagram)</h2>
-            <p>LightSSM 由三大核心模块组成：IoC 容器、MVC 框架、ORM 模块，以及辅助的 AOP 切面支持。</p>
-            
-            <div class="mermaid">
-flowchart TB
-    subgraph ioc["IoC 容器模块 com.lightframework.ioc"]
-        A1["annotation<br/>@Component @Autowired @Scope"]
-        A2["beans<br/>BeanDefinition"]
-        A3["context<br/>AnnotationConfigApplicationContext"]
-        A4["core<br/>BeanFactory / DefaultListableBeanFactory"]
-        A5["exception<br/>BeansException / BeanCreationException"]
-        
-        A1 --> A3
-        A2 --> A4
-        A3 --> A4
-        A4 --> A5
-    end
-    
-    subgraph mvc["MVC 框架模块 com.lightframework.mvc"]
-        M1["annotation<br/>@RequestMapping @PathVariable"]
-        M2["core<br/>HandlerMapping / HandlerAdapter"]
-        M3["handler<br/>HandlerMethod / RequestMappingHandlerMapping"]
-        M4["servlet<br/>DispatcherServlet"]
-        M5["view<br/>ViewResolver / JsonView"]
-        
-        M1 --> M3
-        M2 --> M3
-        M3 --> M4
-        M4 --> M5
-        M2 --> M4
-    end
-    
-    subgraph orm["ORM 模块 com.lightframework.orm"]
-        O1["session<br/>SqlSession / Configuration"]
-        O2["executor<br/>Executor / SimpleExecutor"]
-        O3["statement<br/>StatementHandler"]
-        O4["mapping<br/>MappedStatement / BoundSql"]
-        O5["binding<br/>MapperProxy / MapperMethod"]
-        O6["datasource<br/>PooledDataSource"]
-        O7["type<br/>TypeHandler"]
-        O8["transaction<br/>JdbcTransaction"]
-        O9["plugin<br/>Interceptor"]
-        
-        O1 --> O2
-        O2 --> O3
-        O4 --> O2
-        O5 --> O1
-        O6 --> O2
-        O7 --> O3
-        O8 --> O2
-        O9 --> O2
-    end
-    
-    subgraph aop["AOP 模块 com.lightframework.aop"]
-        P1["annotation<br/>@Aspect @Before @After"]
-        P2["core<br/>ProxyFactory / AopProxy"]
-        P3["interceptor<br/>MethodInterceptor"]
-        P4["pointcut<br/>AspectJExpressionPointcut"]
-        
-        P1 --> P4
-        P4 --> P2
-        P3 --> P2
-    end
-    
-    IoC_C["IoC 容器层"]
-    MVC_C["MVC 框架层"]
-    ORM_C["ORM 数据层"]
-    
-    ioc --> IoC_C
-    mvc --> MVC_C
-    orm --> ORM_C
-    aop --> IoC_C
-    
-    IoC_C -. 注入 .-> MVC_C
-    IoC_C -. 注入 .-> ORM_C
-    
-    style ioc fill:#e8f0fe,stroke:#667eea
-    style mvc fill:#e6f7ed,stroke:#28a745
-    style orm fill:#fff3cd,stroke:#ffc107
-    style aop fill:#f8d7da,stroke:#dc3545
-            </div>
+      <!-- 1. 包结构图 -->
+      <div class="section">
+        <h2>一、包结构图 (Package Diagram)</h2>
+        <p>
+          LightSSM 由三大核心模块组成：IoC 容器、MVC 框架、ORM 模块，以及辅助的
+          AOP 切面支持。
+        </p>
 
-            <div class="highlight-box">
-                <h4>模块职责</h4>
-                <table>
-                    <tr><th>模块</th><th>职责</th><th>核心类</th></tr>
-                    <tr><td>IoC</td><td>Bean 生命周期管理、依赖注入、三级缓存</td><td>DefaultListableBeanFactory</td></tr>
-                    <tr><td>MVC</td><td>请求分发、处理器映射、视图渲染</td><td>DispatcherServlet</td></tr>
-                    <tr><td>ORM</td><td>SQL 执行、结果映射、事务管理</td><td>SqlSession、Executor</td></tr>
-                    <tr><td>AOP</td><td>动态代理、切面拦截、方法增强</td><td>ProxyFactory</td></tr>
-                </table>
-            </div>
+        <div class="mermaid">
+          flowchart TB subgraph ioc["IoC 容器模块 com.lightframework.ioc"]
+          A1["annotation<br />@Component @Autowired @Scope"] A2["beans<br />BeanDefinition"]
+          A3["context<br />AnnotationConfigApplicationContext"] A4["core<br />BeanFactory
+          / DefaultListableBeanFactory"] A5["exception<br />BeansException /
+          BeanCreationException"] A1 --> A3 A2 --> A4 A3 --> A4 A4 --> A5 end
+          subgraph mvc["MVC 框架模块 com.lightframework.mvc"] M1["annotation<br />@RequestMapping
+          @PathVariable"] M2["core<br />HandlerMapping / HandlerAdapter"]
+          M3["handler<br />HandlerMethod / RequestMappingHandlerMapping"]
+          M4["servlet<br />DispatcherServlet"] M5["view<br />ViewResolver /
+          JsonView"] M1 --> M3 M2 --> M3 M3 --> M4 M4 --> M5 M2 --> M4 end
+          subgraph orm["ORM 模块 com.lightframework.orm"] O1["session<br />SqlSession
+          / Configuration"] O2["executor<br />Executor / SimpleExecutor"]
+          O3["statement<br />StatementHandler"] O4["mapping<br />MappedStatement
+          / BoundSql"] O5["binding<br />MapperProxy / MapperMethod"]
+          O6["datasource<br />PooledDataSource"] O7["type<br />TypeHandler"]
+          O8["transaction<br />JdbcTransaction"] O9["plugin<br />Interceptor"]
+          O1 --> O2 O2 --> O3 O4 --> O2 O5 --> O1 O6 --> O2 O7 --> O3 O8 --> O2
+          O9 --> O2 end subgraph aop["AOP 模块 com.lightframework.aop"]
+          P1["annotation<br />@Aspect @Before @After"] P2["core<br />ProxyFactory
+          / AopProxy"] P3["interceptor<br />MethodInterceptor"] P4["pointcut<br />AspectJExpressionPointcut"]
+          P1 --> P4 P4 --> P2 P3 --> P2 end IoC_C["IoC 容器层"] MVC_C["MVC
+          框架层"] ORM_C["ORM 数据层"] ioc --> IoC_C mvc --> MVC_C orm --> ORM_C
+          aop --> IoC_C IoC_C -. 注入 .-> MVC_C IoC_C -. 注入 .-> ORM_C style
+          ioc fill:#e8f0fe,stroke:#667eea style mvc fill:#e6f7ed,stroke:#28a745
+          style orm fill:#fff3cd,stroke:#ffc107 style aop
+          fill:#f8d7da,stroke:#dc3545
         </div>
 
-        <!-- 2. 核心组件依赖图 -->
-        <div class="section">
-            <h2>二、核心组件依赖图 (Component Diagram)</h2>
-            
-            <div class="mermaid">
-flowchart LR
-    subgraph IOC["IoC 容器层"]
-        A["ApplicationContext<br/>应用上下文"]
-        B["BeanFactory<br/>Bean 工厂"]
-        C["BeanPostProcessor<br/>Bean 后置处理器"]
-    end
-    
-    subgraph MVC["MVC 框架层"]
-        D["DispatcherServlet<br/>前端控制器"]
-        E["HandlerMapping<br/>处理器映射"]
-        F["HandlerAdapter<br/>处理器适配器"]
-        G["Controller<br/>业务控制器"]
-    end
-    
-    subgraph ORM["ORM 数据层"]
-        H["SqlSessionFactory<br/>会话工厂"]
-        I["SqlSession<br/>数据库会话"]
-        J["Executor<br/>执行器"]
-        K["MapperProxy<br/>Mapper 代理"]
-    end
-    
-    D --> E
-    D --> F
-    E --> G
-    F --> G
-    G --> C
-    G --> K
-    K --> I
-    I --> J
-    
-    A --> B
-    B --> A
-    A --> D
-    A --> G
-    A --> H
-    
-    style IOC fill:#e8f0fe
-    style MVC fill:#e6f7ed
-    style ORM fill:#fff3cd
-            </div>
+        <div class="highlight-box">
+          <h4>模块职责</h4>
+          <table>
+            <tr>
+              <th>模块</th>
+              <th>职责</th>
+              <th>核心类</th>
+            </tr>
+            <tr>
+              <td>IoC</td>
+              <td>Bean 生命周期管理、依赖注入、三级缓存</td>
+              <td>DefaultListableBeanFactory</td>
+            </tr>
+            <tr>
+              <td>MVC</td>
+              <td>请求分发、处理器映射、视图渲染</td>
+              <td>DispatcherServlet</td>
+            </tr>
+            <tr>
+              <td>ORM</td>
+              <td>SQL 执行、结果映射、事务管理</td>
+              <td>SqlSession、Executor</td>
+            </tr>
+            <tr>
+              <td>AOP</td>
+              <td>动态代理、切面拦截、方法增强</td>
+              <td>ProxyFactory</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. 核心组件依赖图 -->
+      <div class="section">
+        <h2>二、核心组件依赖图 (Component Diagram)</h2>
+
+        <div class="mermaid">
+          flowchart LR subgraph IOC["IoC 容器层"] A["ApplicationContext<br />应用上下文"]
+          B["BeanFactory<br />Bean 工厂"] C["BeanPostProcessor<br />Bean
+          后置处理器"] end subgraph MVC["MVC 框架层"] D["DispatcherServlet<br />前端控制器"]
+          E["HandlerMapping<br />处理器映射"] F["HandlerAdapter<br />处理器适配器"]
+          G["Controller<br />业务控制器"] end subgraph ORM["ORM 数据层"]
+          H["SqlSessionFactory<br />会话工厂"] I["SqlSession<br />数据库会话"]
+          J["Executor<br />执行器"] K["MapperProxy<br />Mapper 代理"] end D -->
+          E D --> F E --> G F --> G G --> C G --> K K --> I I --> J A --> B B
+          --> A A --> D A --> G A --> H style IOC fill:#e8f0fe style MVC
+          fill:#e6f7ed style ORM fill:#fff3cd
+        </div>
+      </div>
+
+      <!-- 3. Bean 生命周期 -->
+      <div class="section">
+        <h2>三、Bean 生命周期时序图 (Sequence Diagram)</h2>
+
+        <div class="mermaid">
+          sequenceDiagram participant APP as 应用代码 participant CTX as
+          ApplicationContext participant BF as BeanFactory participant BPP as
+          BeanPostProcessor participant BEAN as Bean 实例 APP->>CTX: new
+          AnnotationConfigApplicationContext() CTX->>CTX: scan(basePackages)
+          CTX->>BF: registerBeanDefinition() Note over BF: 注册所有
+          BeanDefinition<br />到 beanDefinitionMap CTX->>BF:
+          preInstantiateSingletons() loop 遍历每个 Bean BF->>BF:
+          doGetBean(beanName) alt 单例 Bean BF->>BF: getSingleton(beanName) Note
+          over BF: 三级缓存查找<br />singletonObjects → earlySingletonObjects →
+          singletonFactories end BF->>BEAN: instantiateBean(beanName) Note over
+          BEAN: 反射调用构造函数<br />创建 Bean 实例 BF->>BF:
+          addSingletonFactory() Note over BF: 加入三级缓存<br />singletonFactories
+          BF->>BF: populateBean() Note over BF: 遍历 @Autowired 字段<br />递归调用
+          getBean 注入依赖 BF->>BPP: postProcessBeforeInitialization() Note over
+          BPP: 前置处理<br />可用于修改 Bean 属性 BF->>BEAN: invokeInitMethods()
+          Note over BEAN: 调用 InitializingBean<br />或自定义 init-method
+          BF->>BPP: postProcessAfterInitialization() Note over BPP: 后置处理<br />常用于
+          AOP 代理包装 BF->>BF: addSingleton() Note over BF: 移入一级缓存<br />singletonObjects<br />移除二三级缓存
+          BF-->>APP: 返回完整 Bean end
         </div>
 
-        <!-- 3. Bean 生命周期 -->
-        <div class="section">
-            <h2>三、Bean 生命周期时序图 (Sequence Diagram)</h2>
-            
-            <div class="mermaid">
-sequenceDiagram
-    participant APP as 应用代码
-    participant CTX as ApplicationContext
-    participant BF as BeanFactory
-    participant BPP as BeanPostProcessor
-    participant BEAN as Bean 实例
-    
-    APP->>CTX: new AnnotationConfigApplicationContext()
-    CTX->>CTX: scan(basePackages)
-    CTX->>BF: registerBeanDefinition()
-    Note over BF: 注册所有 BeanDefinition<br/>到 beanDefinitionMap
-    
-    CTX->>BF: preInstantiateSingletons()
-    
-    loop 遍历每个 Bean
-        BF->>BF: doGetBean(beanName)
-        
-        alt 单例 Bean
-            BF->>BF: getSingleton(beanName)
-            Note over BF: 三级缓存查找<br/>singletonObjects → earlySingletonObjects → singletonFactories
-        end
-        
-        BF->>BEAN: instantiateBean(beanName)
-        Note over BEAN: 反射调用构造函数<br/>创建 Bean 实例
-        
-        BF->>BF: addSingletonFactory()
-        Note over BF: 加入三级缓存<br/>singletonFactories
-        
-        BF->>BF: populateBean()
-        Note over BF: 遍历 @Autowired 字段<br/>递归调用 getBean 注入依赖
-        
-        BF->>BPP: postProcessBeforeInitialization()
-        Note over BPP: 前置处理<br/>可用于修改 Bean 属性
-        
-        BF->>BEAN: invokeInitMethods()
-        Note over BEAN: 调用 InitializingBean<br/>或自定义 init-method
-        
-        BF->>BPP: postProcessAfterInitialization()
-        Note over BPP: 后置处理<br/>常用于 AOP 代理包装
-        
-        BF->>BF: addSingleton()
-        Note over BF: 移入一级缓存<br/>singletonObjects<br/>移除二三级缓存
-        
-        BF-->>APP: 返回完整 Bean
-    end
+        <div class="highlight-box">
+          <h4>关键设计点</h4>
+          <div class="grid-3">
+            <div class="card">
+              <h4>三级缓存</h4>
+              <p>解决循环依赖问题，通过提前暴露早期引用打破依赖环</p>
             </div>
+            <div class="card">
+              <h4>BeanPostProcessor</h4>
+              <p>提供扩展点，在 Bean 初始化前后进行自定义处理，是 AOP 的基础</p>
+            </div>
+            <div class="card">
+              <h4>延迟实例化</h4>
+              <p>Bean 只在第一次 getBean() 时创建，避免不必要的资源消耗</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="highlight-box">
-                <h4>关键设计点</h4>
-                <div class="grid-3">
-                    <div class="card">
-                        <h4>三级缓存</h4>
-                        <p>解决循环依赖问题，通过提前暴露早期引用打破依赖环</p>
-                    </div>
-                    <div class="card">
-                        <h4>BeanPostProcessor</h4>
-                        <p>提供扩展点，在 Bean 初始化前后进行自定义处理，是 AOP 的基础</p>
-                    </div>
-                    <div class="card">
-                        <h4>延迟实例化</h4>
-                        <p>Bean 只在第一次 getBean() 时创建，避免不必要的资源消耗</p>
-                    </div>
-                </div>
-            </div>
+      <!-- 4. 源码解析 -->
+      <div class="section">
+        <h2>四、核心源码解析 - DefaultListableBeanFactory</h2>
+
+        <h3>1. 数据结构定义</h3>
+        <div class="code-block">
+          <span class="keyword">public class</span>
+          <span class="type">DefaultListableBeanFactory</span>
+          <span class="keyword">implements</span>
+          <span class="type">ListableBeanFactory</span> {
+
+          <span class="comment">// BeanDefinition 注册表</span>
+          <span class="keyword">private final</span>
+          <span class="type">Map</span>&lt;<span class="type">String</span>,
+          <span class="type">BeanDefinition</span>&gt;
+          <span class="method">beanDefinitionMap</span> =
+          <span class="keyword">new</span>
+          <span class="type">ConcurrentHashMap</span>&lt;&gt;(256);
+
+          <span class="comment">// 一级缓存：完整 Bean 实例</span>
+          <span class="keyword">private final</span>
+          <span class="type">Map</span>&lt;<span class="type">String</span>,
+          <span class="type">Object</span>&gt;
+          <span class="method">singletonObjects</span> =
+          <span class="keyword">new</span>
+          <span class="type">ConcurrentHashMap</span>&lt;&gt;(256);
+
+          <span class="comment"
+            >// 二级缓存：早期 Bean 引用（未完成属性填充）</span
+          >
+          <span class="keyword">private final</span>
+          <span class="type">Map</span>&lt;<span class="type">String</span>,
+          <span class="type">Object</span>&gt;
+          <span class="method">earlySingletonObjects</span> =
+          <span class="keyword">new</span>
+          <span class="type">ConcurrentHashMap</span>&lt;&gt;(16);
+
+          <span class="comment"
+            >// 三级缓存：Bean 工厂（用于创建早期引用）</span
+          >
+          <span class="keyword">private final</span>
+          <span class="type">Map</span>&lt;<span class="type">String</span>,
+          <span class="type">ObjectFactory</span>&lt;?&gt;&gt;
+          <span class="method">singletonFactories</span> =
+          <span class="keyword">new</span>
+          <span class="type">ConcurrentHashMap</span>&lt;&gt;(16);
+
+          <span class="comment">// 记录正在创建的 Bean 名称</span>
+          <span class="keyword">private final</span>
+          <span class="type">Set</span>&lt;<span class="type">String</span>&gt;
+          <span class="method">singletonsCurrentlyInCreation</span> =
+          <span class="type">Collections</span>.newSetFromMap(<span
+            class="keyword"
+            >new</span
+          >
+          <span class="type">ConcurrentHashMap</span>&lt;&gt;(16));
+
+          <span class="comment">// BeanPostProcessor 集合</span>
+          <span class="keyword">private final</span>
+          <span class="type">List</span>&lt;<span class="type"
+            >BeanPostProcessor</span
+          >&gt; <span class="method">beanPostProcessors</span> =
+          <span class="keyword">new</span>
+          <span class="type">ArrayList</span>&lt;&gt;(); }
         </div>
 
-        <!-- 4. 源码解析 -->
-        <div class="section">
-            <h2>四、核心源码解析 - DefaultListableBeanFactory</h2>
-            
-            <h3>1. 数据结构定义</h3>
-            <div class="code-block">
-<span class="keyword">public class</span> <span class="type">DefaultListableBeanFactory</span> <span class="keyword">implements</span> <span class="type">ListableBeanFactory</span> {
-    
-    <span class="comment">// BeanDefinition 注册表</span>
-    <span class="keyword">private final</span> <span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">BeanDefinition</span>&gt; <span class="method">beanDefinitionMap</span> = <span class="keyword">new</span> <span class="type">ConcurrentHashMap</span>&lt;&gt;(256);
-    
-    <span class="comment">// 一级缓存：完整 Bean 实例</span>
-    <span class="keyword">private final</span> <span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">Object</span>&gt; <span class="method">singletonObjects</span> = <span class="keyword">new</span> <span class="type">ConcurrentHashMap</span>&lt;&gt;(256);
-    
-    <span class="comment">// 二级缓存：早期 Bean 引用（未完成属性填充）</span>
-    <span class="keyword">private final</span> <span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">Object</span>&gt; <span class="method">earlySingletonObjects</span> = <span class="keyword">new</span> <span class="type">ConcurrentHashMap</span>&lt;&gt;(16);
-    
-    <span class="comment">// 三级缓存：Bean 工厂（用于创建早期引用）</span>
-    <span class="keyword">private final</span> <span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">ObjectFactory</span>&lt;?&gt;&gt; <span class="method">singletonFactories</span> = <span class="keyword">new</span> <span class="type">ConcurrentHashMap</span>&lt;&gt;(16);
-    
-    <span class="comment">// 记录正在创建的 Bean 名称</span>
-    <span class="keyword">private final</span> <span class="type">Set</span>&lt;<span class="type">String</span>&gt; <span class="method">singletonsCurrentlyInCreation</span> = <span class="type">Collections</span>.newSetFromMap(<span class="keyword">new</span> <span class="type">ConcurrentHashMap</span>&lt;&gt;(16));
-    
-    <span class="comment">// BeanPostProcessor 集合</span>
-    <span class="keyword">private final</span> <span class="type">List</span>&lt;<span class="type">BeanPostProcessor</span>&gt; <span class="method">beanPostProcessors</span> = <span class="keyword">new</span> <span class="type">ArrayList</span>&lt;&gt;();
-}
-            </div>
+        <h3>2. 核心方法 doGetBean()</h3>
+        <div class="code-block">
+          <span class="keyword">protected</span> &lt;T&gt;
+          <span class="type">T</span>
+          <span class="method">doGetBean</span>(<span class="type">String</span>
+          name, <span class="type">Class</span>&lt;<span class="type">T</span
+          >&gt; requiredType, <span class="type">Object</span>[] args) {
+          <span class="type">BeanDefinition</span> bd =
+          <span class="keyword">this</span>.beanDefinitionMap.get(name);
+          <span class="keyword">if</span> (bd ==
+          <span class="keyword">null</span>) {
+          <span class="keyword">throw new</span>
+          <span class="type">NoSuchBeanDefinitionException</span>(name); }
 
-            <h3>2. 核心方法 doGetBean()</h3>
-            <div class="code-block">
-<span class="keyword">protected</span> &lt;T&gt; <span class="type">T</span> <span class="method">doGetBean</span>(<span class="type">String</span> name, <span class="type">Class</span>&lt;<span class="type">T</span>&gt; requiredType, <span class="type">Object</span>[] args) {
-    <span class="type">BeanDefinition</span> bd = <span class="keyword">this</span>.beanDefinitionMap.get(name);
-    <span class="keyword">if</span> (bd == <span class="keyword">null</span>) {
-        <span class="keyword">throw new</span> <span class="type">NoSuchBeanDefinitionException</span>(name);
-    }
-    
-    <span class="keyword">if</span> (bd.isSingleton()) {
-        <span class="comment">// 尝试从缓存获取</span>
-        <span class="type">Object</span> sharedInstance = <span class="method">getSingleton</span>(name);
-        <span class="keyword">if</span> (sharedInstance == <span class="keyword">null</span>) {
-            sharedInstance = <span class="method">createSingletonBean</span>(name, bd);
-        }
-        <span class="keyword">return</span> (<span class="type">T</span>) sharedInstance;
-    } <span class="keyword">else</span> {
-        <span class="comment">// 原型 Bean 每次创建新实例</span>
-        <span class="keyword">return</span> (<span class="type">T</span>) <span class="method">createBean</span>(name, bd);
-    }
-}
-            </div>
-
-            <h3>3. Bean 创建流程 doCreateBean()</h3>
-            <div class="code-block">
-<span class="keyword">protected</span> <span class="type">Object</span> <span class="method">doCreateBean</span>(<span class="type">String</span> beanName, <span class="type">BeanDefinition</span> bd) {
-    <span class="comment">// 1. 实例化 Bean</span>
-    <span class="type">Object</span> beanInstance = <span class="method">instantiateBean</span>(beanName, bd);
-    
-    <span class="comment">// 2. 提前暴露引用（放入三级缓存）</span>
-    <span class="keyword">boolean</span> earlySingletonExposure = 
-        bd.isSingleton() && <span class="keyword">this</span>.singletonsCurrentlyInCreation.contains(beanName);
-    <span class="keyword">if</span> (earlySingletonExposure) {
-        <span class="method">addSingletonFactory</span>(beanName, () -> <span class="method">getEarlyBeanReference</span>(beanName, bd, beanInstance));
-    }
-    
-    <span class="comment">// 3. 属性填充（依赖注入）</span>
-    <span class="method">populateBean</span>(beanName, bd, beanInstance);
-    
-    <span class="comment">// 4. 初始化 Bean</span>
-    <span class="type">Object</span> exposedObject = <span class="method">initializeBean</span>(beanName, beanInstance, bd);
-    
-    <span class="comment">// 5. 处理早期引用冲突</span>
-    <span class="keyword">if</span> (earlySingletonExposure) {
-        <span class="type">Object</span> earlySingletonReference = <span class="method">getSingleton</span>(beanName);
-        <span class="keyword">if</span> (earlySingletonReference != <span class="keyword">null</span>) {
-            exposedObject = earlySingletonReference;
-        }
-    }
-    
-    <span class="keyword">return</span> exposedObject;
-}
-            </div>
+          <span class="keyword">if</span> (bd.isSingleton()) {
+          <span class="comment">// 尝试从缓存获取</span>
+          <span class="type">Object</span> sharedInstance =
+          <span class="method">getSingleton</span>(name);
+          <span class="keyword">if</span> (sharedInstance ==
+          <span class="keyword">null</span>) { sharedInstance =
+          <span class="method">createSingletonBean</span>(name, bd); }
+          <span class="keyword">return</span> (<span class="type">T</span>)
+          sharedInstance; } <span class="keyword">else</span> {
+          <span class="comment">// 原型 Bean 每次创建新实例</span>
+          <span class="keyword">return</span> (<span class="type">T</span>)
+          <span class="method">createBean</span>(name, bd); } }
         </div>
 
-        <!-- 5. 三级缓存机制 -->
-        <div class="section">
-            <h2>五、三级缓存机制详解</h2>
-            
-            <div class="mermaid">
-flowchart TB
-    START(["getBean(beanName)"])
-    
-    START --> C1["一级缓存查找<br/>singletonObjects.get(name)"]
-    C1 --> HAS_C1{"命中?"}
-    HAS_C1 -->|是| RETURN["返回 Bean"]
-    HAS_C1 -->|否| CHECK_CREATING{"正在创建?"}
-    
-    CHECK_CREATING -->|否| CREATE["创建新 Bean"]
-    CHECK_CREATING -->|是| C2["二级缓存查找<br/>earlySingletonObjects.get(name)"]
-    
-    C2 --> HAS_C2{"命中?"}
-    HAS_C2 -->|是| RETURN
-    HAS_C2 -->|否| C3["三级缓存查找<br/>singletonFactories.get(name)"]
-    
-    C3 --> HAS_C3{"有工厂?"}
-    HAS_C3 -->|否| RETURN
-    HAS_C3 -->|是| FACTORY["factory.getObject()<br/>创建早期引用"]
-    
-    FACTORY --> PUT_C2["放入二级缓存<br/>earlySingletonObjects.put()"]
-    PUT_C2 --> REMOVE_C3["移除三级缓存<br/>singletonFactories.remove()"]
-    REMOVE_C3 --> RETURN
-    
-    style START fill:#667eea,color:#fff
-    style RETURN fill:#28a745,color:#fff
-    style C1 fill:#e8f0fe
-    style C2 fill:#fff3cd
-    style C3 fill:#f8d7da
-            </div>
+        <h3>3. Bean 创建流程 doCreateBean()</h3>
+        <div class="code-block">
+          <span class="keyword">protected</span>
+          <span class="type">Object</span>
+          <span class="method">doCreateBean</span>(<span class="type"
+            >String</span
+          >
+          beanName, <span class="type">BeanDefinition</span> bd) {
+          <span class="comment">// 1. 实例化 Bean</span>
+          <span class="type">Object</span> beanInstance =
+          <span class="method">instantiateBean</span>(beanName, bd);
 
-            <div class="highlight-box">
-                <h4>为什么需要三级缓存？</h4>
-                <p><strong>一级缓存 singletonObjects：</strong>存储完整的、初始化完成的 Bean 实例。这是最终目标，所有单例 Bean 最终都会存放在这里。</p>
-                <p><strong>二级缓存 earlySingletonObjects：</strong>存储早期的 Bean 引用（已实例化但未完成属性填充）。用于解决循环依赖，让其他 Bean 可以提前获取到引用。</p>
-                <p><strong>三级缓存 singletonFactories：</strong>存储 ObjectFactory 工厂对象。通过工厂可以按需创建早期引用，延迟了早期引用的创建时机，是解决 AOP 代理问题的关键。</p>
-            </div>
+          <span class="comment">// 2. 提前暴露引用（放入三级缓存）</span>
+          <span class="keyword">boolean</span> earlySingletonExposure =
+          bd.isSingleton() &&
+          <span class="keyword">this</span
+          >.singletonsCurrentlyInCreation.contains(beanName);
+          <span class="keyword">if</span> (earlySingletonExposure) {
+          <span class="method">addSingletonFactory</span>(beanName, () ->
+          <span class="method">getEarlyBeanReference</span>(beanName, bd,
+          beanInstance)); }
+
+          <span class="comment">// 3. 属性填充（依赖注入）</span>
+          <span class="method">populateBean</span>(beanName, bd, beanInstance);
+
+          <span class="comment">// 4. 初始化 Bean</span>
+          <span class="type">Object</span> exposedObject =
+          <span class="method">initializeBean</span>(beanName, beanInstance,
+          bd);
+
+          <span class="comment">// 5. 处理早期引用冲突</span>
+          <span class="keyword">if</span> (earlySingletonExposure) {
+          <span class="type">Object</span> earlySingletonReference =
+          <span class="method">getSingleton</span>(beanName);
+          <span class="keyword">if</span> (earlySingletonReference !=
+          <span class="keyword">null</span>) { exposedObject =
+          earlySingletonReference; } }
+
+          <span class="keyword">return</span> exposedObject; }
+        </div>
+      </div>
+
+      <!-- 5. 三级缓存机制 -->
+      <div class="section">
+        <h2>五、三级缓存机制详解</h2>
+
+        <div class="mermaid">
+          flowchart TB START(["getBean(beanName)"]) START -->
+          C1["一级缓存查找<br />singletonObjects.get(name)"] C1 -->
+          HAS_C1{"命中?"} HAS_C1 -->|是| RETURN["返回 Bean"] HAS_C1 -->|否|
+          CHECK_CREATING{"正在创建?"} CHECK_CREATING -->|否| CREATE["创建新
+          Bean"] CHECK_CREATING -->|是| C2["二级缓存查找<br />earlySingletonObjects.get(name)"]
+          C2 --> HAS_C2{"命中?"} HAS_C2 -->|是| RETURN HAS_C2 -->|否|
+          C3["三级缓存查找<br />singletonFactories.get(name)"] C3 -->
+          HAS_C3{"有工厂?"} HAS_C3 -->|否| RETURN HAS_C3 -->|是|
+          FACTORY["factory.getObject()<br />创建早期引用"] FACTORY -->
+          PUT_C2["放入二级缓存<br />earlySingletonObjects.put()"] PUT_C2 -->
+          REMOVE_C3["移除三级缓存<br />singletonFactories.remove()"] REMOVE_C3
+          --> RETURN style START fill:#667eea,color:#fff style RETURN
+          fill:#28a745,color:#fff style C1 fill:#e8f0fe style C2 fill:#fff3cd
+          style C3 fill:#f8d7da
         </div>
 
-        <!-- 6. 循环依赖场景 -->
-        <div class="section">
-            <h2>六、循环依赖解决流程</h2>
-            
-            <h3>场景：BeanA → BeanB → BeanA</h3>
-            
-            <div class="mermaid">
-sequenceDiagram
-    participant MAIN as 主流程
-    participant C1 as 一级缓存
-    participant C2 as 二级缓存
-    participant C3 as 三级缓存
-    participant BA as BeanA
-    participant BB as BeanB
-    
-    MAIN->>BA: 1. 实例化 BeanA
-    MAIN->>C3: 2. addSingletonFactory(beanA)
-    Note over C3: 三级缓存: {beanA: factoryA}
-    
-    MAIN->>BA: 3. populateBean(beanA)
-    Note over BA: 发现依赖 BeanB
-    
-    MAIN->>BB: 4. 创建 BeanB
-    MAIN->>BB: 5. 实例化 BeanB
-    MAIN->>C3: 6. addSingletonFactory(beanB)
-    Note over C3: 三级缓存: {beanA: factoryA, beanB: factoryB}
-    
-    MAIN->>BB: 7. populateBean(beanB)
-    Note over BB: 发现依赖 BeanA
-    
-    MAIN->>C3: 8. getSingleton(beanA)
-    C3->>C3: 9. factoryA.getObject()
-    C3->>C2: 10. earlySingletonObjects.put(beanA, earlyRef)
-    C3->>C3: 11. singletonFactories.remove(beanA)
-    Note over C2: 二级缓存: {beanA: earlyRef}
-    
-    C2-->>MAIN: 12. 返回 BeanA 早期引用
-    MAIN->>BB: 13. 注入 BeanA 早期引用
-    MAIN->>BB: 14. 完成 BeanB 创建
-    MAIN->>C1: 15. addSingleton(beanB)
-    C1-->>C1: 16. 清理二三级缓存
-    
-    MAIN->>BA: 17. 继续 populateBean(beanA)
-    Note over BA: 注入已完成的 BeanB
-    
-    MAIN->>BA: 18. 完成 BeanA 创建
-    MAIN->>C1: 19. addSingleton(beanA)
-    Note over C1: 一级缓存: {beanA, beanB}
-            </div>
-
-            <div class="highlight-box">
-                <h4>核心机制</h4>
-                <p><strong>提前暴露：</strong>BeanA 在实例化后、属性填充前，就将工厂对象放入三级缓存，这样其他 Bean 就可以通过工厂获取到 BeanA 的早期引用。</p>
-                <p><strong>早期引用：</strong>从三级缓存的工厂创建早期引用，放入二级缓存。早期引用只是实例化后的对象，还未完成属性填充和初始化。</p>
-                <p><strong>引用传递：</strong>当 BeanB 完成创建后放入一级缓存，BeanA 继续创建时注入的 BeanB 已经是完整实例，从而打破循环依赖。</p>
-            </div>
+        <div class="highlight-box">
+          <h4>为什么需要三级缓存？</h4>
+          <p>
+            <strong>一级缓存 singletonObjects：</strong>存储完整的、初始化完成的
+            Bean 实例。这是最终目标，所有单例 Bean 最终都会存放在这里。
+          </p>
+          <p>
+            <strong>二级缓存 earlySingletonObjects：</strong>存储早期的 Bean
+            引用（已实例化但未完成属性填充）。用于解决循环依赖，让其他 Bean
+            可以提前获取到引用。
+          </p>
+          <p>
+            <strong>三级缓存 singletonFactories：</strong>存储 ObjectFactory
+            工厂对象。通过工厂可以按需创建早期引用，延迟了早期引用的创建时机，是解决
+            AOP 代理问题的关键。
+          </p>
         </div>
+      </div>
+
+      <!-- 6. 循环依赖场景 -->
+      <div class="section">
+        <h2>六、循环依赖解决流程</h2>
+
+        <h3>场景：BeanA → BeanB → BeanA</h3>
+
+        <div class="mermaid">
+          sequenceDiagram participant MAIN as 主流程 participant C1 as 一级缓存
+          participant C2 as 二级缓存 participant C3 as 三级缓存 participant BA
+          as BeanA participant BB as BeanB MAIN->>BA: 1. 实例化 BeanA MAIN->>C3:
+          2. addSingletonFactory(beanA) Note over C3: 三级缓存: {beanA:
+          factoryA} MAIN->>BA: 3. populateBean(beanA) Note over BA: 发现依赖
+          BeanB MAIN->>BB: 4. 创建 BeanB MAIN->>BB: 5. 实例化 BeanB MAIN->>C3:
+          6. addSingletonFactory(beanB) Note over C3: 三级缓存: {beanA:
+          factoryA, beanB: factoryB} MAIN->>BB: 7. populateBean(beanB) Note over
+          BB: 发现依赖 BeanA MAIN->>C3: 8. getSingleton(beanA) C3->>C3: 9.
+          factoryA.getObject() C3->>C2: 10. earlySingletonObjects.put(beanA,
+          earlyRef) C3->>C3: 11. singletonFactories.remove(beanA) Note over C2:
+          二级缓存: {beanA: earlyRef} C2-->>MAIN: 12. 返回 BeanA 早期引用
+          MAIN->>BB: 13. 注入 BeanA 早期引用 MAIN->>BB: 14. 完成 BeanB 创建
+          MAIN->>C1: 15. addSingleton(beanB) C1-->>C1: 16. 清理二三级缓存
+          MAIN->>BA: 17. 继续 populateBean(beanA) Note over BA: 注入已完成的
+          BeanB MAIN->>BA: 18. 完成 BeanA 创建 MAIN->>C1: 19.
+          addSingleton(beanA) Note over C1: 一级缓存: {beanA, beanB}
+        </div>
+
+        <div class="highlight-box">
+          <h4>核心机制</h4>
+          <p>
+            <strong>提前暴露：</strong>BeanA
+            在实例化后、属性填充前，就将工厂对象放入三级缓存，这样其他 Bean
+            就可以通过工厂获取到 BeanA 的早期引用。
+          </p>
+          <p>
+            <strong>早期引用：</strong
+            >从三级缓存的工厂创建早期引用，放入二级缓存。早期引用只是实例化后的对象，还未完成属性填充和初始化。
+          </p>
+          <p>
+            <strong>引用传递：</strong>当 BeanB 完成创建后放入一级缓存，BeanA
+            继续创建时注入的 BeanB 已经是完整实例，从而打破循环依赖。
+          </p>
+        </div>
+      </div>
     </div>
 
     <script>
-        mermaid.initialize({ 
-            startOnLoad: true,
-            theme: 'default',
-            flowchart: { useMaxWidth: true, htmlLabels: true },
-            sequence: { useMaxWidth: true, showSequenceNumbers: false }
-        });
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default",
+        flowchart: { useMaxWidth: true, htmlLabels: true },
+        sequence: { useMaxWidth: true, showSequenceNumbers: false },
+      });
     </script>
-</body>
+  </body>
 </html>

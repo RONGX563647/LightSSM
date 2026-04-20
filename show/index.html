@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LightSSM - 轻量级自研 SSM 框架</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+      }
+
+      .top-links {
+        position: fixed;
+        top: 32px;
+        right: 40px;
+        display: flex;
+        gap: 16px;
+        z-index: 1000;
+      }
+
+      .top-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-links a:hover {
+        color: #ff6b35;
+      }
+
+      .container {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 160px 40px 120px;
+      }
+
+      .hero {
+        margin-bottom: 120px;
+      }
+
+      .hero h1 {
+        font-size: 56px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 20px;
+        letter-spacing: -1px;
+        line-height: 1.1;
+      }
+
+      .hero .subtitle {
+        font-size: 18px;
+        color: #999;
+        font-weight: 400;
+        margin-bottom: 32px;
+        letter-spacing: 2px;
+      }
+
+      .hero .description {
+        font-size: 18px;
+        color: #666;
+        max-width: 640px;
+        line-height: 2;
+      }
+
+      .section {
+        margin-bottom: 100px;
+      }
+
+      .section-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 32px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .content-text {
+        font-size: 16px;
+        color: #444;
+        line-height: 2;
+      }
+
+      .content-text strong {
+        color: #1a1a1a;
+        font-weight: 600;
+      }
+
+      .highlight-text {
+        color: #ff6b35;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 40px 60px;
+      }
+
+      .feature-item {
+        border-left: 2px solid transparent;
+        padding-left: 24px;
+        transition: border-color 0.2s;
+      }
+
+      .feature-item:hover {
+        border-left-color: #ff6b35;
+      }
+
+      .feature-item h4 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .feature-item p {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.7;
+      }
+
+      .comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+      }
+
+      .comparison-item h4 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #1a1a1a;
+      }
+
+      .comparison-item.light h4 {
+        color: #ff6b35;
+      }
+
+      .code-block {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 13px;
+        line-height: 1.8;
+        color: #666;
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 4px;
+      }
+
+      .code-block .keyword {
+        color: #d73a49;
+        font-weight: 600;
+      }
+
+      .code-block .comment {
+        color: #999;
+      }
+
+      .code-example {
+        background: #fafafa;
+        padding: 32px;
+        border-radius: 4px;
+        margin-top: 24px;
+      }
+
+      .questions {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .question-item {
+        padding: 20px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .question-item:last-child {
+        border-bottom: none;
+      }
+
+      .question-item strong {
+        color: #1a1a1a;
+        font-weight: 600;
+        margin-right: 8px;
+      }
+
+      .question-item span {
+        color: #666;
+      }
+
+      .cta {
+        text-align: center;
+        padding: 60px 40px;
+        background: #fafafa;
+        margin-top: 60px;
+      }
+
+      .cta p {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 32px;
+      }
+
+      .cta-button {
+        display: inline-block;
+        background: #1a1a1a;
+        color: white;
+        text-decoration: none;
+        padding: 14px 40px;
+        font-size: 15px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .cta-button:hover {
+        background: #ff6b35;
+        transform: translateY(-2px);
+      }
+
+      .footer {
+        text-align: center;
+        padding: 60px 40px 40px;
+        margin-top: 80px;
+        border-top: 1px solid #f0f0f0;
+        color: #999;
+        font-size: 13px;
+      }
+
+      .footer a {
+        color: #999;
+        text-decoration: none;
+        margin: 0 16px;
+        transition: color 0.2s;
+      }
+
+      .footer a:hover {
+        color: #ff6b35;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 120px 24px 60px;
+        }
+
+        .hero h1 {
+          font-size: 40px;
+        }
+
+        .hero .subtitle {
+          font-size: 16px;
+        }
+
+        .hero .description {
+          font-size: 16px;
+        }
+
+        .features,
+        .comparison {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+
+        .top-links {
+          top: 20px;
+          right: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-links">
+      <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+        >GitHub</a
+      >
+      <a href="https://www.rongx.top" target="_blank">主页</a>
+    </div>
+
+    <div class="container">
+      <div class="hero">
+        <h1>LightSSM</h1>
+        <p class="subtitle">轻量级自研 SSM 框架</p>
+        <p class="description">
+          通过手写精简版的 Spring + SpringMVC +
+          MyBatis，深入理解框架核心设计思想。
+          面试最加分的项目经历，让你在众多候选人中脱颖而出。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">核心价值</h2>
+        <p class="content-text">
+          <strong>别人只会背原生 Spring 理论，你是原生 Spring 原理 +
+          自己手写精简框架对照理解。</strong><br />
+          所有面试考点锚定你的项目，不再空洞，面试官深挖你完全接得住。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">功能特性</h2>
+        <div class="features">
+          <div class="feature-item">
+            <h4>IOC/DI 容器</h4>
+            <p>支持 @Component、@Autowired 注解扫描与依赖注入，基于三级缓存解决循环依赖问题，支持 @Scope 配置单例/原型模式</p>
+          </div>
+          <div class="feature-item">
+            <h4>SpringMVC 核心</h4>
+            <p>实现 DispatcherServlet、HandlerMapping、HandlerAdapter，支持 @RequestMapping、@ResponseBody、@RequestParam、@PathVariable</p>
+          </div>
+          <div class="feature-item">
+            <h4>ORM 模块</h4>
+            <p>支持 XML SQL 映射配置、动态 SQL 拼接（OGNL 表达式）、参数自动绑定与 ResultSet 映射、插件拦截器机制</p>
+          </div>
+          <div class="feature-item">
+            <h4>AOP 切面</h4>
+            <p>基于 JDK/CGLIB 双代理实现，支持 @Before、@After、@Around 通知织入，支持 AspectJ 表达式切入点</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">架构对比</h2>
+        <div class="comparison">
+          <div class="comparison-item original">
+            <h4>原生 Spring</h4>
+            <div class="code-block">
+              【IOC 容器】<br />
+              BeanDefinition → BeanFactory →<br />
+              三级缓存 → BeanPostProcessor<br /><br />
+              【AOP】<br />
+              动态代理 → 声明式事务<br /><br />
+              【SpringMVC】<br />
+              DispatcherServlet → HandlerMapping →<br />
+              HandlerAdapter → ViewResolver<br /><br />
+              【ORM】<br />
+              SqlSessionFactory → SqlSession →<br />
+              Executor → StatementHandler
+            </div>
+          </div>
+          <div class="comparison-item light">
+            <h4>LightSSM</h4>
+            <div class="code-block">
+              【迷你 IOC】<br />
+              包扫描 → BeanDefinitionMap →<br />
+              三级缓存 → 字段注入<br /><br />
+              【迷你 AOP】<br />
+              JDK/CGLIB 双代理 → 方法拦截器<br /><br />
+              【迷你 MVC】<br />
+              DispatcherServlet → URL 映射表 →<br />
+              反射执行<br /><br />
+              【整合 MyBatis】<br />
+              手动 SqlSessionFactory →<br />
+              Mapper 代理注入
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">核心代码</h2>
+        <div class="code-example">
+          <div class="code-block">
+            <span class="keyword">public class</span>
+            <span class="type">DefaultListableBeanFactory</span> {<br />
+            &nbsp;&nbsp;<span class="comment">// 一级缓存：完整 Bean 实例</span><br />
+            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String, Object&gt;
+            singletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();<br /><br />
+            &nbsp;&nbsp;<span class="comment">// 二级缓存：早期 Bean 引用</span><br />
+            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String, Object&gt;
+            earlySingletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();<br /><br />
+            &nbsp;&nbsp;<span class="comment">// 三级缓存：Bean 工厂</span><br />
+            &nbsp;&nbsp;<span class="keyword">private</span> Map&lt;String, ObjectFactory&lt;?&gt;&gt;
+            singletonFactories = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();<br /><br />
+            &nbsp;&nbsp;<span class="comment">// 三级缓存查找逻辑</span><br />
+            &nbsp;&nbsp;<span class="keyword">protected</span> Object getSingleton(String beanName) {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;Object singletonObject = <span class="keyword">this</span>.singletonObjects.get(beanName);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span> && isSingletonCurrentlyInCreation(beanName)) {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;singletonObject = <span class="keyword">this</span>.earlySingletonObjects.get(beanName);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span>) {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ObjectFactory&lt;?&gt; factory = <span class="keyword">this</span>.singletonFactories.get(beanName);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (factory != <span class="keyword">null</span>) {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;singletonObject = factory.getObject();<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.earlySingletonObjects.put(beanName, singletonObject);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.singletonFactories.remove(beanName);<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> singletonObject;<br />
+            &nbsp;&nbsp;}<br />
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">面试考点</h2>
+        <div class="questions">
+          <div class="question-item">
+            <strong>1.</strong>
+            <span>IOC、DI 是什么？你的 LightSSM 如何实现？</span>
+          </div>
+          <div class="question-item">
+            <strong>2.</strong>
+            <span>Spring 三级缓存机制是什么？你的 LightSSM 如何实现的？</span>
+          </div>
+          <div class="question-item">
+            <strong>3.</strong>
+            <span>SpringMVC 流程？你的 DispatcherServlet 怎么写的？</span>
+          </div>
+          <div class="question-item">
+            <strong>4.</strong>
+            <span>MyBatis 如何整合进 Spring 容器？</span>
+          </div>
+          <div class="question-item">
+            <strong>5.</strong>
+            <span>AOP 实现原理？你的 LightSSM 支持哪些通知类型？</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta">
+        <p>查看完整技术文档，深入理解 Spring 核心架构</p>
+        <a href="ioc-container.html" class="cta-button">开始学习</a>
+      </div>
+
+      <div class="footer">
+        <p>LightSSM Team</p>
+        <p style="margin-top: 16px">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <span>·</span>
+          <a href="https://www.rongx.top" target="_blank">个人主页</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
