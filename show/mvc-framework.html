@@ -14,47 +14,54 @@
             color: #333;
         }
         .nav {
-            background: white;
-            padding: 12px 20px;
-            border-bottom: 1px solid #e9ecef;
-            position: sticky;
+            position: fixed;
+            left: 0;
             top: 0;
-            z-index: 100;
+            width: 180px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e9ecef;
+            padding: 15px 0;
+            overflow-y: auto;
         }
         .nav ul {
             list-style: none;
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            flex-wrap: wrap;
+        }
+        .nav li {
+            margin-bottom: 5px;
         }
         .nav a {
+            display: block;
             color: #555;
             text-decoration: none;
-            font-size: 0.9em;
-            padding: 6px 12px;
-            border-radius: 6px;
+            font-size: 0.85em;
+            padding: 8px 15px;
             transition: all 0.3s;
             font-weight: 500;
+            border-left: 3px solid transparent;
         }
         .nav a:hover {
             background: #fff8f5;
             color: #ff9a56;
+            border-left-color: #ff9a56;
+        }
+        .nav a.active {
+            background: #fff8f5;
+            color: #ff9a56;
+            border-left-color: #ff9a56;
         }
         .header {
+            margin-left: 180px;
             background: linear-gradient(135deg, #ff9a56 0%, #ffb380 100%);
             color: white;
-            padding: 30px 20px;
-            text-align: center;
+            padding: 20px 30px;
         }
-        .header h1 { font-size: 1.8em; margin-bottom: 8px; }
-        .header p { font-size: 1em; opacity: 0.95; }
         .container { 
-            max-width: 1800px; 
-            margin: 0 auto; 
-            padding: 30px 20px;
+            max-width: calc(100% - 180px);
+            margin-left: 180px;
+            padding: 30px;
             display: grid;
-            grid-template-columns: 1fr 1.2fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 25px;
         }
         .column {
@@ -72,12 +79,63 @@
             margin-bottom: 20px;
             font-weight: 600;
         }
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            height: 100%;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: left;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+            overflow-y: auto;
+            padding: 25px;
+        }
+        .flip-card-front {
+            background: white;
+        }
+        .flip-card-back {
+            background: white;
+            transform: rotateY(180deg);
+        }
+        .flip-hint {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #fff0e6;
+            color: #ff9a56;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
         .mermaid {
             background: #fafafa;
             padding: 15px;
             border-radius: 6px;
             margin: 15px 0;
             text-align: center;
+            white-space: pre-wrap;
+        }
+        .mermaid code {
+            white-space: pre;
         }
         .code-block {
             background: #f8f9fa;
@@ -137,21 +195,19 @@
 <body>
     <div class="nav">
         <ul>
-            <li><a href="index.html">📊 首页</a></li>
-            <li><a href="ioc-container.html">🔄 IoC 容器</a></li>
-            <li><a href="mvc-framework.html">🌐 MVC 框架</a></li>
-            <li><a href="orm-module.html">💾 ORM 模块</a></li>
-            <li><a href="core-difficulties.html">🔥 核心难点</a></li>
+            <li><a href="ioc-container.html">IoC 容器</a></li>
+            <li><a href="mvc-framework.html" class="active">MVC 框架</a></li>
+            <li><a href="orm-module.html">ORM 模块</a></li>
+            <li><a href="core-difficulties.html">核心难点</a></li>
+            <li><a href="interview-topics.html">面试考点</a></li>
         </ul>
     </div>
 
     <div class="header">
-        <h1>MVC 框架架构</h1>
-        <p>请求处理流程 / 处理器映射 / 视图解析 / 源码实现</p>
     </div>
 
     <div class="container">
-        <!-- 第一列：设计模式与核心组件 -->
+        <!-- 第一列：设计模式与组件 -->
         <div class="column">
             <div class="column-title">设计模式与组件</div>
             
@@ -204,11 +260,145 @@
             </div>
         </div>
 
-        <!-- 第二列：图表 -->
-        <div class="column">
-            <div class="column-title">架构类图</div>
-            
-            <div class="mermaid">
+        <!-- 第二列：可翻转的代码/图表卡片 -->
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+            <div class="flip-card-inner">
+                <!-- 正面：代码实现 -->
+                <div class="flip-card-front">
+                    <div class="flip-hint">🔄 点击翻转</div>
+                    <div class="column-title">LightSSM 源码实现</div>
+                    
+                    <div class="section">
+                        <h3>1. DispatcherServlet 核心</h3>
+                        <div class="code-block">
+<span class="comment">// 前端控制器：统一处理请求</span>
+service(request, response) {
+    <span class="keyword">try</span> {
+        <span class="comment">// 1. 获取 Handler</span>
+        mappedHandler = getHandler(request)
+        <span class="keyword">if</span> mappedHandler == <span class="keyword">null</span>:
+            response.sendError(404)
+            <span class="keyword">return</span>
+        
+        <span class="comment">// 2. 获取 HandlerAdapter</span>
+        ha = getHandlerAdapter(mappedHandler.handler)
+        
+        <span class="comment">// 3. 执行拦截器前置处理</span>
+        <span class="keyword">if</span> !mappedHandler.applyPreHandle(request, response):
+            <span class="keyword">return</span>
+        
+        <span class="comment">// 4. 执行 Handler 方法</span>
+        mv = ha.handle(request, response, mappedHandler.handler)
+        
+        <span class="comment">// 5. 执行拦截器后置处理</span>
+        mappedHandler.applyPostHandle(request, response, mv)
+        
+        <span class="comment">// 6. 渲染视图</span>
+        render(mv, request, response)
+        
+    } <span class="keyword">catch</span> (Exception e):
+        <span class="comment">// 异常处理</span>
+    } <span class="keyword">finally</span> {
+        <span class="comment">// 7. 执行拦截器完成处理</span>
+        triggerAfterCompletion()
+    }
+}
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>2. HandlerMapping 映射表</h3>
+                        <div class="code-block">
+<span class="comment">// URL 映射表构建与查找</span>
+<span class="keyword">class</span> <span class="type">RequestMappingHandlerMapping</span> {
+    handlerMap = Map&lt;String, HandlerMethod&gt;
+    
+    registerHandlerMethod(bean, method, mapping) {
+        urlPattern = mapping.value()
+        handlerMethod = <span class="keyword">new</span> HandlerMethod(bean, method)
+        handlerMap.put(urlPattern, handlerMethod)
+    }
+    
+    getHandler(request) {
+        url = request.getRequestURI()
+        <span class="keyword">for</span> pattern <span class="keyword">in</span> handlerMap.keySet():
+            <span class="keyword">if</span> matchUrl(pattern, url):
+                <span class="keyword">return</span> <span class="keyword">new</span> HandlerExecutionChain(
+                    handlerMap.get(pattern)
+                )
+        <span class="keyword">return</span> <span class="keyword">null</span>
+    }
+}
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>3. HandlerAdapter 调用</h3>
+                        <div class="code-block">
+<span class="comment">// 适配器：统一调用 Handler</span>
+<span class="keyword">class</span> <span class="type">RequestMappingHandlerAdapter</span> {
+    handle(request, response, handler) {
+        handlerMethod = (HandlerMethod) handler
+        
+        <span class="comment">// 1. 解析方法参数</span>
+        args = getMethodArguments(handlerMethod, request, response)
+        
+        <span class="comment">// 2. 反射调用方法</span>
+        returnValue = handlerMethod.invoke(args)
+        
+        <span class="comment">// 3. 处理返回值</span>
+        <span class="keyword">if</span> handlerMethod.hasAnnotation(ResponseBody):
+            writeWithMessageConverter(returnValue, response)
+            <span class="keyword">return</span> <span class="keyword">null</span>
+        <span class="keyword">else</span>:
+            <span class="keyword">return</span> <span class="keyword">new</span> ModelAndView(
+                handlerMethod.getViewName(), 
+                returnValue
+            )
+    }
+}
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>4. 参数解析机制</h3>
+                        <div class="code-block">
+<span class="comment">// 方法参数解析</span>
+getMethodArguments(handlerMethod, request, response) {
+    params = method.getParameters()
+    args = <span class="keyword">new</span> Object[params.length]
+    
+    <span class="keyword">for</span> i <span class="keyword">in</span> 0..params.length:
+        param = params[i]
+        
+        <span class="keyword">if</span> param.hasAnnotation(PathVariable):
+            pv = param.getAnnotation(PathVariable)
+            args[i] = request.getAttribute(pv.value())
+        
+        <span class="keyword">else if</span> param.hasAnnotation(RequestParam):
+            rp = param.getAnnotation(RequestParam)
+            args[i] = request.getParameter(rp.value())
+        
+        <span class="keyword">else if</span> param.type == HttpServletRequest:
+            args[i] = request
+        
+        <span class="keyword">else if</span> param.type == HttpServletResponse:
+            args[i] = response
+    
+    <span class="keyword">return</span> args
+}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 背面：图表 -->
+                <div class="flip-card-back">
+                    <div class="flip-hint">🔄 点击返回</div>
+                    <div class="column-title">架构图表</div>
+                    
+                    <div class="section">
+                        <h3>架构类图</h3>
+                        <div class="mermaid">
 classDiagram
     class DispatcherServlet {
         -List handlerMappings
@@ -257,19 +447,8 @@ classDiagram
         +afterCompletion(request, response, handler, ex)
     }
     
-    class ViewResolver {
-        &lt;&lt;interface&gt;&gt;
-        +resolveViewName(viewName)
-    }
-    
-    class View {
-        &lt;&lt;interface&gt;&gt;
-        +render(model, request, response)
-    }
-    
     DispatcherServlet o-- HandlerMapping
     DispatcherServlet o-- HandlerAdapter
-    DispatcherServlet o-- ViewResolver
     HandlerMapping &lt;|-- RequestMappingHandlerMapping
     HandlerAdapter &lt;|-- RequestMappingHandlerAdapter
     HandlerExecutionChain o-- HandlerInterceptor
@@ -277,19 +456,18 @@ classDiagram
     style DispatcherServlet fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
     style HandlerMapping fill:#fff8f5,stroke:#ff9a56
     style HandlerAdapter fill:#fff8f5,stroke:#ff9a56
-    style ViewResolver fill:#fff8f5,stroke:#ff9a56
-            </div>
+                        </div>
+                    </div>
 
-            <div class="section">
-                <h3>请求处理时序</h3>
-                <div class="mermaid">
+                    <div class="section">
+                        <h3>请求处理时序</h3>
+                        <div class="mermaid">
 sequenceDiagram
     participant Client as 浏览器
     participant DS as DispatcherServlet
     participant HM as HandlerMapping
     participant HA as HandlerAdapter
     participant CTRL as Controller
-    participant VR as ViewResolver
     
     Client->>DS: HTTP Request: GET /users/1
     DS->>HM: getHandler(request)
@@ -301,184 +479,15 @@ sequenceDiagram
     DS->>HA: handle(request, response, handler)
     HA->>CTRL: controller.getUser(id=1)
     CTRL-->>HA: return User 对象
-    HA-->>DS: ModelAndView(viewName, model)
+    HA-->>DS: ModelAndView
     DS->>DS: applyPostHandle()
-    DS->>VR: resolveViewName(viewName)
-    VR-->>DS: View 对象
-    DS->>DS: render(model, request, response)
     DS-->>Client: HTTP Response
     DS->>DS: triggerAfterCompletion()
     
     style DS fill:#fffbf7,stroke:#ff9a56
     style CTRL fill:#fff0e6,stroke:#ff9a56
-            </div>
-        </div>
-
-        <!-- 第三列：源码实现 -->
-        <div class="column">
-            <div class="column-title">LightSSM 源码实现</div>
-            
-            <div class="section">
-                <h3>1. DispatcherServlet 核心</h3>
-                <div class="code-block">
-<span class="comment">// 前端控制器：统一处理请求</span>
-service(request, response) {
-    <span class="keyword">try</span> {
-        <span class="comment">// 1. 获取 Handler</span>
-        mappedHandler = getHandler(request)
-        <span class="keyword">if</span> mappedHandler == <span class="keyword">null</span>:
-            response.sendError(404)
-            <span class="keyword">return</span>
-        
-        <span class="comment">// 2. 获取 HandlerAdapter</span>
-        ha = getHandlerAdapter(mappedHandler.handler)
-        
-        <span class="comment">// 3. 执行拦截器前置处理</span>
-        <span class="keyword">if</span> !mappedHandler.applyPreHandle(request, response):
-            <span class="keyword">return</span>
-        
-        <span class="comment">// 4. 执行 Handler 方法</span>
-        mv = ha.handle(request, response, mappedHandler.handler)
-        
-        <span class="comment">// 5. 执行拦截器后置处理</span>
-        mappedHandler.applyPostHandle(request, response, mv)
-        
-        <span class="comment">// 6. 渲染视图</span>
-        render(mv, request, response)
-        
-    } <span class="keyword">catch</span> (Exception e):
-        <span class="comment">// 异常处理</span>
-    } <span class="keyword">finally</span> {
-        <span class="comment">// 7. 执行拦截器完成处理</span>
-        triggerAfterCompletion()
-    }
-}
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>2. HandlerMapping 映射表</h3>
-                <div class="code-block">
-<span class="comment">// URL 映射表构建与查找</span>
-<span class="keyword">class</span> <span class="type">RequestMappingHandlerMapping</span> {
-    <span class="comment">// URL 到 HandlerMethod 的映射</span>
-    handlerMap = Map&lt;String, HandlerMethod&gt;
-    
-    <span class="comment">// 注册映射关系</span>
-    registerHandlerMethod(bean, method, mapping) {
-        urlPattern = mapping.value()
-        handlerMethod = <span class="keyword">new</span> HandlerMethod(bean, method)
-        handlerMap.put(urlPattern, handlerMethod)
-    }
-    
-    <span class="comment">// 根据 URL 查找 Handler</span>
-    getHandler(request) {
-        url = request.getRequestURI()
-        <span class="keyword">for</span> pattern <span class="keyword">in</span> handlerMap.keySet():
-            <span class="keyword">if</span> matchUrl(pattern, url):
-                <span class="keyword">return</span> <span class="keyword">new</span> HandlerExecutionChain(
-                    handlerMap.get(pattern)
-                )
-        <span class="keyword">return</span> <span class="keyword">null</span>
-    }
-}
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>3. HandlerAdapter 调用</h3>
-                <div class="code-block">
-<span class="comment">// 适配器：统一调用 Handler</span>
-<span class="keyword">class</span> <span class="type">RequestMappingHandlerAdapter</span> {
-    handle(request, response, handler) {
-        handlerMethod = (HandlerMethod) handler
-        
-        <span class="comment">// 1. 解析方法参数</span>
-        args = getMethodArguments(handlerMethod, request, response)
-        
-        <span class="comment">// 2. 反射调用方法</span>
-        returnValue = handlerMethod.invoke(args)
-        
-        <span class="comment">// 3. 处理返回值</span>
-        <span class="keyword">if</span> handlerMethod.hasAnnotation(ResponseBody):
-            <span class="comment">// 直接写入响应体（JSON）</span>
-            writeWithMessageConverter(returnValue, response)
-            <span class="keyword">return</span> <span class="keyword">null</span>
-        <span class="keyword">else</span>:
-            <span class="comment">// 返回视图</span>
-            <span class="keyword">return</span> <span class="keyword">new</span> ModelAndView(
-                handlerMethod.getViewName(), 
-                returnValue
-            )
-    }
-}
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>4. 参数解析机制</h3>
-                <div class="code-block">
-<span class="comment">// 方法参数解析</span>
-getMethodArguments(handlerMethod, request, response) {
-    params = method.getParameters()
-    args = <span class="keyword">new</span> Object[params.length]
-    
-    <span class="keyword">for</span> i <span class="keyword">in</span> 0..params.length:
-        param = params[i]
-        
-        <span class="comment">// @PathVariable</span>
-        <span class="keyword">if</span> param.hasAnnotation(PathVariable):
-            pv = param.getAnnotation(PathVariable)
-            args[i] = request.getAttribute(pv.value())
-        
-        <span class="comment">// @RequestParam</span>
-        <span class="keyword">else if</span> param.hasAnnotation(RequestParam):
-            rp = param.getAnnotation(RequestParam)
-            args[i] = request.getParameter(rp.value())
-        
-        <span class="comment">// HttpServletRequest</span>
-        <span class="keyword">else if</span> param.type == HttpServletRequest:
-            args[i] = request
-        
-        <span class="comment">// HttpServletResponse</span>
-        <span class="keyword">else if</span> param.type == HttpServletResponse:
-            args[i] = response
-    
-    <span class="keyword">return</span> args
-}
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>5. 视图解析与渲染</h3>
-                <div class="code-block">
-<span class="comment">// JSON 视图实现</span>
-<span class="keyword">class</span> <span class="type">JsonView</span> <span class="keyword">implements</span> <span class="type">View</span> {
-    render(model, request, response) {
-        <span class="comment">// 设置响应类型</span>
-        response.setContentType("application/json;charset=UTF-8")
-        
-        <span class="comment">// 转换为 JSON 并写入响应</span>
-        json = objectMapper.writeValueAsString(model)
-        response.getWriter().write(json)
-    }
-}
-
-<span class="comment">// 拦截器责任链</span>
-<span class="keyword">class</span> <span class="type">HandlerExecutionChain</span> {
-    applyPreHandle(request, response) {
-        <span class="keyword">for</span> interceptor <span class="keyword">in</span> interceptors:
-            <span class="keyword">if</span> !interceptor.preHandle(request, response, handler):
-                <span class="keyword">return</span> <span class="keyword">false</span>
-        <span class="keyword">return</span> <span class="keyword">true</span>
-    }
-    
-    applyPostHandle(request, response, mv) {
-        <span class="comment">// 倒序执行</span>
-        <span class="keyword">for</span> i <span class="keyword">in</span> interceptors.length-1..0:
-            interceptors[i].postHandle(request, response, handler, mv)
-    }
-}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

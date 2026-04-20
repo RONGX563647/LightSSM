@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面试考点全解 - LightSSM</title>
+    <script src="mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            background: #fafafa;
+            line-height: 1.6;
+            color: #333;
+        }
+        .nav {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 180px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e9ecef;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .nav ul {
+            list-style: none;
+        }
+        .nav li {
+            margin-bottom: 5px;
+        }
+        .nav a {
+            display: block;
+            color: #555;
+            text-decoration: none;
+            font-size: 0.85em;
+            padding: 8px 15px;
+            transition: all 0.3s;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+        }
+        .nav a:hover {
+            background: #fff8f5;
+            color: #ff9a56;
+            border-left-color: #ff9a56;
+        }
+        .nav a.active {
+            background: #fff8f5;
+            color: #ff9a56;
+            border-left-color: #ff9a56;
+        }
+        .header {
+            margin-left: 180px;
+            background: linear-gradient(135deg, #ff9a56 0%, #ffb380 100%);
+            color: white;
+            padding: 20px 30px;
+        }
+        .container {
+            max-width: calc(100% - 180px);
+            margin-left: 180px;
+            padding: 30px;
+        }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .section-title {
+            font-size: 1.6em;
+            color: #ff9a56;
+            border-left: 4px solid #ff9a56;
+            padding-left: 15px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .subsection {
+            margin: 25px 0;
+        }
+        .subsection h3 {
+            color: #555;
+            font-size: 1.3em;
+            margin: 20px 0 10px 0;
+            font-weight: 600;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .comparison-table th {
+            background: #fff8f5;
+            color: #ff9a56;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+        .comparison-table td {
+            padding: 12px;
+            border: 1px solid #e9ecef;
+        }
+        .comparison-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+        .code-block {
+            background: #f8f9fa;
+            color: #333;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+            white-space: pre-wrap;
+        }
+        .code-block .keyword { color: #d73a49; font-weight: bold; }
+        .code-block .type { color: #005cc5; }
+        .code-block .comment { color: #6a737d; font-style: italic; }
+        .highlight-box {
+            background: #fff0e6;
+            border-left: 4px solid #ff9a56;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .highlight-box h4 {
+            color: #ff9a56;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .highlight-box ul {
+            margin-left: 20px;
+        }
+        .highlight-box li {
+            margin: 5px 0;
+        }
+        .question-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .question-box .question {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .question-box .answer {
+            color: #555;
+            line-height: 1.8;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #fff0e6;
+            color: #ff9a56;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin: 3px;
+            font-weight: 500;
+        }
+        .mermaid {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: center;
+            white-space: pre-wrap;
+        }
+        .mermaid code {
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <ul>
+            <li><a href="ioc-container.html">IoC 容器</a></li>
+            <li><a href="mvc-framework.html">MVC 框架</a></li>
+            <li><a href="orm-module.html">ORM 模块</a></li>
+            <li><a href="core-difficulties.html">核心难点</a></li>
+            <li><a href="interview-topics.html" class="active">面试考点</a></li>
+        </ul>
+    </div>
+
+    <div class="header">
+        <h1>🎯 Spring 面试考点全解</h1>
+        <p>原生 Spring 原理 + LightSSM 精简实现对照，面试满分回答模板</p>
+    </div>
+
+    <div class="container">
+        <!-- 第一部分：IOC & DI -->
+        <div class="section">
+            <h2 class="section-title">一、IOC & DI 容器（核心考点）</h2>
+            
+            <div class="subsection">
+                <h3>📌 高频面试题 1：什么是 IOC、DI？你在 LightSSM 中是如何实现的？</h3>
+                <div class="question-box">
+                    <div class="question">💡 满分回答模板（两段式）：</div>
+                    <div class="answer">
+                        <strong>① 原生 Spring 原理：</strong><br>
+                        IOC（Inversion of Control）控制反转，将对象的创建和依赖关系管理交给 Spring 容器，而不是代码中 new 对象。DI（Dependency Injection）依赖注入，是 IOC 的具体实现方式，通过反射将依赖的对象注入到目标对象中。<br><br>
+                        <strong>② 我的 LightSSM 实现：</strong><br>
+                        在我的 LightSSM 中，我实现了一个精简版的 IOC 容器：
+                        <div class="code-block">
+<span class="comment">// LightSSM 简易 IOC 容器</span>
+<span class="keyword">public class</span> <span class="type">LightIOC</span> {
+    <span class="comment">// 单例 Bean 容器</span>
+    <span class="keyword">private</span> Map&lt;String, Object&gt; beanMap = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();
+    
+    <span class="comment">// 1. 包扫描，注册 Bean</span>
+    <span class="keyword">public void</span> scanPackage(String packagePath) {
+        Set&lt;Class?&gt; classes = getClasses(packagePath);
+        <span class="keyword">for</span> (Class? clazz : classes) {
+            <span class="keyword">if</span> (clazz.isAnnotationPresent(MyComponent.<span class="keyword">class</span>)) {
+                String beanName = getBeanName(clazz);
+                beanMap.put(beanName, clazz);
+            }
+        }
+    }
+    
+    <span class="comment">// 2. 获取 Bean（懒加载）</span>
+    <span class="keyword">public</span> Object getBean(String beanName) <span class="keyword">throws</span> Exception {
+        Object instance = beanMap.get(beanName);
+        <span class="keyword">if</span> (instance == <span class="keyword">null</span>) {
+            Class? clazz = (Class?) beanMap.get(beanName);
+            instance = clazz.getDeclaredConstructor().newInstance();
+            beanMap.put(beanName, instance);
+            <span class="comment">// 3. 依赖注入</span>
+            injectDependencies(instance);
+        }
+        <span class="keyword">return</span> instance;
+    }
+    
+    <span class="comment">// 4. 依赖注入（字段注入）</span>
+    <span class="keyword">private void</span> injectDependencies(Object obj) {
+        Field[] fields = obj.getClass().getDeclaredFields();
+        <span class="keyword">for</span> (Field field : fields) {
+            <span class="keyword">if</span> (field.isAnnotationPresent(MyAutowired.<span class="keyword">class</span>)) {
+                field.setAccessible(<span class="keyword">true</span>);
+                Object bean = getBean(getBeanName(field.getType()));
+                field.set(obj, bean);
+            }
+        }
+    }
+}
+                        </div>
+                        <strong>核心差异：</strong>原生 Spring 有完整的 BeanDefinition、三级缓存、BeanPostProcessor 等扩展机制，我的 LightSSM 只保留了最核心的 IOC+DI 骨架，用于理解 Spring 设计思想。
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>📌 高频面试题 2：Spring 三级缓存、循环依赖，你 LightSSM 为什么没有实现？</h3>
+                <div class="question-box">
+                    <div class="question">💡 满分回答模板：</div>
+                    <div class="answer">
+                        <strong>① 原生 Spring 三级缓存机制：</strong><br>
+                        Spring 通过三级缓存解决单例 Bean 的 setter 注入循环依赖：
+                        <div class="mermaid">
+flowchart LR
+    A["getBean(A)"] --> B["一级缓存 singletonObjects"]
+    B --> C{"命中？"}
+    C -->|否 | D["实例化 A"]
+    D --> E["提前暴露到三级缓存"]
+    E --> F["属性注入 B"]
+    F --> G["getBean(B)"]
+    G --> H["实例化 B"]
+    H --> I["属性注入 A"]
+    I --> J["从三级缓存拿 A 的早期引用"]
+    J --> K["B 完成创建"]
+    K --> L["A 完成创建"]
+    L --> M["放入一级缓存"]
+                        </div>
+                        <div class="code-block">
+<span class="comment">// Spring 三级缓存结构</span>
+singletonObjects          <span class="comment">// 一级：成品 Bean</span>
+earlySingletonObjects     <span class="comment">// 二级：半成品早期引用</span>
+singletonFactories        <span class="comment">// 三级：对象工厂（可延迟 AOP 代理）</span>
+                        </div>
+
+                        <strong>② 我的 LightSSM 为什么没实现：</strong><br>
+                        <div class="highlight-box">
+                            <h4>🎯 设计取舍（面试加分点）：</h4>
+                            <ul>
+                                <li><strong>定位差异：</strong>LightSSM 是学习型框架，核心目的是理解 IOC、DI、MVC 骨架，循环依赖属于高级复杂特性</li>
+                                <li><strong>实现成本：</strong>三级缓存 + 早期引用暴露 + AOP 代理延迟创建，实现成本高，代码量会增加 2-3 倍</li>
+                                <li><strong>业务场景：</strong>日常 90% 的业务场景不会出现循环依赖，良好的设计应该避免循环依赖</li>
+                                <li><strong>学习价值：</strong>理解 Spring 为什么要用三级缓存（支持 AOP 代理），比实现本身更重要</li>
+                            </ul>
+                        </div>
+                        <strong>话术总结：</strong>"我的 LightSSM 虽然没有实现三级缓存，但我通过研读 Spring 源码，理解了它的设计思想：通过提前暴露早期引用来打破循环，通过工厂模式延迟 AOP 代理的创建。这让我对 Spring 的架构设计有了更深的理解。"
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>📌 高频面试题 3：Spring Bean 生命周期 vs LightSSM Bean 生命周期</h3>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="50%">📘 原生 Spring（完整版）</th>
+                                <th>🔶 我的 LightSSM（精简版）</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    1. 实例化（Instantiation）<br>
+                                    2. 属性赋值（Populate）<br>
+                                    3. Aware 接口回调（BeanNameAware 等）<br>
+                                    4. BeanPostProcessor.beforeInitialization()<br>
+                                    5. InitializingBean.afterPropertiesSet()<br>
+                                    6. 自定义 init-method<br>
+                                    7. BeanPostProcessor.afterInitialization()<br>
+                                    8. 存入单例池，可以使用
+                                </td>
+                                <td>
+                                    1. 反射实例化<br>
+                                    2. 依赖注入（字段注入）<br>
+                                    3. 存入 beanMap<br>
+                                    4. 可以使用
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="highlight-box">
+                    <h4>🎯 面试回答要点：</h4>
+                    <p>原生 Spring 的 Bean 生命周期有 8 个步骤，核心是为了支持各种扩展点（BeanPostProcessor、Aware、初始化回调）。我的 LightSSM 只保留了最核心的"实例化 + 注入"两步，虽然功能简单，但让我理解了 Spring 最本质的 IOC 思想。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二部分：AOP & 事务 -->
+        <div class="section">
+            <h2 class="section-title">二、AOP & 声明式事务（理解差异）</h2>
+            
+            <div class="subsection">
+                <h3>📌 高频面试题 1：Spring AOP 底层原理？你 LightSSM 为什么没有 AOP？</h3>
+                <div class="question-box">
+                    <div class="question">💡 满分回答模板：</div>
+                    <div class="answer">
+                        <strong>① 原生 Spring AOP 原理：</strong><br>
+                        Spring AOP 基于动态代理实现，有两种方式：
+                        <div class="highlight-box">
+                            <ul>
+                                <li><strong>JDK 动态代理：</strong>基于接口实现，使用 InvocationHandler，要求目标类实现接口</li>
+                                <li><strong>CGLIB 代理：</strong>基于子类实现，使用 MethodInterceptor，可以代理没有接口的类</li>
+                                <li><strong>选择策略：</strong>有接口优先用 JDK，没有接口用 CGLIB（SpringBoot 2.x 后默认 CGLIB）</li>
+                            </ul>
+                        </div>
+
+                        <strong>② 我的 LightSSM 为什么没有 AOP：</strong><br>
+                        <div class="highlight-box">
+                            <h4>🎯 设计考量：</h4>
+                            <ul>
+                                <li><strong>复杂度：</strong>AOP 是 Spring 第二大核心，涉及动态代理、拦截器链、切面织入等，实现复杂度远高于 IOC</li>
+                                <li><strong>定位：</strong>LightSSM 的核心目标是吃透 IOC+MVC 骨架，AOP 可以单独作为扩展模块学习</li>
+                                <li><strong>事务支撑：</strong>声明式事务基于 AOP，没有 AOP 的情况下，我使用 MyBatis 原生事务管理</li>
+                            </ul>
+                        </div>
+                        <div class="code-block">
+<span class="comment">// 我的 LightSSM 手动事务管理</span>
+<span class="keyword">try</span> (SqlSession session = sqlSessionFactory.openSession(<span class="keyword">false</span>)) {
+    <span class="comment">// 1. 获取 Mapper</span>
+    UserMapper mapper = session.getMapper(UserMapper.<span class="keyword">class</span>);
+    
+    <span class="comment">// 2. 执行业务</span>
+    mapper.insert(user);
+    mapper.insert(role);
+    
+    <span class="comment">// 3. 手动提交事务</span>
+    session.commit();
+} <span class="keyword">catch</span> (Exception e) {
+    <span class="comment">// 4. 回滚事务</span>
+    session.rollback();
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三部分：SpringMVC -->
+        <div class="section">
+            <h2 class="section-title">三、SpringMVC（你的核心复刻模块，重中之重）</h2>
+            
+            <div class="subsection">
+                <h3>📌 高频面试题 1：原生 SpringMVC 完整流程 vs 你的 LightSSM 实现</h3>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="50%">📘 原生 SpringMVC（完整版）</th>
+                                <th>🔶 我的 LightSSM（精简版）</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>五大核心组件：</strong><br>
+                                    1. DispatcherServlet（前端控制器）<br>
+                                    2. HandlerMapping（处理器映射）<br>
+                                    3. HandlerAdapter（处理器适配器）<br>
+                                    4. ViewResolver（视图解析器）<br>
+                                    5. HandlerInterceptor（拦截器）<br><br>
+                                    <strong>完整流程：</strong><br>
+                                    请求 → DispatcherServlet → HandlerMapping → HandlerAdapter → Controller → ModelAndView → ViewResolver → 视图渲染 → 响应
+                                </td>
+                                <td>
+                                    <strong>精简组件：</strong><br>
+                                    1. 自定义 DispatcherServlet<br>
+                                    2. 简易 HandlerMapping（URL 映射表）<br>
+                                    3. 直接反射执行<br><br>
+                                    <strong>简化流程：</strong><br>
+                                    请求 → DispatcherServlet → 匹配 URL → 反射执行 Controller 方法 → 响应
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>📌 高频面试题 2：你手写 DispatcherServlet 的实现逻辑</h3>
+                <div class="question-box">
+                    <div class="question">💡 满分回答 + 源码：</div>
+                    <div class="answer">
+                        <strong>我的 LightSSM 实现：</strong><br>
+                        <div class="code-block">
+<span class="comment">// LightSSM 自定义前端控制器</span>
+@WebServlet(<span class="string">"/"</span>)
+<span class="keyword">public class</span> <span class="type">LightDispatcherServlet</span> <span class="keyword">extends</span> HttpServlet {
+    
+    <span class="comment">// URL 到方法的映射表</span>
+    <span class="keyword">private</span> Map&lt;String, Handler&gt; handlerMap = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();
+    
+    <span class="comment">// 1. 初始化：扫描@Controller，构建映射表</span>
+    <span class="keyword">public void</span> init() {
+        Map&lt;String, Object&gt; controllers = getBeansWithAnnotation(MyController.<span class="keyword">class</span>);
+        <span class="keyword">for</span> (Entry&lt;String, Object&gt; entry : controllers.entrySet()) {
+            Object controller = entry.getValue();
+            <span class="comment">// 扫描@RequestMapping 注解</span>
+            Method[] methods = controller.getClass().getMethods();
+            <span class="keyword">for</span> (Method method : methods) {
+                <span class="keyword">if</span> (method.isAnnotationPresent(MyRequestMapping.<span class="keyword">class</span>)) {
+                    MyRequestMapping mapping = method.getAnnotation(MyRequestMapping.<span class="keyword">class</span>);
+                    String url = mapping.value();
+                    handlerMap.put(url, <span class="keyword">new</span> Handler(controller, method));
+                }
+            }
+        }
+    }
+    
+    <span class="comment">// 2. 处理请求</span>
+    <span class="keyword">protected void</span> service(HttpServletRequest req, HttpServletResponse resp) {
+        String url = req.getRequestURI();
+        Handler handler = handlerMap.get(url);
+        
+        <span class="keyword">if</span> (handler == <span class="keyword">null</span>) {
+            resp.setStatus(404);
+            <span class="keyword">return</span>;
+        }
+        
+        <span class="comment">// 3. 反射执行 Controller 方法</span>
+        <span class="keyword">try</span> {
+            handler.method.invoke(handler.controller, req, resp);
+        } <span class="keyword">catch</span> (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    <span class="comment">// 内部类：处理器</span>
+    <span class="keyword">class</span> <span class="type">Handler</span> {
+        Object controller;
+        Method method;
+        Handler(Object c, Method m) { controller = c; method = m; }
+    }
+}
+                        </div>
+                        <strong>核心差异：</strong>原生 SpringMVC 有 HandlerAdapter 适配器层（支持多种 Handler 类型）、视图解析器（支持 JSP、Thymeleaf 等）、拦截器链。我的 LightSSM 只保留了最核心的"URL 映射 + 反射执行"，用于理解 SpringMVC 的本质。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第四部分：架构对比图 -->
+        <div class="section">
+            <h2 class="section-title">四、双架构对比图（面试纸上直接画）</h2>
+            
+            <div class="subsection">
+                <h3>📘 原生 Spring 架构</h3>
+                <div class="mermaid">
+flowchart TB
+    subgraph APP["应用层"]
+        A[Service]
+        B[Controller]
+        C[Mapper]
+    end
+    
+    subgraph IOC["IOC 容器"]
+        D[BeanDefinition]
+        E[BeanFactory]
+        F[单例池 singletonObjects]
+        G[三级缓存]
+        H[BeanPostProcessor]
+    end
+    
+    subgraph AOP["AOP 模块"]
+        I[动态代理]
+        J[拦截器链]
+        K[声明式事务]
+    end
+    
+    subgraph MVC["SpringMVC"]
+        L[DispatcherServlet]
+        M[HandlerMapping]
+        N[HandlerAdapter]
+        O[ViewResolver]
+    end
+    
+    subgraph MYBATIS["MyBatis"]
+        P[SqlSessionFactory]
+        Q[Mapper 代理]
+        R[事务管理]
+    end
+    
+    APP --> IOC
+    IOC --> AOP
+    IOC --> MVC
+    IOC --> MYBATIS
+    
+    style IOC fill:#fff8f5,stroke:#ff9a56,stroke-width:2px
+    style AOP fill:#ffe6d9,stroke:#ff9a56
+    style MVC fill:#fff0e6,stroke:#ff9a56
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>🔶 我的 LightSSM 架构</h3>
+                <div class="mermaid">
+flowchart TB
+    subgraph APP["应用层"]
+        A[Service]
+        B[Controller]
+    end
+    
+    subgraph IOC["迷你 IOC 容器"]
+        C[包扫描]
+        D[BeanMap 单例池]
+        E[字段注入]
+    end
+    
+    subgraph MVC["迷你 SpringMVC"]
+        F[LightDispatcherServlet]
+        G[URL 映射表]
+        H[反射执行]
+    end
+    
+    subgraph MYBATIS["原生 MyBatis"]
+        I[手动 SqlSessionFactory]
+        J[Mapper 代理注入]
+        K[手动事务 commit/rollback]
+    end
+    
+    APP --> IOC
+    IOC --> MVC
+    IOC --> MYBATIS
+    
+    style IOC fill:#fff8f5,stroke:#ff9a56,stroke-width:2px
+    style MVC fill:#fff0e6,stroke:#ff9a56
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>🎯 面试话术总结：</h4>
+                <p>原生 Spring 是<strong>全能重型容器</strong>，内置完整的扩展机制、AOP 代理、事务管理、三级缓存、生命周期回调。我的 <strong>LightSSM 只复刻 Spring 最核心骨架</strong>：IOC 托管 Bean + DI 依赖注入 + SpringMVC 请求分发 + 整合 MyBatis，砍掉所有高级冗余特性，用于理解原生设计思想。</p>
+            </div>
+        </div>
+
+        <!-- 第五部分：框架设计深挖 -->
+        <div class="section">
+            <h2 class="section-title">五、框架设计深挖题（面试官专属追问）</h2>
+            
+            <div class="subsection">
+                <h3>📌 高频面试题：你做 LightSSM 的初衷是什么？简化了哪些冗余设计？</h3>
+                <div class="question-box">
+                    <div class="question">💡 满分回答模板：</div>
+                    <div class="answer">
+                        <strong>① 初衷：</strong><br>
+                        学习 Spring 源码时，发现代码量太大（几十万行），直接阅读源码很难抓住核心。所以我决定自己手写一个精简版，只保留最核心的 IOC+DI+MVC 骨架，通过实践来理解 Spring 的设计思想。<br><br>
+                        
+                        <strong>② 简化的设计：</strong><br>
+                        <div class="highlight-box">
+                            <ul>
+                                <li><strong>BeanDefinition 层：</strong>原生 Spring 用 BeanDefinition 封装 Bean 元信息，我直接用 Class 对象存储</li>
+                                <li><strong>三级缓存：</strong>原生 Spring 用三级缓存解决循环依赖，我直接舍弃（理由：学习重点不在此）</li>
+                                <li><strong>BeanPostProcessor：</strong>原生 Spring 有大量扩展点，我全部舍弃</li>
+                                <li><strong>AOP 模块：</strong>原生 Spring 基于动态代理实现 AOP，我完全没实现（复杂度太高）</li>
+                                <li><strong>视图解析器：</strong>原生 SpringMVC 支持多种视图技术，我只做 RESTful API，不需要视图解析</li>
+                                <li><strong>拦截器链：</strong>原生 SpringMVC 有拦截器链，我没实现（核心是理解请求分发）</li>
+                            </ul>
+                        </div>
+                        
+                        <strong>③ 收获：</strong><br>
+                        通过手写 LightSSM，我理解了 Spring 最本质的设计思想：<strong>IOC 容器负责托管对象，DI 自动注入依赖，MVC 统一分发请求</strong>。虽然我的框架功能简单，但让我看 Spring 源码时不再迷茫，知道哪些是核心、哪些是扩展。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第六部分：专属备考方法 -->
+        <div class="section">
+            <h2 class="section-title">六、专属备考方法（LightSSM 贯穿法）</h2>
+            
+            <div class="highlight-box">
+                <h4>🎯 备考策略：</h4>
+                <ul>
+                    <li><strong>看到原生 Spring 概念 → 联想 LightSSM 对应实现</strong></li>
+                    <li><strong>面试回答 → 两段式：① 原生原理 ② 我的精简实现 + 差异对比</strong></li>
+                    <li><strong>被深挖 → 坦诚承认简化，但强调理解设计思想</strong></li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3>📚 背诵口诀：</h3>
+                <div class="highlight-box">
+                    <p><strong>"IOC 管对象，DI 来注入，MVC 分请求，MyBatis 存数据。Spring 功能全，我取核心骨，虽然功能简，思想已领悟。"</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#fff8f5',
+                primaryTextColor: '#333',
+                primaryBorderColor: '#ff9a56',
+                lineColor: '#ff9a56',
+                secondaryColor: '#ffe6d9',
+                tertiaryColor: '#fff0e6'
+            },
+            flowchart: { useMaxWidth: true, htmlLabels: true }
+        });
+    </script>
+</body>
+</html>

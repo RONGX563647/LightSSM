@@ -14,47 +14,54 @@
             color: #333;
         }
         .nav {
-            background: white;
-            padding: 12px 20px;
-            border-bottom: 1px solid #e9ecef;
-            position: sticky;
+            position: fixed;
+            left: 0;
             top: 0;
-            z-index: 100;
+            width: 180px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e9ecef;
+            padding: 15px 0;
+            overflow-y: auto;
         }
         .nav ul {
             list-style: none;
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            flex-wrap: wrap;
+        }
+        .nav li {
+            margin-bottom: 5px;
         }
         .nav a {
+            display: block;
             color: #555;
             text-decoration: none;
-            font-size: 0.9em;
-            padding: 6px 12px;
-            border-radius: 6px;
+            font-size: 0.85em;
+            padding: 8px 15px;
             transition: all 0.3s;
             font-weight: 500;
+            border-left: 3px solid transparent;
         }
         .nav a:hover {
             background: #fff8f5;
             color: #ff9a56;
+            border-left-color: #ff9a56;
+        }
+        .nav a.active {
+            background: #fff8f5;
+            color: #ff9a56;
+            border-left-color: #ff9a56;
         }
         .header {
+            margin-left: 180px;
             background: linear-gradient(135deg, #ff9a56 0%, #ffb380 100%);
             color: white;
-            padding: 30px 20px;
-            text-align: center;
+            padding: 20px 30px;
         }
-        .header h1 { font-size: 1.8em; margin-bottom: 8px; }
-        .header p { font-size: 1em; opacity: 0.95; }
         .container { 
-            max-width: 1800px; 
-            margin: 0 auto; 
-            padding: 30px 20px;
+            max-width: calc(100% - 180px);
+            margin-left: 180px;
+            padding: 30px;
             display: grid;
-            grid-template-columns: 1fr 1.2fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 25px;
         }
         .column {
@@ -72,12 +79,63 @@
             margin-bottom: 20px;
             font-weight: 600;
         }
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            height: 100%;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: left;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+            overflow-y: auto;
+            padding: 25px;
+        }
+        .flip-card-front {
+            background: white;
+        }
+        .flip-card-back {
+            background: white;
+            transform: rotateY(180deg);
+        }
+        .flip-hint {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #fff0e6;
+            color: #ff9a56;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
         .mermaid {
             background: #fafafa;
             padding: 15px;
             border-radius: 6px;
             margin: 15px 0;
             text-align: center;
+            white-space: pre-wrap;
+        }
+        .mermaid code {
+            white-space: pre;
         }
         .code-block {
             background: #f8f9fa;
@@ -137,23 +195,21 @@
 <body>
     <div class="nav">
         <ul>
-            <li><a href="index.html">📊 首页</a></li>
-            <li><a href="ioc-container.html">🔄 IoC 容器</a></li>
-            <li><a href="mvc-framework.html">🌐 MVC 框架</a></li>
-            <li><a href="orm-module.html">💾 ORM 模块</a></li>
-            <li><a href="core-difficulties.html">🔥 核心难点</a></li>
+            <li><a href="ioc-container.html">IoC 容器</a></li>
+            <li><a href="mvc-framework.html">MVC 框架</a></li>
+            <li><a href="orm-module.html">ORM 模块</a></li>
+            <li><a href="core-difficulties.html" class="active">核心难点</a></li>
+            <li><a href="interview-topics.html">面试考点</a></li>
         </ul>
     </div>
 
     <div class="header">
-        <h1>核心难点深度解析</h1>
-        <p>循环依赖 / AOP 代理 / 动态 SQL / 插件机制</p>
     </div>
 
     <div class="container">
-        <!-- 第一列：循环依赖与 AOP -->
+        <!-- 第一列：核心概念 -->
         <div class="column">
-            <div class="column-title">循环依赖与 AOP</div>
+            <div class="column-title">核心概念解析</div>
             
             <div class="section">
                 <h3>1. 循环依赖问题</h3>
@@ -167,131 +223,43 @@
                     <ul>
                         <li><strong>一级缓存：</strong>singletonObjects - 存储完整的 Bean 实例</li>
                         <li><strong>二级缓存：</strong>earlySingletonObjects - 存储早期 Bean 引用</li>
-                        <li><strong>三级缓存：</strong>singletonFactories - 存储 Bean 工厂，用于创建早期引用</li>
+                        <li><strong>三级缓存：</strong>singletonFactories - 存储 Bean 工厂</li>
                     </ul>
                 </div>
 
-                <h3>3. 为什么必须三级缓存？</h3>
-                <div class="comparison-box">
-                    <p><strong>如果只有两级：</strong>无法处理 AOP 代理场景。当 Bean 被 AOP 增强时，二级缓存存储的是早期引用，无法延迟代理对象的创建。</p>
-                    <p><strong>三级缓存的核心价值：</strong>ObjectFactory 的 getObject() 方法中会调用 BeanPostProcessor.getEarlyBeanReference()，在这里可以应用 AOP 代理。</p>
-                </div>
-
-                <h3>4. AOP 代理机制</h3>
+                <h3>3. AOP 代理机制</h3>
                 <div class="comparison-box">
                     <h4>两种代理方式</h4>
                     <ul>
-                        <li><strong>JDK 动态代理：</strong>基于接口实现，使用 InvocationHandler</li>
-                        <li><strong>CGLIB 代理：</strong>基于子类实现，使用 MethodInterceptor</li>
+                        <li><strong>JDK 动态代理：</strong>基于接口实现</li>
+                        <li><strong>CGLIB 代理：</strong>基于子类实现</li>
                     </ul>
-                    <p><strong>选择策略：</strong>如果目标对象实现了接口，优先使用 JDK 代理；否则使用 CGLIB。</p>
+                    <p><strong>选择策略：</strong>优先使用 JDK 代理，否则使用 CGLIB。</p>
                 </div>
-            </div>
-        </div>
 
-        <!-- 第二列：图表 -->
-        <div class="column">
-            <div class="column-title">核心流程图</div>
-            
-            <div class="section">
-                <h3>循环依赖解决流程</h3>
-                <div class="mermaid">
-flowchart TB
-    A["创建 BeanA"] --> B["实例化 BeanA"]
-    B --> C["加入三级缓存<br/>singletonFactories"]
-    C --> D["populateBean<br/>发现依赖 BeanB"]
-    D --> E["创建 BeanB"]
-    E --> F["实例化 BeanB"]
-    F --> G["加入三级缓存"]
-    G --> H["populateBean<br/>发现依赖 BeanC"]
-    H --> I["创建 BeanC"]
-    I --> J["实例化 BeanC"]
-    J --> K["加入三级缓存"]
-    K --> L["populateBean<br/>发现依赖 BeanA"]
-    L --> M["从三级缓存获取<br/>factoryA.getObject()"]
-    M --> N["放入二级缓存<br/>移除三级缓存"]
-    N --> O["BeanC 注入早期引用"]
-    O --> P["BeanC 完成创建<br/>加入一级缓存"]
-    P --> Q["BeanB 注入 BeanC"]
-    Q --> R["BeanB 完成创建<br/>加入一级缓存"]
-    R --> S["BeanA 注入 BeanB"]
-    S --> T["BeanA 完成创建<br/>加入一级缓存"]
-    
-    style C fill:#fff0e6,stroke:#ff9a56
-    style N fill:#ffe6d9,stroke:#ff9a56
-    style P fill:#fff8f5,stroke:#ff9a56
-    style R fill:#fff8f5,stroke:#ff9a56
-    style T fill:#fff8f5,stroke:#ff9a56
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>AOP 代理类图</h3>
-                <div class="mermaid">
-classDiagram
-    class ProxyFactory {
-        -target
-        -advisors
-        -useCglibProxy
-        +getProxy()
-        +createJdkProxy()
-        +createCglibProxy()
-    }
-    
-    class AopProxy {
-        &lt;&lt;interface&gt;&gt;
-        +getProxy()
-    }
-    
-    class JdkDynamicAopProxy {
-        -advised
-        +getProxy()
-        #invoke(proxy, method, args)
-    }
-    
-    class CglibAopProxy {
-        -advised
-        +getProxy()
-        #intercept(obj, method, args, proxy)
-    }
-    
-    class MethodInterceptor {
-        &lt;&lt;interface&gt;&gt;
-        +intercept(MethodInvocation)
-    }
-    
-    ProxyFactory --> AopProxy
-    AopProxy &lt;|-- JdkDynamicAopProxy
-    AopProxy &lt;|-- CglibAopProxy
-    ProxyFactory *-- MethodInterceptor
-    
-    style ProxyFactory fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
-    style AopProxy fill:#fff8f5,stroke:#ff9a56
-    style JdkDynamicAopProxy fill:#fff0e6,stroke:#ff9a56
-    style CglibAopProxy fill:#fff0e6,stroke:#ff9a56
-                </div>
-            </div>
-        </div>
-
-        <!-- 第三列：动态 SQL 与插件 -->
-        <div class="column">
-            <div class="column-title">动态 SQL 与插件</div>
-            
-            <div class="section">
-                <h3>1. 动态 SQL 解析</h3>
+                <h3>4. 动态 SQL 解析</h3>
                 <div class="comparison-box">
                     <h4>SqlNode 树结构</h4>
-                    <p>XML 动态 SQL 被解析为 SqlNode 树，每个标签对应一个 SqlNode 节点。</p>
                     <ul>
-                        <li><strong>MixedSqlNode：</strong>混合节点，包含多个子节点</li>
-                        <li><strong>IfSqlNode：</strong>条件节点，根据表达式决定是否包含内容</li>
-                        <li><strong>TextSqlNode：</strong>文本节点，包含静态 SQL 和占位符</li>
-                        <li><strong>TrimSqlNode：</strong>修剪节点，处理 WHERE、SET 等前缀</li>
+                        <li><strong>MixedSqlNode：</strong>混合节点</li>
+                        <li><strong>IfSqlNode：</strong>条件节点</li>
+                        <li><strong>TextSqlNode：</strong>文本节点</li>
                     </ul>
                 </div>
+            </div>
+        </div>
 
-                <h3>2. SqlNode 接口设计</h3>
-                <div class="code-block">
+        <!-- 第二列：可翻转的代码/图表卡片 -->
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+            <div class="flip-card-inner">
+                <!-- 正面：代码实现 -->
+                <div class="flip-card-front">
+                    <div class="flip-hint">🔄 点击翻转</div>
+                    <div class="column-title">源码实现</div>
+                    
+                    <div class="section">
+                        <h3>1. SqlNode 接口设计</h3>
+                        <div class="code-block">
 <span class="comment">// SqlNode 接口</span>
 <span class="keyword">interface</span> <span class="type">SqlNode</span> {
     apply(context)
@@ -323,22 +291,17 @@ classDiagram
     text = String
     
     apply(context) {
-        <span class="comment">// 替换参数占位符 #{xxx}</span>
         parser = <span class="keyword">new</span> GenericTokenParser("#{", "}", 
             token -&gt; context.getBindings().get(token))
         context.appendSql(parser.parse(text))
     }
 }
-                </div>
+                        </div>
+                    </div>
 
-                <h3>3. 插件机制</h3>
-                <div class="comparison-box">
-                    <h4>责任链模式</h4>
-                    <p>插件通过责任链模式包装目标对象，在方法执行前后添加增强逻辑。常见用途：性能监控、分页、SQL 审计等。</p>
-                </div>
-
-                <h3>4. 插件实现示例</h3>
-                <div class="code-block">
+                    <div class="section">
+                        <h3>2. 插件机制</h3>
+                        <div class="code-block">
 <span class="comment">// 性能监控插件</span>
 <span class="keyword">class</span> <span class="type">PerformanceInterceptor</span> <span class="keyword">implements</span> <span class="type">Interceptor</span> {
     
@@ -370,19 +333,91 @@ classDiagram
         <span class="keyword">return</span> target
     }
 }
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="section">
-                <h3>5. 核心难点总结</h3>
-                <div class="comparison-box">
-                    <h4>关键点回顾</h4>
-                    <ul>
-                        <li><strong>循环依赖：</strong>三级缓存 + 提前暴露引用</li>
-                        <li><strong>AOP 代理：</strong>JDK 动态代理 + CGLIB，方法调用链</li>
-                        <li><strong>动态 SQL：</strong>SqlNode 树 + 递归 apply()</li>
-                        <li><strong>插件扩展：</strong>责任链 + 代理包装</li>
-                    </ul>
+                <!-- 背面：图表 -->
+                <div class="flip-card-back">
+                    <div class="flip-hint">🔄 点击返回</div>
+                    <div class="column-title">流程图</div>
+                    
+                    <div class="section">
+                        <h3>循环依赖解决流程</h3>
+                        <div class="mermaid">
+flowchart TB
+    A["创建 BeanA"] --> B["实例化 BeanA"]
+    B --> C["加入三级缓存"]
+    C --> D["populateBean<br/>发现依赖 BeanB"]
+    D --> E["创建 BeanB"]
+    E --> F["实例化 BeanB"]
+    F --> G["加入三级缓存"]
+    G --> H["populateBean<br/>发现依赖 BeanA"]
+    H --> I["从三级缓存获取<br/>factoryA.getObject()"]
+    I --> J["放入二级缓存"]
+    J --> K["BeanB 完成创建"]
+    K --> L["BeanA 注入 BeanB"]
+    L --> M["BeanA 完成创建"]
+    
+    style C fill:#fff0e6,stroke:#ff9a56
+    style I fill:#ffe6d9,stroke:#ff9a56
+    style K fill:#fff8f5,stroke:#ff9a56
+    style M fill:#fff8f5,stroke:#ff9a56
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>AOP 代理类图</h3>
+                        <div class="mermaid">
+classDiagram
+    class ProxyFactory {
+        -target
+        -advisors
+        -useCglibProxy
+        +getProxy()
+        +createJdkProxy()
+        +createCglibProxy()
+    }
+    
+    class AopProxy {
+        &lt;&lt;interface&gt;&gt;
+        +getProxy()
+    }
+    
+    class JdkDynamicAopProxy {
+        -advised
+        +getProxy()
+        #invoke(proxy, method, args)
+    }
+    
+    class CglibAopProxy {
+        -advised
+        +getProxy()
+        #intercept(obj, method, args, proxy)
+    }
+    
+    ProxyFactory --> AopProxy
+    AopProxy &lt;|-- JdkDynamicAopProxy
+    AopProxy &lt;|-- CglibAopProxy
+    
+    style ProxyFactory fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
+    style AopProxy fill:#fff8f5,stroke:#ff9a56
+    style JdkDynamicAopProxy fill:#fff0e6,stroke:#ff9a56
+    style CglibAopProxy fill:#fff0e6,stroke:#ff9a56
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>关键点回顾</h3>
+                        <div class="comparison-box">
+                            <ul>
+                                <li><strong>循环依赖：</strong>三级缓存 + 提前暴露引用</li>
+                                <li><strong>AOP 代理：</strong>JDK 动态代理 + CGLIB</li>
+                                <li><strong>动态 SQL：</strong>SqlNode 树 + 递归 apply()</li>
+                                <li><strong>插件扩展：</strong>责任链 + 代理包装</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
