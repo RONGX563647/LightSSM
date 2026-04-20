@@ -265,6 +265,135 @@
         font-size: 14px;
       }
 
+      .comparison-detail {
+        margin-top: 60px;
+      }
+
+      .comparison-section {
+        margin-bottom: 80px;
+      }
+
+      .comparison-section h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #ff6b35;
+      }
+
+      .comparison-section h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #555;
+        margin: 24px 0 16px 0;
+      }
+
+      .code-comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        margin: 24px 0;
+      }
+
+      .code-comparison-item {
+        background: #fafafa;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .code-comparison-item .header {
+        background: #f0f0f0;
+        padding: 12px 20px;
+        font-weight: 600;
+        font-size: 14px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .code-comparison-item.light .header {
+        background: #fff8f5;
+        color: #ff6b35;
+        border-bottom: 1px solid #ffd6c2;
+      }
+
+      .code-comparison-item .code-content {
+        padding: 20px;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 13px;
+        line-height: 1.8;
+        overflow-x: auto;
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 24px 0;
+        font-size: 14px;
+      }
+
+      .comparison-table th {
+        background: #f5f5f5;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #ddd;
+      }
+
+      .comparison-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #eee;
+        vertical-align: top;
+      }
+
+      .comparison-table tr:hover {
+        background: #fafafa;
+      }
+
+      .highlight-box {
+        background: linear-gradient(135deg, #fff8f5 0%, #fff0e6 100%);
+        border-left: 4px solid #ff6b35;
+        padding: 20px 24px;
+        margin: 24px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .highlight-box h4 {
+        color: #ff6b35;
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .highlight-box ul {
+        margin-left: 20px;
+      }
+
+      .highlight-box li {
+        margin: 8px 0;
+        color: #555;
+      }
+
+      .insight-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
+        border-left: 4px solid #667eea;
+        padding: 20px 24px;
+        margin: 24px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .insight-box h4 {
+        color: #667eea;
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .insight-box p {
+        color: #555;
+        line-height: 1.8;
+      }
+
       @media (max-width: 768px) {
         .container {
           padding: 120px 24px 60px;
@@ -286,6 +415,19 @@
         .comparison {
           grid-template-columns: 1fr;
           gap: 32px;
+        }
+
+        .code-comparison {
+          grid-template-columns: 1fr;
+        }
+
+        .comparison-table {
+          font-size: 13px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+          padding: 8px 12px;
         }
 
         .top-links {
@@ -488,6 +630,525 @@
           <div class="question-item">
             <strong>5.</strong>
             <span>AOP 实现原理？你的 LightSSM 支持哪些通知类型？</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="comparison-detail">
+        <div class="comparison-section">
+          <h3>一、IOC 容器深度对比：三级缓存与 Bean 生命周期</h3>
+
+          <h4>1.1 三级缓存结构对比</h4>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th style="width: 15%">维度</th>
+                <th style="width: 42%">原生 Spring</th>
+                <th style="width: 43%">LightSSM</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>一级缓存</strong></td>
+                <td>
+                  <code>singletonObjects</code><br />
+                  存储完整的、初始化完成的 Bean 实例<br />
+                  <small>包含所有生命周期回调执行完毕的对象</small>
+                </td>
+                <td>
+                  <code>singletonObjects</code><br />
+                  存储完整的 Bean 实例<br />
+                  <small>简化版本，仅存储最终对象</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>二级缓存</strong></td>
+                <td>
+                  <code>earlySingletonObjects</code><br />
+                  存储早期 Bean 引用（未完全初始化）<br />
+                  <small>用于解决循环依赖的临时缓存</small>
+                </td>
+                <td>
+                  <code>earlySingletonObjects</code><br />
+                  存储早期 Bean 引用<br />
+                  <small>从三级缓存工厂创建的早期对象</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>三级缓存</strong></td>
+                <td>
+                  <code>singletonFactories</code><br />
+                  存储 ObjectFactory 工厂对象<br />
+                  <small>延迟创建早期引用，支持 AOP 提前代理</small>
+                </td>
+                <td>
+                  <code>singletonFactories</code><br />
+                  存储 ObjectFactory 工厂<br />
+                  <small>简化版本，仅用于创建早期引用</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mermaid">
+            flowchart TB subgraph Spring["原生 Spring 三级缓存"] A1["一级缓存<br />singletonObjects<br />完整
+            Bean"] A2["二级缓存<br />earlySingletonObjects<br />早期引用"]
+            A3["三级缓存<br />singletonFactories<br />ObjectFactory"]
+            A4["BeanPostProcessor<br />AOP 代理"] A3 -->|getObject()| A2 A2
+            -->|依赖注入完成 | A1 A4 -.->|提前暴露代理 | A2 end subgraph
+            Light["LightSSM 三级缓存"] B1["一级缓存<br />singletonObjects<br />完整
+            Bean"] B2["二级缓存<br />earlySingletonObjects<br />早期引用"]
+            B3["三级缓存<br />singletonFactories<br />ObjectFactory"] B3
+            -->|getObject()| B2 B2 -->|依赖注入完成 | B1 end style A1
+            fill:#e8f0fe,stroke:#667eea,stroke-width:2px style A2
+            fill:#fff3cd,stroke:#ffc107 style A3 fill:#f8d7da,stroke:#dc3545
+            style B1 fill:#e8f0fe,stroke:#667eea,stroke-width:2px style B2
+            fill:#fff3cd,stroke:#ffc107 style B3 fill:#f8d7da,stroke:#dc3545
+          </div>
+
+          <h4>1.2 源码对比：getSingleton() 方法</h4>
+          <div class="code-comparison">
+            <div class="code-comparison-item">
+              <div class="header">
+                原生 Spring - AbstractAutowireCapableBeanFactory
+              </div>
+              <div class="code-content">
+                <span class="keyword">protected</span> Object
+                <span class="method">getSingleton</span>(String beanName) {
+                Object singletonObject = <span class="keyword">this</span>
+                .singletonObjects.get(beanName);
+
+                <span class="keyword">if</span> (singletonObject ==
+                <span class="keyword">null</span> &&
+                isSingletonCurrentlyInCreation(beanName)) { singletonObject =
+                <span class="keyword">this</span>
+                .earlySingletonObjects.get(beanName);
+
+                <span class="keyword">if</span> (singletonObject ==
+                <span class="keyword">null</span>) { ObjectFactory&lt;?&gt;
+                factory = <span class="keyword">this</span>
+                .singletonFactories.get(beanName);
+
+                <span class="keyword">if</span> (factory !=
+                <span class="keyword">null</span>) { singletonObject =
+                factory.getObject();
+                <span class="keyword">this</span>.earlySingletonObjects
+                .put(beanName, singletonObject);
+                <span class="keyword">this</span>.singletonFactories
+                .remove(beanName); } } }
+                <span class="keyword">return</span> singletonObject; }
+              </div>
+            </div>
+
+            <div class="code-comparison-item light">
+              <div class="header">LightSSM - DefaultListableBeanFactory</div>
+              <div class="code-content">
+                <span class="keyword">protected</span> Object
+                <span class="method">getSingleton</span>(String beanName) {
+                Object singletonObject = <span class="keyword">this</span>
+                .singletonObjects.get(beanName);
+
+                <span class="keyword">if</span> (singletonObject ==
+                <span class="keyword">null</span> &&
+                isSingletonCurrentlyInCreation(beanName)) { singletonObject =
+                <span class="keyword">this</span>
+                .earlySingletonObjects.get(beanName);
+
+                <span class="keyword">if</span> (singletonObject ==
+                <span class="keyword">null</span>) { ObjectFactory&lt;?&gt;
+                factory = <span class="keyword">this</span>
+                .singletonFactories.get(beanName);
+
+                <span class="keyword">if</span> (factory !=
+                <span class="keyword">null</span>) { singletonObject =
+                factory.getObject();
+                <span class="keyword">this</span>.earlySingletonObjects
+                .put(beanName, singletonObject);
+                <span class="keyword">this</span>.singletonFactories
+                .remove(beanName); } } }
+                <span class="keyword">return</span> singletonObject; }
+              </div>
+            </div>
+          </div>
+
+          <div class="insight-box">
+            <h4>💡 核心洞察</h4>
+            <p>
+              <strong>LightSSM 的三级缓存实现与原生 Spring 几乎一致！</strong
+              >这证明了 Spring 的设计精髓：
+              通过三级缓存打破循环依赖的关键在于<strong>提前暴露早期引用</strong>。
+              原生 Spring 的复杂性在于支持 AOP 代理的提前织入（通过
+              BeanPostProcessor）， 而 LightSSM
+              去除了这个复杂机制，保留了最核心的循环依赖解决方案。
+            </p>
+          </div>
+
+          <h4>1.3 Bean 生命周期完整对比</h4>
+          <div class="mermaid">
+            sequenceDiagram participant Spring as 原生 Spring participant Light
+            as LightSSM rect rgb(232, 240, 254) Note over Spring: 实例化阶段
+            Spring->>Spring: 1. createBeanInstance()<br />反射创建对象
+            Light->>Light: 1. instantiateBean()<br />反射创建对象 end rect
+            rgb(255, 243, 205) Note over Spring: 提前暴露引用 Spring->>Spring:
+            2. addSingletonFactory()<br />放入三级缓存 Light->>Light: 2.
+            addSingletonFactory()<br />放入三级缓存 end rect rgb(255, 248, 245)
+            Note over Spring: 属性填充 Spring->>Spring: 3. populateBean()<br />依赖注入
+            Light->>Light: 3. populateBean()<br />依赖注入 end rect rgb(248,
+            215, 218) Note over Spring: 初始化阶段 Spring->>Spring: 4.
+            initializeBean()<br />• Aware 接口回调<br />•
+            BeanPostProcessor.before()<br />• init-method<br />•
+            BeanPostProcessor.after() Light->>Light: 4. initializeBean()<br />•
+            InitializingBean<br />• init-method end rect rgb(232, 240, 254) Note
+            over Spring: 注册完成 Spring->>Spring: 5. addSingleton()<br />移入一级缓存
+            Light->>Light: 5. addSingleton()<br />移入一级缓存 end
+          </div>
+
+          <div class="highlight-box">
+            <h4>🎯 面试加分点：三级缓存的本质</h4>
+            <ul>
+              <li><strong>一级缓存是目标</strong>：存储完整可用的 Bean</li>
+              <li>
+                <strong>二级缓存是过渡</strong
+                >：存储早期引用，解决"我依赖你，你依赖我"的死锁
+              </li>
+              <li>
+                <strong>三级缓存是延迟</strong>：通过工厂延迟创建早期引用，给
+                AOP 留出代理机会
+              </li>
+              <li><strong>核心思想</strong>：提前暴露、延迟创建、缓存复用</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="comparison-section">
+          <h3>二、SpringMVC 深度对比：请求处理流程</h3>
+
+          <h4>2.1 核心组件架构对比</h4>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th style="width: 15%">组件</th>
+                <th style="width: 42%">原生 Spring</th>
+                <th style="width: 43%">LightSSM</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>前端控制器</strong></td>
+                <td>
+                  <code>DispatcherServlet</code><br />
+                  统一入口，协调各个组件<br />
+                  <small>doDispatch() 方法为核心</small>
+                </td>
+                <td>
+                  <code>DispatcherServlet</code><br />
+                  简化版本，直接路由<br />
+                  <small>service() 方法处理请求</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>处理器映射</strong></td>
+                <td>
+                  <code>HandlerMapping</code><br />
+                  支持多种映射策略<br />
+                  <small>RequestMappingHandlerMapping</small>
+                </td>
+                <td>
+                  <code>Map&lt;String, Handler&gt;</code><br />
+                  URL 直接映射到方法<br />
+                  <small>启动时扫描 @RequestMapping</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>处理器适配器</strong></td>
+                <td>
+                  <code>HandlerAdapter</code><br />
+                  支持多种处理器类型<br />
+                  <small>RequestMappingHandlerAdapter</small>
+                </td>
+                <td>
+                  <code>直接反射调用</code><br />
+                  统一处理方法调用<br />
+                  <small>Method.invoke()</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h4>2.2 请求处理时序对比</h4>
+          <div class="mermaid">
+            sequenceDiagram participant Client as 客户端 participant DS as
+            DispatcherServlet participant HM as HandlerMapping participant HA as
+            HandlerAdapter participant Controller as Controller rect rgb(255,
+            248, 245) Note over Client,Controller: 原生 Spring 流程 Client->>DS:
+            HTTP Request DS->>HM: getHandler(request) HM-->>DS:
+            HandlerExecutionChain DS->>HA: getHandlerAdapter(handler) HA-->>DS:
+            HandlerAdapter DS->>HA: handle(request, response) HA->>Controller:
+            invoke() Controller-->>HA: ModelAndView HA-->>DS: ModelAndView
+            DS->>DS: renderView() DS-->>Client: HTTP Response end rect rgb(232,
+            240, 254) Note over Client,Controller: LightSSM 流程 Client->>DS:
+            HTTP Request DS->>DS: 查找 URL 映射表 DS->>DS: 参数绑定
+            DS->>Controller: Method.invoke() Controller-->>DS: 返回结果 DS->>DS:
+            写入响应 DS-->>Client: HTTP Response end
+          </div>
+
+          <h4>2.3 源码对比：请求分发核心</h4>
+          <div class="code-comparison">
+            <div class="code-comparison-item">
+              <div class="header">
+                原生 Spring - DispatcherServlet.doDispatch()
+              </div>
+              <div class="code-content">
+                <span class="keyword">protected</span>
+                <span class="keyword">void</span>
+                <span class="method">doDispatch</span>( HttpServletRequest
+                request, HttpServletResponse response) {
+
+                <span class="comment">// 1. 查找 Handler</span>
+                HandlerExecutionChain mappedHandler =
+                getHandler(processedRequest);
+
+                <span class="comment">// 2. 查找 HandlerAdapter</span>
+                HandlerAdapter ha = getHandlerAdapter(mappedHandler);
+
+                <span class="comment">// 3. 执行拦截器前置处理</span>
+                <span class="keyword">if</span>
+                (!mappedHandler.applyPreHandle(...)) {
+                <span class="keyword">return</span>; }
+
+                <span class="comment">// 4. 执行 Controller 方法</span>
+                ModelAndView mv = ha.handle( processedRequest, response,
+                mappedHandler.getHandler());
+
+                <span class="comment">// 5. 执行拦截器后置处理</span>
+                mappedHandler.applyPostHandle(...);
+
+                <span class="comment">// 6. 渲染视图</span>
+                processDispatchResult(...); }
+              </div>
+            </div>
+
+            <div class="code-comparison-item light">
+              <div class="header">LightSSM - DispatcherServlet.service()</div>
+              <div class="code-content">
+                <span class="keyword">protected</span>
+                <span class="keyword">void</span>
+                <span class="method">service</span>( HttpServletRequest request,
+                HttpServletResponse response) {
+
+                <span class="comment">// 1. 获取请求路径</span>
+                String url = request.getRequestURI();
+
+                <span class="comment">// 2. 查找 Handler</span>
+                Handler handler = handlerMap.get(url);
+                <span class="keyword">if</span> (handler ==
+                <span class="keyword">null</span>) { response.sendError(404);
+                <span class="keyword">return</span>; }
+
+                <span class="comment">// 3. 参数绑定</span>
+                Object[] args = bindParams( request, handler);
+
+                <span class="comment">// 4. 反射执行</span>
+                Object result = handler.getMethod() .invoke(handler.getBean(),
+                args);
+
+                <span class="comment">// 5. 处理响应</span>
+                handleResponse(response, result); }
+              </div>
+            </div>
+          </div>
+
+          <div class="insight-box">
+            <h4>💡 架构设计洞察</h4>
+            <p>
+              <strong>原生 Spring 的强大在于扩展性</strong>：通过
+              HandlerMapping、HandlerAdapter 的接口抽象，
+              支持多种请求映射方式和处理器类型。而
+              <strong>LightSSM 的精髓在于理解本质</strong>： MVC 的核心就是"URL
+              → Controller 方法 → 响应"的映射过程。
+              通过手写简化版，你能清晰看到每个环节的作用，这是背十遍源码都达不到的理解深度。
+            </p>
+          </div>
+        </div>
+
+        <div class="comparison-section">
+          <h3>三、MyBatis 深度对比：SQL 执行流程</h3>
+
+          <h4>3.1 核心组件职责对比</h4>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th style="width: 15%">组件</th>
+                <th style="width: 42%">原生 MyBatis</th>
+                <th style="width: 43%">LightSSM 整合版</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>SqlSessionFactory</strong></td>
+                <td>
+                  <code>SqlSessionFactoryBuilder</code><br />
+                  解析配置文件构建工厂<br />
+                  <small>单例模式，线程安全</small>
+                </td>
+                <td>
+                  <code>手动创建</code><br />
+                  简化配置，直接注入<br />
+                  <small>由 IOC 容器管理</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Executor</strong></td>
+                <td>
+                  <code>SimpleExecutor/ReuseExecutor</code><br />
+                  执行 SQL，管理缓存<br />
+                  <small>支持插件拦截</small>
+                </td>
+                <td>
+                  <code>SimpleExecutor</code><br />
+                  直接执行 JDBC<br />
+                  <small>无二级缓存</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>StatementHandler</strong></td>
+                <td>
+                  <code>PreparedStatementHandler</code><br />
+                  创建和设置 PreparedStatement<br />
+                  <small>参数设置、结果集处理</small>
+                </td>
+                <td>
+                  <code>直接封装</code><br />
+                  简化参数设置流程<br />
+                  <small>TypeHandler 简化</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mermaid">
+            flowchart TB subgraph MyBatis["原生 MyBatis"] A1["应用层<br />Mapper
+            接口"] --> A2["代理层<br />MapperProxy"] A2 --> A3["会话层<br />SqlSession"]
+            A3 --> A4["执行层<br />Executor"] A4 --> A5["语句层<br />StatementHandler"]
+            A5 --> A6["参数层<br />ParameterHandler"] A5 --> A7["结果层<br />ResultSetHandler"]
+            A6 --> A8["JDBC"] A7 --> A8 end subgraph Light["LightSSM 整合版"]
+            B1["应用层<br />Mapper 接口"] --> B2["代理层<br />MapperProxy"] B2
+            --> B3["会话层<br />SqlSession"] B3 --> B4["执行层<br />SimpleExecutor"]
+            B4 --> B5["JDBC 封装"] end style A1 fill:#e8f0fe,stroke:#667eea
+            style B1 fill:#e8f0fe,stroke:#667eea style A4
+            fill:#fff3cd,stroke:#ffc107 style B4 fill:#fff3cd,stroke:#ffc107
+          </div>
+
+          <div class="highlight-box">
+            <h4>🎯 面试核心：MyBatis 整合到 Spring 的关键</h4>
+            <ul>
+              <li>
+                <strong>问题</strong>：Mapper 接口没有实现类，如何被 Spring
+                管理？
+              </li>
+              <li>
+                <strong>解决方案</strong>：使用 FactoryBean 创建 Mapper 代理对象
+              </li>
+              <li>
+                <strong>核心流程</strong>：
+                <ol>
+                  <li>扫描包路径，找到所有 Mapper 接口</li>
+                  <li>为每个 Mapper 创建 MapperFactoryBean</li>
+                  <li>FactoryBean.getObject() 返回 JdkDynamicAopProxy 代理</li>
+                  <li>
+                    代理对象注入 SqlSession，执行 SQL 时调用 SqlSession 方法
+                  </li>
+                </ol>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="comparison-section">
+          <h3>四、AOP 深度对比：动态代理与切面织入</h3>
+
+          <h4>4.1 代理方式对比</h4>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th style="width: 15%">维度</th>
+                <th style="width: 42%">原生 Spring AOP</th>
+                <th style="width: 43%">LightSSM AOP</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>JDK 代理</strong></td>
+                <td>
+                  <code>JdkDynamicAopProxy</code><br />
+                  基于接口代理<br />
+                  <small>实现 InvocationHandler</small>
+                </td>
+                <td>
+                  <code>JdkDynamicAopProxy</code><br />
+                  相同实现<br />
+                  <small>invoke() 方法织入通知</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>CGLIB 代理</strong></td>
+                <td>
+                  <code>CglibAopProxy</code><br />
+                  基于子类代理<br />
+                  <small>实现 MethodInterceptor</small>
+                </td>
+                <td>
+                  <code>CglibAopProxy</code><br />
+                  相同实现<br />
+                  <small>intercept() 方法织入通知</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>代理选择策略</strong></td>
+                <td>
+                  优先 JDK 代理<br />
+                  无接口时自动切换 CGLIB<br />
+                  <small>proxy-target-class 配置</small>
+                </td>
+                <td>
+                  手动指定<br />
+                  或根据目标类判断<br />
+                  <small>简化判断逻辑</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h4>4.2 通知执行流程对比</h4>
+          <div class="mermaid">
+            sequenceDiagram participant Client as 客户端 participant Proxy as
+            代理对象 chain as 拦截器链 target as 目标对象 rect rgb(255, 248,
+            245) Note over Client,target: 原生 Spring 执行流程 Client->>Proxy:
+            调用方法 Proxy->>chain: 获取拦截器链 chain->>chain: 执行 Before 通知
+            chain->>target: 执行目标方法 chain->>chain: 执行 After 通知
+            chain->>chain: 执行 AfterReturning 通知 chain-->>Proxy: 返回结果
+            Proxy-->>Client: 返回结果 end rect rgb(232, 240, 254) Note over
+            Client,target: LightSSM 执行流程 Client->>Proxy: 调用方法
+            Proxy->>Proxy: 查找匹配的 Advisor Proxy->>Proxy: 执行 Before 通知
+            Proxy->>target: 执行目标方法 Proxy->>Proxy: 执行 AfterReturning 通知
+            Proxy-->>Client: 返回结果 end
+          </div>
+
+          <div class="insight-box">
+            <h4>💡 AOP 本质洞察</h4>
+            <p>
+              <strong>AOP 的核心就三件事</strong>： 1.
+              <strong>在哪里拦截</strong>（Pointcut + AspectJ 表达式） 2.
+              <strong>用什么代理</strong>（JDK 接口代理 vs CGLIB 子类代理） 3.
+              <strong>执行什么逻辑</strong>（Before/After/Around 通知）
+            </p>
+            <p style="margin-top: 12px">
+              原生 Spring 的复杂性在于支持多种通知类型、Advisor
+              链管理、暴露连接点信息等高级特性。 LightSSM
+              剥离了这些复杂性，让你看到 AOP 的骨架：<strong
+                >代理 + 拦截 = AOP</strong
+              >。
+            </p>
           </div>
         </div>
       </div>
