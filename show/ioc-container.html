@@ -229,6 +229,138 @@
           grid-template-columns: 1fr;
         }
       }
+      .highlight-box ul li {
+        margin-bottom: 10px;
+        line-height: 1.7;
+      }
+
+      .highlight-box ul li strong {
+        color: #ff6b35;
+      }
+
+      /* 深度对比内容样式 */
+      .deep-dive-section {
+        background: white;
+        margin: 30px;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      .deep-dive-container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .deep-dive-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+
+      .deep-dive-subtitle {
+        font-size: 16px;
+        color: #666;
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .comparison-section {
+        margin-bottom: 50px;
+      }
+
+      .comparison-section h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #ff6b35;
+      }
+
+      .code-comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        margin: 24px 0;
+      }
+
+      .code-comparison-item {
+        background: #fafafa;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+      }
+
+      .code-comparison-item.light {
+        border: 2px solid #ff9a56;
+      }
+
+      .code-header {
+        background: #f0f0f0;
+        padding: 12px 20px;
+        font-weight: 600;
+        font-size: 14px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .code-header-left {
+        background: #fff8f5;
+        color: #ff6b35;
+        border-bottom: 1px solid #ffd6c2;
+      }
+
+      .code-header-right {
+        background: #fff8f5;
+        color: #ff6b35;
+        border-bottom: 1px solid #ffd6c2;
+      }
+
+      .code-content {
+        padding: 20px;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 13px;
+        line-height: 1.8;
+        overflow-x: auto;
+      }
+
+      .keyword {
+        color: #0000ff;
+        font-weight: 600;
+      }
+
+      .type {
+        color: #2b91af;
+      }
+
+      .method {
+        color: #7453ff;
+      }
+
+      .comment {
+        color: #008000;
+      }
+
+      @media (max-width: 768px) {
+        .deep-dive-container {
+          padding: 20px;
+        }
+
+        .code-comparison {
+          grid-template-columns: 1fr;
+        }
+
+        .comparison-table {
+          font-size: 13px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+          padding: 8px 12px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -426,83 +558,236 @@
             <div class="section">
               <h3>架构类图</h3>
               <div class="mermaid">
-classDiagram
-class BeanFactory {
-&lt;&lt;interface&gt;&gt;
-+ Object getBean(String name)
-+ T getBean(Class requiredType)
-+ boolean containsBean(String name)
-+ boolean isSingleton(String name)
-}
-class ListableBeanFactory {
-&lt;&lt;interface&gt;&gt;
-+ boolean containsBeanDefinition(String)
-+ int getBeanDefinitionCount()
-+ String[] getBeanDefinitionNames()
-+ List getBeansOfType(Class type)
-}
-class DefaultListableBeanFactory {
-- Map beanDefinitionMap
-- Map singletonObjects
-- Map earlySingletonObjects
-- Map singletonFactories
-- List beanPostProcessors
-+ void registerBeanDefinition(String, BeanDefinition)
-+ Object getBean(String name)
-# Object doGetBean(String, Class)
-# Object getSingleton(String)
-# Object createBean(String, BeanDefinition)
-# void populateBean(String, BeanDefinition, Object)
-# Object resolveDependency(Class, String)
-}
-class BeanDefinition {
-+ String beanName
-+ Class beanClass
-+ String scope
-+ boolean isSingleton()
-}
-class BeanPostProcessor {
-&lt;&lt;interface&gt;&gt;
-+ Object postProcessBeforeInitialization(Object, String)
-+ Object postProcessAfterInitialization(Object, String)
-}
-BeanFactory &lt;|-- ListableBeanFactory
-ListableBeanFactory &lt;|-- DefaultListableBeanFactory
-DefaultListableBeanFactory *-- BeanDefinition
-DefaultListableBeanFactory *-- BeanPostProcessor
-style BeanFactory fill:#fff8f5,stroke:#ff9a56,stroke-width:2px
-style ListableBeanFactory fill:#fff8f5,stroke:#ff9a56
-style DefaultListableBeanFactory fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
+                classDiagram class BeanFactory { &lt;&lt;interface&gt;&gt; +
+                Object getBean(String name) + T getBean(Class requiredType) +
+                boolean containsBean(String name) + boolean isSingleton(String
+                name) } class ListableBeanFactory { &lt;&lt;interface&gt;&gt; +
+                boolean containsBeanDefinition(String) + int
+                getBeanDefinitionCount() + String[] getBeanDefinitionNames() +
+                List getBeansOfType(Class type) } class
+                DefaultListableBeanFactory { - Map beanDefinitionMap - Map
+                singletonObjects - Map earlySingletonObjects - Map
+                singletonFactories - List beanPostProcessors + void
+                registerBeanDefinition(String, BeanDefinition) + Object
+                getBean(String name) # Object doGetBean(String, Class) # Object
+                getSingleton(String) # Object createBean(String, BeanDefinition)
+                # void populateBean(String, BeanDefinition, Object) # Object
+                resolveDependency(Class, String) } class BeanDefinition { +
+                String beanName + Class beanClass + String scope + boolean
+                isSingleton() } class BeanPostProcessor {
+                &lt;&lt;interface&gt;&gt; + Object
+                postProcessBeforeInitialization(Object, String) + Object
+                postProcessAfterInitialization(Object, String) } BeanFactory
+                &lt;|-- ListableBeanFactory ListableBeanFactory &lt;|--
+                DefaultListableBeanFactory DefaultListableBeanFactory *--
+                BeanDefinition DefaultListableBeanFactory *-- BeanPostProcessor
+                style BeanFactory fill:#fff8f5,stroke:#ff9a56,stroke-width:2px
+                style ListableBeanFactory fill:#fff8f5,stroke:#ff9a56 style
+                DefaultListableBeanFactory
+                fill:#fffbf7,stroke:#ff9a56,stroke-width:2px
               </div>
             </div>
 
             <div class="section">
               <h3>三级缓存机制</h3>
               <div class="mermaid">
-flowchart LR
-A["getBean(name)"] --> B["一级缓存<br />singletonObjects"]
-B --> C{"命中？"}
-C -->|是 | D["返回 Bean"]
-C -->|否 | E{"正在创建？"}
-E -->|否 | F["创建新 Bean"]
-E -->|是 | G["二级缓存<br />earlySingletonObjects"]
-G --> H{"命中？"}
-H -->|是 | D
-H -->|否 | I["三级缓存<br />singletonFactories"]
-I --> J{"有工厂？"}
-J -->|否 | D
-J -->|是 | K["factory.getObject()"]
-K --> L["放入二级缓存"]
-L --> M["移除三级缓存"]
-M --> D
-style A fill:#ff9a56,color:#fff
-style D fill:#ffb380,color:#fff
-style B fill:#fff8f5,stroke:#ff9a56
-style G fill:#fff0e6,stroke:#ff9a56
-style I fill:#ffe6d9,stroke:#ff9a56
+                flowchart LR A["getBean(name)"] --> B["一级缓存<br />singletonObjects"]
+                B --> C{"命中？"} C -->|是 | D["返回 Bean"] C -->|否 |
+                E{"正在创建？"} E -->|否 | F["创建新 Bean"] E -->|是 |
+                G["二级缓存<br />earlySingletonObjects"] G --> H{"命中？"} H
+                -->|是 | D H -->|否 | I["三级缓存<br />singletonFactories"] I
+                --> J{"有工厂？"} J -->|否 | D J -->|是 |
+                K["factory.getObject()"] K --> L["放入二级缓存"] L -->
+                M["移除三级缓存"] M --> D style A fill:#ff9a56,color:#fff style
+                D fill:#ffb380,color:#fff style B fill:#fff8f5,stroke:#ff9a56
+                style G fill:#fff0e6,stroke:#ff9a56 style I
+                fill:#ffe6d9,stroke:#ff9a56
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 深度对比内容 -->
+    <div class="deep-dive-section">
+      <div class="deep-dive-container">
+        <h2 class="deep-dive-title">📚 源码深度对比：IOC 容器与三级缓存</h2>
+        <p class="deep-dive-subtitle">
+          通过对比学习法，深入理解 Spring IOC 的核心设计思想
+        </p>
+
+        <div class="comparison-section">
+          <h3>一、三级缓存结构对比</h3>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th style="width: 15%">维度</th>
+                <th style="width: 42%">原生 Spring</th>
+                <th style="width: 43%">LightSSM</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>一级缓存</strong></td>
+                <td>
+                  <code>singletonObjects</code><br />
+                  存储完整的、初始化完成的 Bean 实例<br />
+                  <small>包含所有生命周期回调执行完毕的对象</small>
+                </td>
+                <td>
+                  <code>singletonObjects</code><br />
+                  存储完整的 Bean 实例<br />
+                  <small>简化版本，仅存储最终对象</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>二级缓存</strong></td>
+                <td>
+                  <code>earlySingletonObjects</code><br />
+                  存储早期 Bean 引用（未完全初始化）<br />
+                  <small>用于解决循环依赖的临时缓存</small>
+                </td>
+                <td>
+                  <code>earlySingletonObjects</code><br />
+                  存储早期 Bean 引用<br />
+                  <small>从三级缓存工厂创建的早期对象</small>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>三级缓存</strong></td>
+                <td>
+                  <code>singletonFactories</code><br />
+                  存储 ObjectFactory 工厂对象<br />
+                  <small>延迟创建早期引用，支持 AOP 提前代理</small>
+                </td>
+                <td>
+                  <code>singletonFactories</code><br />
+                  存储 ObjectFactory 工厂<br />
+                  <small>简化版本，仅用于创建早期引用</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="comparison-section">
+          <h3>二、源码对比：getSingleton() 方法</h3>
+          <div class="code-comparison">
+            <div class="code-comparison-item">
+              <div class="code-header code-header-left">
+                原生 Spring - AbstractAutowireCapableBeanFactory
+              </div>
+              <div class="code-content">
+                <span class="keyword">protected</span> Object
+                <span class="method">getSingleton</span>(String beanName) {
+                Object singletonObject = <span class="keyword">this</span>
+                .singletonObjects.get(beanName);
+
+                <span class="keyword">if</span> (singletonObject ==
+                <span class="keyword">null</span> &&
+                isSingletonCurrentlyInCreation(beanName)) { singletonObject =
+                <span class="keyword">this</span>
+                .earlySingletonObjects.get(beanName);
+
+                <span class="keyword">if</span> (singletonObject ==
+                <span class="keyword">null</span>) { ObjectFactory&lt;?&gt;
+                factory = <span class="keyword">this</span>
+                .singletonFactories.get(beanName);
+
+                <span class="keyword">if</span> (factory !=
+                <span class="keyword">null</span>) { singletonObject =
+                factory.getObject();
+                <span class="keyword">this</span>.earlySingletonObjects
+                .put(beanName, singletonObject);
+                <span class="keyword">this</span>.singletonFactories
+                .remove(beanName); } } }
+                <span class="keyword">return</span> singletonObject; }
+              </div>
+            </div>
+
+            <div class="code-comparison-item light">
+              <div class="code-header code-header-right">
+                LightSSM - DefaultListableBeanFactory
+              </div>
+              <div class="code-content">
+                <span class="keyword">protected</span> Object
+                <span class="method">getSingleton</span>(String beanName) {
+                Object singletonObject = <span class="keyword">this</span>
+                .singletonObjects.get(beanName);
+
+                <span class="keyword">if</span> (singletonObject ==
+                <span class="keyword">null</span> &&
+                isSingletonCurrentlyInCreation(beanName)) { singletonObject =
+                <span class="keyword">this</span>
+                .earlySingletonObjects.get(beanName);
+
+                <span class="keyword">if</span> (singletonObject ==
+                <span class="keyword">null</span>) { ObjectFactory&lt;?&gt;
+                factory = <span class="keyword">this</span>
+                .singletonFactories.get(beanName);
+
+                <span class="keyword">if</span> (factory !=
+                <span class="keyword">null</span>) { singletonObject =
+                factory.getObject();
+                <span class="keyword">this</span>.earlySingletonObjects
+                .put(beanName, singletonObject);
+                <span class="keyword">this</span>.singletonFactories
+                .remove(beanName); } } }
+                <span class="keyword">return</span> singletonObject; }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-section">
+          <h3>三、Bean 生命周期完整对比</h3>
+          <div class="mermaid">
+            sequenceDiagram participant Spring as 原生 Spring participant Light
+            as LightSSM rect rgb(232, 240, 254) Note over Spring: 实例化阶段
+            Spring->>Spring: 1. createBeanInstance()<br />反射创建对象
+            Light->>Light: 1. instantiateBean()<br />反射创建对象 end rect
+            rgb(255, 243, 205) Note over Spring: 提前暴露引用 Spring->>Spring:
+            2. addSingletonFactory()<br />放入三级缓存 Light->>Light: 2.
+            addSingletonFactory()<br />放入三级缓存 end rect rgb(255, 248, 245)
+            Note over Spring: 属性填充 Spring->>Spring: 3. populateBean()<br />依赖注入
+            Light->>Light: 3. populateBean()<br />依赖注入 end rect rgb(248,
+            215, 218) Note over Spring: 初始化阶段 Spring->>Spring: 4.
+            initializeBean()<br />• Aware 接口回调<br />•
+            BeanPostProcessor.before()<br />• init-method<br />•
+            BeanPostProcessor.after() Light->>Light: 4. initializeBean()<br />•
+            InitializingBean<br />• init-method end rect rgb(232, 240, 254) Note
+            over Spring: 注册完成 Spring->>Spring: 5. addSingleton()<br />移入一级缓存
+            Light->>Light: 5. addSingleton()<br />移入一级缓存 end
+          </div>
+        </div>
+
+        <div class="insight-box">
+          <h4>💡 核心洞察</h4>
+          <p>
+            <strong>LightSSM 的三级缓存实现与原生 Spring 几乎一致！</strong
+            >这证明了 Spring 的设计精髓：
+            通过三级缓存打破循环依赖的关键在于<strong>提前暴露早期引用</strong>。
+            原生 Spring 的复杂性在于支持 AOP 代理的提前织入（通过
+            BeanPostProcessor）， 而 LightSSM
+            去除了这个复杂机制，保留了最核心的循环依赖解决方案。
+          </p>
+        </div>
+
+        <div class="highlight-box">
+          <h4>🎯 面试加分点：三级缓存的本质</h4>
+          <ul>
+            <li><strong>一级缓存是目标</strong>：存储完整可用的 Bean</li>
+            <li>
+              <strong>二级缓存是过渡</strong
+              >：存储早期引用，解决"我依赖你，你依赖我"的死锁
+            </li>
+            <li>
+              <strong>三级缓存是延迟</strong>：通过工厂延迟创建早期引用，给 AOP
+              留出代理机会
+            </li>
+            <li><strong>核心思想</strong>：提前暴露、延迟创建、缓存复用</li>
+          </ul>
         </div>
       </div>
     </div>
