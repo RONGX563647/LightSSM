@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>06. 数据源与事务管理 - LightSSM 文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏样式 */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        padding: 40px 0;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+
+      .sidebar-header {
+        padding: 0 24px 32px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 24px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-header p {
+        font-size: 13px;
+        color: #999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 10px 24px;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+      }
+
+      .sidebar-nav a:hover {
+        background: #f5f5f5;
+        color: #ff6b35;
+      }
+
+      .sidebar-nav a.active {
+        background: #fff5f2;
+        color: #ff6b35;
+        border-left-color: #ff6b35;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .section-title {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 主内容区域 */
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 60px 80px;
+        max-width: 100%;
+      }
+
+      .content-container {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      /* Markdown 样式 */
+      .markdown-body {
+        font-size: 16px;
+        line-height: 2;
+        color: #444;
+      }
+
+      .markdown-body h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .markdown-body h2 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 48px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .markdown-body h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 32px 0 16px;
+      }
+
+      .markdown-body h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 24px 0 12px;
+      }
+
+      .markdown-body p {
+        margin-bottom: 24px;
+        text-align: justify;
+      }
+
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      .markdown-body li {
+        margin-bottom: 12px;
+      }
+
+      .markdown-body a {
+        color: #ff6b35;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .markdown-body a:hover {
+        color: #e65a2b;
+        text-decoration: underline;
+      }
+
+      .markdown-body code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        background: #fafafa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #d73a49;
+      }
+
+      .markdown-body pre {
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+      }
+
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: #24292e;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .markdown-body blockquote {
+        border-left: 4px solid #ff6b35;
+        padding-left: 24px;
+        margin: 24px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid #f0f0f0;
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .markdown-body th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .markdown-body hr {
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        margin: 48px 0;
+      }
+
+      .markdown-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 24px auto;
+      }
+
+      /* 顶部导航 */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 280px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 80px;
+        z-index: 999;
+      }
+
+      .top-nav-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .top-nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-nav-links a:hover {
+        color: #ff6b35;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .sidebar {
+          width: 240px;
+        }
+
+        .main-content {
+          margin-left: 240px;
+          padding: 60px 40px;
+        }
+
+        .top-nav {
+          left: 240px;
+          padding: 0 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 24px 40px;
+        }
+
+        .top-nav {
+          left: 0;
+          padding: 0 24px;
+        }
+
+        .menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          border: 1px solid #f0f0f0;
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>LightSSM</h1>
+        <p>轻量级自研 SSM 框架文档</p>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="section-title">快速开始</li>
+        <li><a href="index.html">首页</a></li>
+        <li><a href="01-architecture.html" class="">01. 架构概述与设计哲学</a></li>
+
+        <li class="section-title">核心模块</li>
+        <li><a href="02-ioc-container.html" class="">02. IoC 容器核心实现</a></li>
+        <li><a href="03-aop-proxy.html" class="">03. AOP 代理机制</a></li>
+        <li><a href="04-mvc-framework.html" class="">04. MVC 框架实现</a></li>
+        <li><a href="05-orm-architecture.html" class="">05. ORM 核心架构</a></li>
+
+        <li class="section-title">数据层实现</li>
+        <li><a href="06-datasource-transaction.html" class="active">06. 数据源与事务管理</a></li>
+        <li><a href="07-sql-parsing.html" class="">07. SQL 解析与动态 SQL</a></li>
+        <li><a href="08-type-system.html" class="">08. 类型系统与类型处理器</a></li>
+
+        <li class="section-title">扩展与高级特性</li>
+        <li><a href="09-plugin-system.html" class="">09. 插件系统与扩展机制</a></li>
+        <li><a href="10-advanced-topics.html" class="">10. 高级特性与源码剖析</a></li>
+
+        <li class="section-title">相关链接</li>
+        <li>
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub 仓库</a
+          >
+        </li>
+        <li><a href="https://www.rongx.top" target="_blank">个人主页</a></li>
+      </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <nav class="top-nav">
+        <div class="top-nav-links">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <a href="https://www.rongx.top" target="_blank">主页</a>
+        </div>
+      </nav>
+
+      <div class="content-container">
+        <div class="markdown-body" id="content">
+          <h1>06 - 数据源与事务管理实现</h1>
+<h2>1. 数据源架构</h2>
+<h3>1.1 DataSourceFactory接口</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public interface DataSourceFactory {<br>    void setProperties(Properties props);<br>    DataSource getDataSource();<br>}</code></pre></p>
+<p><strong>MyBatis官方DataSourceFactory</strong>：<br><pre><code class="language-java">public interface DataSourceFactory {<br>    void setProperties(Properties props);<br>    DataSource getDataSource();<br>}</code></pre></p>
+<p><strong>接口完全一致</strong>。</p>
+<h3>1.2 数据源类型</h3>
+<p>LightSSM实现了三种数据源工厂：</p>
+<pre><code class="language-">DataSourceFactory
+├── UnpooledDataSourceFactory（非池化）
+├── PooledDataSourceFactory（池化）
+└── DruidDataSourceFactory（Druid连接池）</code></pre>
+<h2>2. 非池化数据源</h2>
+<h3>2.1 UnpooledDataSource</h3>
+<p><strong>核心实现</strong>：<br><pre><code class="language-java">public class UnpooledDataSource implements DataSource {<br>    private String driver;<br>    private String url;<br>    private String username;<br>    private String password;<br>    <br>    @Override<br>    public Connection getConnection() throws SQLException {<br>        return doGetConnection(username, password);<br>    }<br>    <br>    private Connection doGetConnection(String username, String password) throws SQLException {<br>        Properties props = new Properties();<br>        if (driver != null) props.setProperty("driver", driver);<br>        props.putAll(driverProperties);<br>        <br>        if (username != null) props.setProperty("user", username);<br>        if (password != null) props.setProperty("password", password);<br>        <br>        return DriverManager.getConnection(url, props);<br>    }<br>}</code></pre></p>
+<h3>2.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的UnpooledDataSource</strong>：<br><ul><li>支持JNDI数据源查找</li><br><li>支持设置默认事务隔离级别</li><br><li>支持日志记录</li><br><li>支持驱动注册</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>仅支持基本的DriverManager获取连接</li><br><li>不支持JNDI</li><br><li>不支持事务隔离级别配置</li><br></ul><br><h2>3. 池化数据源</h2></p>
+<h3>3.1 PooledDataSource实现</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class PooledDataSource implements DataSource {<br>    private DataSourceFactory dataSourceFactory;<br>    private int poolMaximumActiveConnections = 10;<br>    private int poolMaximumIdleConnections = 5;<br>    private int poolMaximumCheckoutTime = 20000;<br>    private int poolTimeToWait = 20000;<br>    <br>    private final List<PooledConnection> idleConnections = new ArrayList<>();<br>    private final List<PooledConnection> activeConnections = new ArrayList<>();<br>    <br>    @Override<br>    public Connection getConnection() throws SQLException {<br>        return getConnectionFromPool();<br>    }<br>    <br>    private Connection getConnectionFromPool() throws SQLException {<br>        synchronized (this) {<br>            // 1. 查找空闲连接<br>            if (!idleConnections.isEmpty()) {<br>                PooledConnection pooledConn = idleConnections.remove(0);<br>                activeConnections.add(pooledConn);<br>                return pooledConn.getRealConnection();<br>            }<br>            <br>            // 2. 创建新连接（未达上限）<br>            if (activeConnections.size() < poolMaximumActiveConnections) {<br>                Connection realConn = dataSourceFactory.getDataSource().getConnection();<br>                PooledConnection pooledConn = new PooledConnection(realConn, this);<br>                activeConnections.add(pooledConn);<br>                return pooledConn.getRealConnection();<br>            }<br>            <br>            // 3. 等待可用连接<br>            try {<br>                this.wait(poolTimeToWait);<br>            } catch (InterruptedException e) {<br>                Thread.currentThread().interrupt();<br>            }<br>            <br>            return getConnectionFromPool(); // 重试<br>        }<br>    }<br>}</code></pre></p>
+<h3>3.2 PooledConnection代理连接</h3>
+<pre><code class="language-java">public class PooledConnection implements InvocationHandler {
+    private Connection realConnection;
+    private PooledDataSource dataSource;
+    private boolean closed = false;
+    
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if ("close".equals(method.getName())) {
+            // 调用close时，不真正关闭，而是返回连接池
+            returnReturnToPool();
+            return null;
+        }
+        return method.invoke(realConnection, args);
+    }
+    
+    private void returnToPool() throws SQLException {
+        synchronized (dataSource) {
+            dataSource.activeConnections.remove(this);
+            dataSource.idleConnections.add(this);
+            closed = false;
+            dataSource.notifyAll(); // 唤醒等待的线程
+        }
+    }
+}</code></pre>
+<h3>3.3 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的PooledDataSource</strong>：<br><ul><li>使用动态代理（Proxy.newProxyInstance）</li><br><li>支持连接池统计（PooledState）</li><br><li>支持连接超时检测</li><br><li>支持Ping测试连接有效性</li><br><li>支持最大连接数限制</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>基础的连接获取和归还</li><br><li>简单的空闲/活跃列表管理</li><br><li>基础的等待机制</li><br></ul><br><h2>4. Druid数据源集成</h2></p>
+<h3>4.1 DruidDataSourceFactory</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class DruidDataSourceFactory implements DataSourceFactory {<br>    private Properties properties;<br>    <br>    @Override<br>    public void setProperties(Properties props) {<br>        this.properties = props;<br>    }<br>    <br>    @Override<br>    public DataSource getDataSource() {<br>        try {<br>            DruidDataSource dataSource = new DruidDataSource();<br>            dataSource.setDriverClassName(properties.getProperty("driver"));<br>            dataSource.setUrl(properties.getProperty("url"));<br>            dataSource.setUsername(properties.getProperty("username"));<br>            dataSource.setPassword(properties.getProperty("password"));<br>            <br>            // 配置连接池参数<br>            dataSource.setInitialSize(<br>                Integer.parseInt(properties.getProperty("initialSize", "5")));<br>            dataSource.setMinIdle(<br>                Integer.parseInt(properties.getProperty("minIdle", "10")));<br>            dataSource.setMaxActive(<br>                Integer.parseInt(properties.getProperty("maxActive", "20")));<br>            <br>            return dataSource;<br>        } catch (Exception e) {<br>            throw new RuntimeException("Failed to create DruidDataSource", e);<br>        }<br>    }<br>}</code></pre></p>
+<h3>4.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方</strong>不直接集成Druid，而是通过SPI机制：<br><pre><code class="language-java">// 用户可以自定义DataSourceFactory实现<br>public class MyDruidDataSourceFactory implements DataSourceFactory {<br>    // 自定义实现<br>}</code></pre></p>
+<p><strong>LightSSM</strong>直接内置Druid支持，方便使用。</p>
+<h2>5. 事务管理</h2>
+<h3>5.1 Transaction接口</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public interface Transaction {<br>    Connection getConnection() throws SQLException;<br>    void commit() throws SQLException;<br>    void rollback() throws SQLException;<br>    void close() throws SQLException;<br>}</code></pre></p>
+<p><strong>MyBatis官方Transaction接口</strong>：<br><pre><code class="language-java">public interface Transaction {<br>    Connection getConnection() throws SQLException;<br>    void commit() throws SQLException;<br>    void rollback() throws SQLException;<br>    void close() throws SQLException;<br>    Integer getTimeout() throws SQLException;<br>    void reset() throws SQLException;<br>    TransactionType getType();<br>}</code></pre></p>
+<h3>5.2 JdbcTransaction实现</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class JdbcTransaction implements Transaction {<br>    private Connection connection;<br>    private DataSource dataSource;<br>    private boolean autoCommit = true;<br>    <br>    @Override<br>    public Connection getConnection() throws SQLException {<br>        if (connection == null) {<br>            connection = dataSource.getConnection();<br>            connection.setAutoCommit(autoCommit);<br>        }<br>        return connection;<br>    }<br>    <br>    @Override<br>    public void commit() throws SQLException {<br>        if (connection != null && !autoCommit) {<br>            connection.commit();<br>        }<br>    }<br>    <br>    @Override<br>    public void rollback() throws SQLException {<br>        if (connection != null && !autoCommit) {<br>            connection.rollback();<br>        }<br>    }<br>    <br>    @Override<br>    public void close() throws SQLException {<br>        if (connection != null) {<br>            connection.close();<br>        }<br>    }<br>}</code></pre></p>
+<h3>5.3 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的JdbcTransaction</strong>：<br><ul><li>支持配置事务超时</li><br><li>支持保存点（Savepoint）</li><br><li>支持事务隔离级别配置</li><br><li>支持从连接池获取连接时保持原autoCommit状态</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>基础的commit/rollback/close</li><br><li>简单的autoCommit控制</li><br><li>不支持保存点</li><br><li>不支持超时</li><br></ul><br><h2>6. 事务工厂</h2></p>
+<h3>6.1 TransactionFactory接口</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public interface TransactionFactory {<br>    void setProperties(Properties props);<br>    Transaction newTransaction(Connection conn);<br>    Transaction newTransaction(DataSource ds);<br>}</code></pre></p>
+<p><strong>MyBatis官方TransactionFactory</strong>：<br><pre><code class="language-java">public interface TransactionFactory {<br>    void setProperties(Properties props);<br>    Transaction newTransaction(Connection conn);<br>    Transaction newTransaction(DataSource ds, TransactionIsolationLevel level, <br>        boolean autoCommit);<br>}</code></pre></p>
+<h3>6.2 JdbcTransactionFactory实现</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class JdbcTransactionFactory implements TransactionFactory {<br>    @Override<br>    public void setProperties(Properties props) {<br>        // 可以配置事务相关属性<br>    }<br>    <br>    @Override<br>    public Transaction newTransaction(Connection conn) {<br>        try {<br>            JdbcTransaction transaction = new JdbcTransaction(conn);<br>            return transaction;<br>        } catch (SQLException e) {<br>            throw new RuntimeException("Failed to create transaction", e);<br>        }<br>    }<br>    <br>    @Override<br>    public Transaction newTransaction(DataSource ds) {<br>        try {<br>            JdbcTransaction transaction = new JdbcTransaction(ds);<br>            return transaction;<br>        } catch (SQLException e) {<br>            throw new RuntimeException("Failed to create transaction", e);<br>        }<br>    }<br>}</code></pre></p>
+<h2>7. 连接池状态监控</h2>
+<h3>7.1 PoolState状态管理</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class PoolState {<br>    protected PooledDataSource dataSource;<br>    <br>    public int getActiveConnectionCount() {<br>        synchronized (dataSource) {<br>            return dataSource.activeConnections.size();<br>        }<br>    }<br>    <br>    public int getIdleConnectionCount() {<br>        synchronized (dataSource) {<br>            return dataSource.idleConnections.size();<br>        }<br>    }<br>    <br>    public int getTotalConnectionCount() {<br>        return getActiveConnectionCount() + getIdleConnectionCount();<br>    }<br>}</code></pre></p>
+<p><strong>MyBatis官方PoolState</strong>还包含：<br><ul><li>累计请求次数</li><br><li>累计错误次数</li><br><li>平均等待时间</li><br><li>平均检出时间</li><br></ul><br><h2>8. 设计模式总结</h2></p>
+<h3>8.1 工厂模式</h3>
+<pre><code class="language-java">// 数据源工厂
+public interface DataSourceFactory {
+    DataSource getDataSource();
+}
+<p>// 事务工厂<br>public interface TransactionFactory {<br>    Transaction newTransaction(DataSource ds);<br>}</code></pre></p>
+<h3>8.2 代理模式</h3>
+<pre><code class="language-java">// PooledConnection代理
+public class PooledConnection implements InvocationHandler {
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if ("close".equals(method.getName())) {
+            returnToPool(); // 归还连接池
+            return null;
+        }
+        return method.invoke(realConnection, args);
+    }
+}</code></pre>
+<h3>8.3 单例模式</h3>
+<pre><code class="language-java">// 每种数据源工厂都是单例使用
+@Configuration
+public class DataSourceConfig {
+    @Bean
+    public DataSource dataSource() {
+        PooledDataSourceFactory factory = new PooledDataSourceFactory();
+        factory.setProperties(props);
+        return factory.getDataSource(); // 单例Bean
+    }
+}</code></pre>
+<h2>9. 面试考点</h2>
+<h3>9.1 高频问题</h3>
+<p>1. <strong>数据库连接池的作用是什么？</strong><br>   - 减少连接创建和销毁的开销<br>   - 控制并发连接数<br>   - 提高系统响应速度</p>
+<p>2. <strong>常见的连接池有哪些？</strong><br>   - DBCP（Apache）<br>   - C3P0<br>   - Druid（阿里）<br>   - HikariCP（Spring Boot默认）</p>
+<p>3. <strong>事务的ACID特性是什么？</strong><br>   - 原子性（Atomicity）<br>   - 一致性（Consistency）<br>   - 隔离性（Isolation）<br>   - 持久性（Durability）</p>
+<h3>9.2 深度问题</h3>
+<p>1. <strong>连接池如何避免连接泄露？</strong><br>   - 设置最大检出时间<br>   - 定期检测空闲连接<br>   - 使用try-with-resources</p>
+<p>2. <strong>HikariCP为什么性能最好？</strong><br>   - 字节码级别优化<br>   - 无锁设计<br>   - 连接快速检测</p>
+<h2>10. 总结</h2>
+<p>LightSSM的数据源与事务模块实现了：</p>
+<ul><li><strong>三种数据源</strong>：Unpooled、Pooled、Druid</li>
+<li><strong>连接池管理</strong>：空闲/活跃列表</li>
+<li><strong>事务管理</strong>：JdbcTransaction</li>
+<li><strong>工厂模式</strong>：DataSourceFactory/TransactionFactory</li>
+</ul>
+通过对照MyBatis官方源码，可以看到LightSSM保留了数据源与事务的核心机制，剥离了高级特性（如连接检测、统计监控等），非常适合学习理解。
+<p>---</p>
+<p><strong>上一篇</strong>：<a href="05-ORM核心架构与MyBatis源码对比.md">05 - ORM核心架构与MyBatis源码对比</a></p>
+<p><strong>下一篇</strong>：<a href="07-SQL解析与动态SQL实现.md">07 - SQL解析与动态SQL实现</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // 移动端菜单切换
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      // 自动高亮当前页面
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPage = window.location.pathname.split("/").pop();
+        const links = document.querySelectorAll(".sidebar-nav a");
+        links.forEach((link) => {
+          if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 代码块语言高亮
+      document.addEventListener("DOMContentLoaded", function () {
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
+          const language = block.className.replace("language-", "");
+          if (language) {
+            block.parentElement.setAttribute("data-language", language);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

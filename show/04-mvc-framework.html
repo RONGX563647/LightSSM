@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>04. MVC 框架实现 - LightSSM 文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏样式 */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        padding: 40px 0;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+
+      .sidebar-header {
+        padding: 0 24px 32px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 24px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-header p {
+        font-size: 13px;
+        color: #999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 10px 24px;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+      }
+
+      .sidebar-nav a:hover {
+        background: #f5f5f5;
+        color: #ff6b35;
+      }
+
+      .sidebar-nav a.active {
+        background: #fff5f2;
+        color: #ff6b35;
+        border-left-color: #ff6b35;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .section-title {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 主内容区域 */
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 60px 80px;
+        max-width: 100%;
+      }
+
+      .content-container {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      /* Markdown 样式 */
+      .markdown-body {
+        font-size: 16px;
+        line-height: 2;
+        color: #444;
+      }
+
+      .markdown-body h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .markdown-body h2 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 48px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .markdown-body h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 32px 0 16px;
+      }
+
+      .markdown-body h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 24px 0 12px;
+      }
+
+      .markdown-body p {
+        margin-bottom: 24px;
+        text-align: justify;
+      }
+
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      .markdown-body li {
+        margin-bottom: 12px;
+      }
+
+      .markdown-body a {
+        color: #ff6b35;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .markdown-body a:hover {
+        color: #e65a2b;
+        text-decoration: underline;
+      }
+
+      .markdown-body code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        background: #fafafa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #d73a49;
+      }
+
+      .markdown-body pre {
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+      }
+
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: #24292e;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .markdown-body blockquote {
+        border-left: 4px solid #ff6b35;
+        padding-left: 24px;
+        margin: 24px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid #f0f0f0;
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .markdown-body th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .markdown-body hr {
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        margin: 48px 0;
+      }
+
+      .markdown-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 24px auto;
+      }
+
+      /* 顶部导航 */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 280px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 80px;
+        z-index: 999;
+      }
+
+      .top-nav-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .top-nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-nav-links a:hover {
+        color: #ff6b35;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .sidebar {
+          width: 240px;
+        }
+
+        .main-content {
+          margin-left: 240px;
+          padding: 60px 40px;
+        }
+
+        .top-nav {
+          left: 240px;
+          padding: 0 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 24px 40px;
+        }
+
+        .top-nav {
+          left: 0;
+          padding: 0 24px;
+        }
+
+        .menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          border: 1px solid #f0f0f0;
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>LightSSM</h1>
+        <p>轻量级自研 SSM 框架文档</p>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="section-title">快速开始</li>
+        <li><a href="index.html">首页</a></li>
+        <li><a href="01-architecture.html" class="">01. 架构概述与设计哲学</a></li>
+
+        <li class="section-title">核心模块</li>
+        <li><a href="02-ioc-container.html" class="">02. IoC 容器核心实现</a></li>
+        <li><a href="03-aop-proxy.html" class="">03. AOP 代理机制</a></li>
+        <li><a href="04-mvc-framework.html" class="active">04. MVC 框架实现</a></li>
+        <li><a href="05-orm-architecture.html" class="">05. ORM 核心架构</a></li>
+
+        <li class="section-title">数据层实现</li>
+        <li><a href="06-datasource-transaction.html" class="">06. 数据源与事务管理</a></li>
+        <li><a href="07-sql-parsing.html" class="">07. SQL 解析与动态 SQL</a></li>
+        <li><a href="08-type-system.html" class="">08. 类型系统与类型处理器</a></li>
+
+        <li class="section-title">扩展与高级特性</li>
+        <li><a href="09-plugin-system.html" class="">09. 插件系统与扩展机制</a></li>
+        <li><a href="10-advanced-topics.html" class="">10. 高级特性与源码剖析</a></li>
+
+        <li class="section-title">相关链接</li>
+        <li>
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub 仓库</a
+          >
+        </li>
+        <li><a href="https://www.rongx.top" target="_blank">个人主页</a></li>
+      </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <nav class="top-nav">
+        <div class="top-nav-links">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <a href="https://www.rongx.top" target="_blank">主页</a>
+        </div>
+      </nav>
+
+      <div class="content-container">
+        <div class="markdown-body" id="content">
+          <h1>04 - MVC框架实现与Spring MVC源码对比</h1>
+<h2>1. Spring MVC概述</h2>
+<p>Spring MVC是基于Servlet API构建的原始Web框架，从Spring框架一开始就包含在其中。</p>
+<h3>1.1 核心架构</h3>
+<pre><code class="language-">客户端请求
+    ↓
+DispatcherServlet（前端控制器）
+    ↓
+HandlerMapping（处理器映射）
+    ↓
+HandlerAdapter（处理器适配器）
+    ↓
+Controller（处理器）
+    ↓
+ModelAndView（模型和视图）
+    ↓
+ViewResolver（视图解析器）
+    ↓
+View（视图渲染）
+    ↓
+响应客户端</code></pre>
+<h3>1.2 核心组件</h3>
+<p>| 组件 | 职责 |<br>|-----|------|<br>| DispatcherServlet | 前端控制器，统一分发请求 |<br>| HandlerMapping | 根据URL映射到处理器 |<br>| HandlerAdapter | 适配不同类型的处理器 |<br>| Controller | 处理请求，返回结果 |<br>| ModelAndView | 封装模型数据和视图名称 |<br>| ViewResolver | 根据视图名称解析视图对象 |<br>| View | 渲染视图，生成响应 |</p>
+<h2>2. DispatcherServlet前端控制器</h2>
+<h3>2.1 核心职责</h3>
+<p>DispatcherServlet是Spring MVC的核心，负责：<br><ul><li>接收HTTP请求</li><br><li>查找处理器</li><br><li>执行处理器</li><br><li>渲染视图</li><br><li>返回响应</li><br></ul><br><h3>2.2 初始化流程</h3></p>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/mvc/servlet/DispatcherServlet.java#L37-L92">DispatcherServlet.java:L37-92</a>）：</p>
+<pre><code class="language-java">@Override
+public void init() throws ServletException {
+    try {
+        // 1. 初始化应用上下文（IoC容器）
+        initApplicationContext();
+        
+        // 2. 初始化处理器映射
+        initHandlerMappings();
+        
+        // 3. 初始化处理器适配器
+        initHandlerAdapters();
+        
+        // 4. 初始化视图解析器
+        initViewResolvers();
+        
+        logger.info("DispatcherServlet initialized successfully");
+    } catch (Exception e) {
+        logger.error("Failed to initialize DispatcherServlet", e);
+        throw new ServletException("Failed to initialize DispatcherServlet", e);
+    }
+}</code></pre>
+<h3>2.3 与Spring官方对比</h3>
+<p><strong>Spring官方的init流程</strong>（FrameworkServlet）：</p>
+<pre><code class="language-java">// Spring官方初始化流程
+public class DispatcherServlet extends FrameworkServlet {
+    
+    @Override
+    protected void onRefresh(ApplicationContext context) {
+        initStrategies(context);
+    }
+    
+    protected void initStrategies(ApplicationContext context) {
+        initMultipartResolver(context);        // 文件上传解析器
+        initLocaleResolver(context);           // 区域解析器
+        initThemeResolver(context);            // 主题解析器
+        initHandlerMappings(context);          // 处理器映射
+        initHandlerAdapters(context);          // 处理器适配器
+        initHandlerExceptionResolvers(context); // 异常处理器
+        initRequestToViewNameTranslator(context); // 请求到视图名转换器
+        initViewResolvers(context);            // 视图解析器
+        initFlashMapManager(context);          // 闪存映射管理器
+    }
+}</code></pre>
+<p><strong>对比分析</strong>：</p>
+<p>| 初始化项 | Spring官方 | LightSSM |<br>|---------|-----------|----------|<br>| IoC容器 | FrameworkServlet管理 | 自己创建ApplicationContext |<br>| 处理器映射 | 从容器获取或创建默认 | 创建RequestMappingHandlerMapping |<br>| 处理器适配器 | 从容器获取或创建默认 | 创建RequestMappingHandlerAdapter |<br>| 视图解析器 | 从容器获取或创建默认 | 从容器获取或创建InternalResourceViewResolver |<br>| 文件上传 | MultipartResolver | 不支持 |<br>| 区域解析 | LocaleResolver | 不支持 |<br>| 异常处理 | HandlerExceptionResolver | 简单handleError方法 |<br>| 主题解析 | ThemeResolver | 不支持 |</p>
+<h2>3. 请求处理流程</h2>
+<h3>3.1 doDispatch核心方法</h3>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/mvc/servlet/DispatcherServlet.java#L105-L136">DispatcherServlet.java:L105-136</a>）：</p>
+<pre><code class="language-java">protected void doDispatch(HttpServletRequest request, HttpServletResponse response)
+        throws Exception {
+    HttpServletRequest processedRequest = request;
+    HandlerExecutionChain mappedHandler = null;
+    
+    try {
+        // 1. 获取处理器执行链
+        mappedHandler = getHandler(processedRequest);
+        if (mappedHandler == null) {
+            noHandlerFound(processedRequest, response);
+            return;
+        }
+        
+        // 2. 获取处理器适配器
+        HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+        if (ha == null) {
+            throw new ServletException("No adapter for handler [" + mappedHandler.getHandler() + "]");
+        }
+        
+        // 3. 执行拦截器前置处理
+        if (!mappedHandler.applyPreHandle(processedRequest, response)) {
+            return;
+        }
+        
+        // 4. 执行处理器
+        ModelAndView mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+        
+        // 5. 执行拦截器后置处理
+        mappedHandler.applyPostHandle(processedRequest, response, mv);
+        
+        // 6. 处理结果（渲染视图）
+        processDispatchResult(processedRequest, response, mappedHandler, mv);
+        
+    } catch (Exception ex) {
+        triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
+        throw ex;
+    }
+}</code></pre>
+<h3>3.2 与Spring官方对比</h3>
+<p><strong>Spring官方的doDispatch</strong>（简化版）：</p>
+<pre><code class="language-java">protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HttpServletRequest processedRequest = request;
+    HandlerExecutionChain mappedHandler = null;
+    boolean errorView = false;
+    
+    try {
+        ModelAndView mv = null;
+        Exception dispatchException = null;
+        
+        try {
+            // 1. 处理文件上传请求
+            processedRequest = checkMultipart(request);
+            
+            // 2. 获取HandlerExecutionChain
+            mappedHandler = getHandler(processedRequest);
+            if (mappedHandler == null) {
+                noHandlerFound(processedRequest, response);
+                return;
+            }
+            
+            // 3. 获取HandlerAdapter
+            HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+            
+            // 4. 处理last-modified
+            String method = request.getMethod();
+            if ("GET".equals(method) || "HEAD".equals(method)) {
+                long lastModified = ha.getLastModified(request, mappedHandler.getHandler());
+                if (new ServletWebRequest(request, response).checkNotModified(lastModified)) {
+                    return;
+                }
+            }
+            
+            // 5. 执行拦截器preHandle
+            if (!mappedHandler.applyPreHandle(processedRequest, response, mappedHandler.getHandler())) {
+                return;
+            }
+            
+            // 6. 执行处理器
+            mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+            
+            if (asyncManager.isConcurrentHandlingStarted()) {
+                return; // 异步处理
+            }
+            
+            // 7. 应用默认视图名称
+            applyDefaultViewName(processedRequest, mv);
+            
+            // 8. 执行拦截器postHandle
+            mappedHandler.applyPostHandle(processedRequest, response, mv);
+        } catch (Exception ex) {
+            dispatchException = ex;
+        }
+        
+        // 9. 处理结果
+        processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
+    } catch (Exception ex) {
+        triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
+    } finally {
+        // 10. 清理
+        if (asyncManager.isConcurrentHandlingStarted()) {
+            // 异步清理
+        } else {
+            resetContextAfterRequest();
+        }
+    }
+}</code></pre>
+<p><strong>对比分析</strong>：</p>
+<p>| 步骤 | Spring官方 | LightSSM |<br>|-----|-----------|----------|<br>| 文件上传 | checkMultipart处理 | 不支持 |<br>| Handler获取 | 相同 | 相同 |<br>| Adapter获取 | 相同 | 相同 |<br>| last-modified | 支持HTTP缓存 | 不支持 |<br>| 拦截器preHandle | 相同 | 相同 |<br>| 处理器执行 | 相同 | 相同 |<br>| 异步处理 | 支持 | 不支持 |<br>| 默认视图名 | applyDefaultViewName | 不支持 |<br>| 拦截器postHandle | 相同 | 相同 |<br>| 结果处理 | 包含异常处理 | 简化版 |<br>| 异步清理 | 支持 | 不支持 |</p>
+<h2>4. HandlerMapping处理器映射</h2>
+<h3>4.1 HandlerMapping接口</h3>
+<p><strong>LightSSM定义</strong>：<br><pre><code class="language-java">public interface HandlerMapping {<br>    HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception;<br>}</code></pre></p>
+<p><strong>Spring官方定义</strong>：<br><pre><code class="language-java">public interface HandlerMapping {<br>    String PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE = HandlerMapping.class.getName() + ".pathWithinHandlerMapping";<br>    String BEST_MATCHING_PATTERN_ATTRIBUTE = HandlerMapping.class.getName() + ".bestMatchingPattern";<br>    // ... 多个常量<br>    <br>    HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception;<br>}</code></pre></p>
+<h3>4.2 RequestMappingHandlerMapping</h3>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/mvc/handler/RequestMappingHandlerMapping.java">RequestMappingHandlerMapping.java</a>）：</p>
+<pre><code class="language-java">public class RequestMappingHandlerMapping implements HandlerMapping {
+    
+    // 路径 -> HandlerMethod映射
+    private final Map<String, HandlerMethod> handlerMethods = new ConcurrentHashMap<>(256);
+    
+    // 路径 -> HandlerExecutionChain缓存
+    private final Map<String, HandlerExecutionChain> handlerCache = new ConcurrentHashMap<>(256);
+    
+    private final ApplicationContext applicationContext;
+    
+    public void initHandlerMethods() throws Exception {
+        // 扫描所有Bean
+        String[] beanNames = applicationContext.getBeanDefinitionNames();
+        
+        for (String beanName : beanNames) {
+            Class<?> beanType = applicationContext.getType(beanName);
+            // 检查是否有@RequestMapping注解
+            if (beanType != null && isHandler(beanType)) {
+                detectHandlerMethods(beanName);
+            }
+        }
+    }
+    
+    protected boolean isHandler(Class<?> beanType) {
+        return beanType.getAnnotation(RequestMapping.class) != null;
+    }
+    
+    protected void detectHandlerMethods(String beanName) throws Exception {
+        Class<?> handlerType = applicationContext.getType(beanName);
+        Method[] methods = handlerType.getDeclaredMethods();
+        
+        for (Method method : methods) {
+            RequestMapping mapping = method.getAnnotation(RequestMapping.class);
+            if (mapping != null) {
+                registerHandlerMethod(beanName, method, mapping);
+            }
+        }
+    }
+    
+    @Override
+    public HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+        String lookupPath = getLookupPath(request);
+        
+        // 先查缓存
+        HandlerExecutionChain handlerChain = this.handlerCache.get(lookupPath);
+        if (handlerChain != null) {
+            return handlerChain;
+        }
+        
+        // 查找HandlerMethod
+        HandlerMethod handlerMethod = this.handlerMethods.get(lookupPath);
+        if (handlerMethod == null) {
+            return null;
+        }
+        
+        // 构建执行链（包含拦截器）
+        handlerChain = getHandlerExecutionChain(handlerMethod, request);
+        this.handlerCache.put(lookupPath, handlerChain);
+        
+        return handlerChain;
+    }
+}</code></pre>
+<h3>4.3 与Spring官方对比</h3>
+<p><strong>Spring官方的RequestMappingHandlerMapping</strong>核心逻辑：</p>
+<pre><code class="language-java">public class RequestMappingHandlerMapping extends AbstractHandlerMethodMapping<RequestMappingInfo> {
+    
+    @Override
+    protected boolean isHandler(Class<?> beanType) {
+        return (AnnotatedElementUtils.hasAnnotation(beanType, Controller.class) ||
+                AnnotatedElementUtils.hasAnnotation(beanType, RequestMapping.class));
+    }
+    
+    @Override
+    protected void detectHandlerMethods(Object handler) {
+        Class<?> handlerType = (handler instanceof String) ?
+                obtainApplicationContext().getType((String) handler) : handler.getClass();
+        
+        if (handlerType != null) {
+            Class<?> userType = ClassUtils.getUserClass(handlerType);
+            // 查找所有匹配的方法
+            Map<Method, T> methods = MethodIntrospector.selectMethods(userType,
+                (MethodIntrospector.MetadataLookup<T>) method -> {
+                    try {
+                        return getMappingForMethod(method, userType);
+                    } catch (Throwable ex) {
+                        throw new IllegalStateException("...");
+                    }
+                });
+            methods.forEach((method, mapping) -> {
+                Method invocableMethod = AopUtils.selectInvocableMethod(method, userType);
+                registerHandlerMethod(handler, invocableMethod, mapping);
+            });
+        }
+    }
+    
+    protected RequestMappingInfo getMappingForMethod(Method method, Class<?> handlerType) {
+        RequestMappingInfo info = createRequestMappingInfo(method);
+        if (info != null) {
+            RequestMappingInfo typeInfo = createRequestMappingInfo(handlerType);
+            if (typeInfo != null) {
+                info = typeInfo.combine(info); // 合并类和方法级别的映射
+            }
+        }
+        return info;
+    }
+}</code></pre>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | Spring官方 | LightSSM |<br>|-----|-----------|----------|<br>| 处理器识别 | @Controller或@RequestMapping | 仅@RequestMapping |<br>| 映射信息 | RequestMappingInfo（复杂对象） | 简单路径字符串 |<br>| 类级别映射 | 支持合并 | 不支持 |<br>| HTTP方法映射 | 支持GET/POST/PUT/DELETE | 不支持 |<br>| 参数条件映射 | params/headers条件 | 不支持 |<br>| 缓存机制 | 复杂的MappingRegistry | 简单ConcurrentHashMap |<br>| 路径匹配 | PathPatternMatcher | 精确匹配 |<br>| 通配符 | 支持<em>和<strong> | 不支持 |</p>
+<h2>5. HandlerAdapter处理器适配器</h2>
+<h3>5.1 适配器模式的作用</h3>
+<p>HandlerAdapter的作用是统一不同类型处理器的调用方式。</p>
+<pre><code class="language-">不同类型处理器：
+<ul><li>HandlerMethod（注解处理器）</li>
+<li>HttpRequestHandler（HTTP请求处理器）</li>
+<li>SimpleControllerHandlerAdapter（传统Controller）</li>
+</ul>
+通过HandlerAdapter统一为：
+ModelAndView handle(request, response, handler)</code></pre>
+<h3>5.2 RequestMappingHandlerAdapter</h3>
+<p></strong>LightSSM实现<strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/mvc/handler/RequestMappingHandlerAdapter.java">RequestMappingHandlerAdapter.java</a>）：</p>
+<pre><code class="language-java">public class RequestMappingHandlerAdapter implements HandlerAdapter {
+    
+    @Override
+    public boolean supports(Object handler) {
+        return handler instanceof HandlerMethod;
+    }
+    
+    @Override
+    public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, 
+        Object handler) throws Exception {
+        HandlerMethod handlerMethod = (HandlerMethod) handler;
+        
+        // 1. 解析方法参数
+        Object[] args = resolveMethodArguments(handlerMethod, request, response);
+        
+        // 2. 调用处理器方法
+        Object returnValue = invokeHandlerMethod(handlerMethod, args);
+        
+        // 3. 处理返回值
+        return handleReturnValue(returnValue, handlerMethod, request, response);
+    }
+}</code></pre>
+<h3>5.3 参数解析</h3>
+<p></strong>LightSSM参数解析<strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/mvc/handler/RequestMappingHandlerAdapter.java#L42-L121">RequestMappingHandlerAdapter.java:L42-121</a>）：</p>
+<pre><code class="language-java">protected Object[] resolveMethodArguments(HandlerMethod handlerMethod, 
+    HttpServletRequest request, HttpServletResponse response) throws Exception {
+    Method method = handlerMethod.getMethod();
+    Parameter[] parameters = method.getParameters();
+    Object[] args = new Object[parameters.length];
+    
+    for (int i = 0; i < parameters.length; i++) {
+        Parameter param = parameters[i];
+        Class<?> paramType = param.getType();
+        
+        // 内置类型参数
+        if (HttpServletRequest.class.isAssignableFrom(paramType)) {
+            args[i] = request;
+        } else if (HttpServletResponse.class.isAssignableFrom(paramType)) {
+            args[i] = response;
+        } else {
+            // 注解参数
+            RequestParam requestParam = param.getAnnotation(RequestParam.class);
+            PathVariable pathVariable = param.getAnnotation(PathVariable.class);
+            
+            if (requestParam != null) {
+                args[i] = resolveRequestParam(requestParam, paramType, request);
+            } else if (pathVariable != null) {
+                args[i] = resolvePathVariable(pathVariable, paramType, request);
+            } else {
+                args[i] = resolveDefaultArgument(paramType, request);
+            }
+        }
+    }
+    
+    return args;
+}</code></pre>
+<h3>5.4 与Spring官方对比</h3>
+<p></strong>Spring官方的HandlerMethodArgumentResolver体系<strong>：</p>
+<pre><code class="language-java">public interface HandlerMethodArgumentResolver {
+    boolean supportsParameter(MethodParameter parameter);
+    Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+            NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception;
+}
+<p>// 多个实现：<br>// - RequestParamMethodArgumentResolver<br>// - PathVariableMethodArgumentResolver  <br>// - RequestBodyMethodArgumentResolver<br>// - ModelMethodArgumentResolver<br>// - SessionAttributeMethodArgumentResolver<br>// - ... 20+种解析器</code></pre></p>
+<p></strong>对比分析<strong>：</p>
+<p>| 参数类型 | Spring官方 | LightSSM |<br>|---------|-----------|----------|<br>| HttpServletRequest | 支持 | 支持 |<br>| HttpServletResponse | 支持 | 支持 |<br>| @RequestParam | RequestParamMethodArgumentResolver | resolveRequestParam |<br>| @PathVariable | PathVariableMethodArgumentResolver | resolvePathVariable |<br>| @RequestBody | RequestResponseBodyMethodProcessor | 不支持 |<br>| @ModelAttribute | ModelAttributeMethodProcessor | 不支持 |<br>| HttpSession | SessionAttributeMethodArgumentResolver | 不支持 |<br>| Principal | PrincipalMethodArgumentResolver | 不支持 |<br>| 类型转换 | ConversionService | convertValue（基础类型） |</p>
+<h2>6. 返回值处理</h2>
+<h3>6.1 LightSSM的返回值处理</h3>
+<p></strong>源码位置<strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/mvc/handler/RequestMappingHandlerAdapter.java#L152-L191">RequestMappingHandlerAdapter.java:L152-191</a></p>
+<pre><code class="language-java">protected ModelAndView handleReturnValue(Object returnValue, HandlerMethod handlerMethod, 
+    HttpServletRequest request, HttpServletResponse response) throws Exception {
+    
+    Method method = handlerMethod.getMethod();
+    ResponseBody responseBody = method.getAnnotation(ResponseBody.class);
+    
+    // @ResponseBody：直接写入JSON响应
+    if (responseBody != null) {
+        handleResponseBody(returnValue, response);
+        return null; // 不需要视图渲染
+    }
+    
+    // ModelAndView：直接返回
+    if (returnValue instanceof ModelAndView) {
+        return (ModelAndView) returnValue;
+    }
+    
+    // String：作为视图名称
+    if (returnValue instanceof String) {
+        String viewName = (String) returnValue;
+        return new ModelAndView(viewName);
+    }
+    
+    // Map：作为模型数据
+    if (returnValue instanceof Map) {
+        Map<String, Object> model = (Map<String, Object>) returnValue;
+        return new ModelAndView().addAllObjects(model);
+    }
+    
+    return null;
+}
+<p>protected void handleResponseBody(Object returnValue, HttpServletResponse response) <br>    throws Exception {<br>    response.setContentType("application/json;charset=UTF-8");<br>    <br>    // 使用Jackson序列化JSON<br>    String json = objectMapper.writeValueAsString(returnValue);<br>    <br>    PrintWriter writer = response.getWriter();<br>    writer.write(json);<br>    writer.flush();<br>}</code></pre></p>
+<h3>6.2 与Spring官方对比</h3>
+<p></strong>Spring官方的HandlerMethodReturnValueHandler体系<strong>：</p>
+<pre><code class="language-java">public interface HandlerMethodReturnValueHandler {
+    boolean supportsReturnType(MethodParameter returnType);
+    void handleReturnValue(Object returnValue, MethodParameter returnType,
+            ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception;
+}
+<p>// 多个实现：<br>// - RequestResponseBodyMethodProcessor（@ResponseBody）<br>// - ViewNameMethodReturnValueHandler（String视图名）<br>// - ModelAndViewMethodReturnValueHandler（ModelAndView）<br>// - ModelMethodProcessor（Model）<br>// - HttpEntityMethodProcessor（HttpEntity）<br>// - ... 15+种处理器</code></pre></p>
+<p></strong>对比分析<strong>：</p>
+<p>| 返回值类型 | Spring官方 | LightSSM |<br>|-----------|-----------|----------|<br>| @ResponseBody | RequestResponseBodyMethodProcessor | handleResponseBody |<br>| ModelAndView | ModelAndViewMethodReturnValueHandler | 直接返回 |<br>| String（视图名） | ViewNameMethodReturnValueHandler | new ModelAndView |<br>| Map | ModelMethodProcessor | addAllObjects |<br>| void | 默认处理 | 返回null |<br>| ResponseEntity | HttpEntityMethodProcessor | 不支持 |<br>| StreamingResponseBody | StreamingResponseBodyReturnValueHandler | 不支持 |</p>
+<h2>7. HandlerExecutionChain执行链</h2>
+<h3>7.1 设计目的</h3>
+<p>HandlerExecutionChain封装了处理器和拦截器，形成完整的执行链。</p>
+<h3>7.2 LightSSM实现</h3>
+<pre><code class="language-java">public class HandlerExecutionChain {
+    private Object handler;                            // 处理器
+    private List<HandlerInterceptor> interceptorList;  // 拦截器列表
+    
+    // 拦截器preHandle（任一返回false则中断）
+    public boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) 
+        throws Exception {
+        if (this.interceptorList != null) {
+            for (int i = 0; i < this.interceptorList.size(); i++) {
+                HandlerInterceptor interceptor = this.interceptorList.get(i);
+                if (!interceptor.preHandle(request, response, this.handler)) {
+                    triggerAfterCompletion(request, response, null);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    // 拦截器postHandle（逆序执行）
+    public void applyPostHandle(HttpServletRequest request, HttpServletResponse response, 
+        ModelAndView mv) throws Exception {
+        if (this.interceptorList != null) {
+            for (int i = this.interceptorList.size() - 1; i >= 0; i--) {
+                HandlerInterceptor interceptor = this.interceptorList.get(i);
+                interceptor.postHandle(request, response, this.handler, mv);
+            }
+        }
+    }
+    
+    // 拦截器afterCompletion（逆序执行，总会执行）
+    public void triggerAfterCompletion(HttpServletRequest request, HttpServletResponse response, 
+        Exception ex) throws Exception {
+        if (this.interceptorList != null) {
+            for (int i = this.interceptorList.size() - 1; i >= 0; i--) {
+                HandlerInterceptor interceptor = this.interceptorList.get(i);
+                interceptor.afterCompletion(request, response, this.handler, ex);
+            }
+        }
+    }
+}</code></pre>
+<h3>7.3 拦截器执行顺序</h3>
+<pre><code class="language-">请求进入
+    ↓
+Interceptor1.preHandle()
+    ↓
+Interceptor2.preHandle()
+    ↓
+Handler处理
+    ↓
+Interceptor2.postHandle()
+    ↓
+Interceptor1.postHandle()
+    ↓
+渲染视图
+    ↓
+Interceptor2.afterCompletion()
+    ↓
+Interceptor1.afterCompletion()
+    ↓
+响应返回</code></pre>
+<h3>7.4 与Spring官方对比</h3>
+<p>Spring官方的HandlerExecutionChain与LightSSM实现几乎一致，主要差异：</p>
+<p>| 功能 | Spring官方 | LightSSM |<br>|-----|-----------|----------|<br>| 拦截器接口 | HandlerInterceptor | HandlerInterceptor |<br>| preHandle | 相同 | 相同 |<br>| postHandle | 相同 | 相同 |<br>| afterCompletion | 相同 | 相同 |<br>| 异步拦截器 | AsyncHandlerInterceptor | 不支持 |<br>| mappedInterceptors | 支持路径匹配 | 不支持 |</p>
+<h2>8. ViewResolver视图解析器</h2>
+<h3>8.1 ViewResolver接口</h3>
+<pre><code class="language-java">public interface ViewResolver {
+    View resolveViewName(String viewName) throws Exception;
+}</code></pre>
+<h3>8.2 InternalResourceViewResolver</h3>
+<p></strong>LightSSM默认视图解析器<strong>：</p>
+<pre><code class="language-java">public class InternalResourceViewResolver implements ViewResolver {
+    private String prefix = "/WEB-INF/views/";
+    private String suffix = ".jsp";
+    
+    @Override
+    public View resolveViewName(String viewName) throws Exception {
+        String viewPath = prefix + viewName + suffix;
+        return new InternalResourceView(viewPath);
+    }
+}</code></pre>
+<h3>8.3 JsonView（REST API支持）</h3>
+<pre><code class="language-java">public class JsonView implements View {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    @Override
+    public void render(Map<String, ?> model, HttpServletRequest request, 
+        HttpServletResponse response) throws Exception {
+        response.setContentType("application/json;charset=UTF-8");
+        String json = objectMapper.writeValueAsString(model);
+        response.getWriter().write(json);
+    }
+}</code></pre>
+<h3>8.4 与Spring官方对比</h3>
+<p></strong>Spring官方的ViewResolver层次<strong>：</p>
+<pre><code class="language-">ViewResolver（接口）
+├── AbstractCachingViewResolver（缓存基类）
+│   ├── UrlBasedViewResolver（URL基类）
+│   │   ├── InternalResourceViewResolver
+│   │   ├── FreeMarkerViewResolver
+│   │   └── ... 
+│   └── ResourceBundleViewResolver
+├── XmlViewResolver
+├── BeanNameViewResolver
+└── ContentNegotiatingViewResolver</code></pre>
+<p></strong>对比分析<strong>：</p>
+<p>| 功能 | Spring官方 | LightSSM |<br>|-----|-----------|----------|<br>| 缓存 | AbstractCachingViewResolver | 无缓存 |<br>| 前缀后缀 | 支持配置 | 硬编码 |<br>| 视图类型 | JSP/Freemarker/Thymeleaf等 | JSP/JSON/Redirect |<br>| 内容协商 | ContentNegotiatingViewResolver | 不支持 |<br>| 顺序 | Ordered接口 | 不支持 |</p>
+<h2>9. 参数绑定与类型转换</h2>
+<h3>9.1 LightSSM的类型转换</h3>
+<pre><code class="language-java">protected Object convertValue(String value, Class<?> targetType) {
+    if (value == null) return null;
+    
+    if (String.class.equals(targetType)) {
+        return value;
+    } else if (Integer.class.equals(targetType) || int.class.equals(targetType)) {
+        return Integer.parseInt(value);
+    } else if (Long.class.equals(targetType) || long.class.equals(targetType)) {
+        return Long.parseLong(value);
+    } else if (Double.class.equals(targetType) || double.class.equals(targetType)) {
+        return Double.parseDouble(value);
+    } else if (Boolean.class.equals(targetType) || boolean.class.equals(targetType)) {
+        return Boolean.parseBoolean(value);
+    }
+    
+    return value;
+}</code></pre>
+<h3>9.2 与Spring官方对比</h3>
+<p></strong>Spring官方的ConversionService<strong>：</p>
+<pre><code class="language-java">public interface ConversionService {
+    boolean canConvert(Class<?> sourceType, Class<?> targetType);
+    <T> T convert(Object source, Class<T> targetType);
+}
+<p>// 内置转换器：<br>// - String -> Integer/Long/Double/Float/Boolean<br>// - String -> Date/Time/LocalDateTime<br>// - String -> Enum<br>// - String -> URL/URI/UUID<br>// - String -> Class<br>// - String -> Locale/Charset/Currency<br>// - String -> byte[]<br>// - ... 100+种转换</code></pre></p>
+<p></strong>对比分析<strong>：</p>
+<p>| 功能 | Spring官方 | LightSSM |<br>|-----|-----------|----------|<br>| 基础类型转换 | 支持 | 支持 |<br>| 日期转换 | DateTimeFormatter | 不支持 |<br>| 枚举转换 | 支持 | 不支持 |<br>| 自定义转换器 | Converter接口 | 不支持 |<br>| 格式化 | @DateTimeFormat/@NumberFormat | 不支持 |<br>| 数据绑定 | DataBinder | 不支持 |</p>
+<h2>10. 设计模式总结</h2>
+<h3>10.1 前端控制器模式</h3>
+<pre><code class="language-java">// DispatcherServlet是前端控制器
+// 统一入口，分发请求到不同处理器
+public class DispatcherServlet extends HttpServlet {
+    protected void doDispatch(HttpServletRequest request, HttpServletResponse response) {
+        HandlerExecutionChain mappedHandler = getHandler(request);
+        HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+        ModelAndView mv = ha.handle(request, response, mappedHandler.getHandler());
+        processDispatchResult(request, response, mappedHandler, mv);
+    }
+}</code></pre>
+<h3>10.2 适配器模式</h3>
+<pre><code class="language-java">// 适配器接口
+public interface HandlerAdapter {
+    boolean supports(Object handler);
+    ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler);
+}
+<p>// 具体适配器<br>public class RequestMappingHandlerAdapter implements HandlerAdapter { ... }</code></pre></p>
+<h3>10.3 策略模式</h3>
+<pre><code class="language-java">// HandlerMapping策略
+HandlerMapping strategy1 = new RequestMappingHandlerMapping(context);
+<p>// HandlerAdapter策略<br>HandlerAdapter strategy2 = new RequestMappingHandlerAdapter();</p>
+<p>// ViewResolver策略<br>ViewResolver strategy3 = new InternalResourceViewResolver();</code></pre></p>
+<h3>10.4 责任链模式</h3>
+<pre><code class="language-java">// HandlerInterceptor责任链
+public class HandlerExecutionChain {
+    public boolean applyPreHandle(...) {
+        for (HandlerInterceptor interceptor : interceptorList) {
+            if (!interceptor.preHandle(...)) {
+                return false; // 中断链
+            }
+        }
+        return true;
+    }
+}</code></pre>
+<h2>11. 面试考点</h2>
+<h3>11.1 高频问题</h3>
+<p>1. </strong>Spring MVC的执行流程是什么？<strong><br>   - DispatcherServlet接收请求<br>   - HandlerMapping查找处理器<br>   - HandlerAdapter执行处理器<br>   - ViewResolver解析视图<br>   - View渲染响应</p>
+<p>2. </strong>DispatcherServlet的作用是什么？<strong><br>   - 前端控制器<br>   - 统一分发请求<br>   - 协调各组件工作</p>
+<p>3. </strong>HandlerMapping和HandlerAdapter的区别？<strong><br>   - HandlerMapping负责找到处理器<br>   - HandlerAdapter负责执行处理器</p>
+<p>4. </strong>@RequestParam和@PathVariable的区别？<strong><br>   - @RequestParam：查询参数<br>   - @PathVariable：路径变量</p>
+<h3>11.2 深度问题</h3>
+<p>1. </strong>为什么要使用HandlerAdapter？<strong><br>   - 统一不同类型处理器的调用方式<br>   - 支持扩展新的处理器类型</p>
+<p>2. </strong>拦截器的执行顺序是什么？<strong><br>   - preHandle：正序执行<br>   - postHandle：逆序执行<br>   - afterCompletion：逆序执行</p>
+<p>3. </strong>Spring MVC是如何支持RESTful API的？<strong><br>   - @ResponseBody注解<br>   - HttpMessageConverter转换<br>   - Jackson序列化JSON</p>
+<h2>12. 总结</h2>
+<p>LightSSM的MVC模块完整实现了Spring MVC的核心机制：</p>
+<ul><li></strong>前端控制器<strong>：DispatcherServlet统一分发</li>
+<li></strong>处理器映射<strong>：RequestMappingHandlerMapping注解映射</li>
+<li></strong>处理器适配<strong>：RequestMappingHandlerAdapter参数解析</li>
+<li></strong>视图解析<strong>：InternalResourceViewResolver视图渲染</li>
+<li></strong>拦截器链<strong>：HandlerExecutionChain横切逻辑</li>
+</ul>
+通过对照Spring官方源码，可以看到LightSSM保留了MVC的核心流程，剥离了高级特性（如文件上传、异步处理、内容协商等），非常适合学习理解MVC原理。
+<p>---</p>
+<p></strong>上一篇<strong>：<a href="03-AOP代理机制与SpringAOP源码对比.md">03 - AOP代理机制与Spring AOP源码对比</a></p>
+<p></strong>下一篇</em>*：<a href="05-ORM核心架构与MyBatis源码对比.md">05 - ORM核心架构与MyBatis源码对比</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // 移动端菜单切换
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      // 自动高亮当前页面
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPage = window.location.pathname.split("/").pop();
+        const links = document.querySelectorAll(".sidebar-nav a");
+        links.forEach((link) => {
+          if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 代码块语言高亮
+      document.addEventListener("DOMContentLoaded", function () {
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
+          const language = block.className.replace("language-", "");
+          if (language) {
+            block.parentElement.setAttribute("data-language", language);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

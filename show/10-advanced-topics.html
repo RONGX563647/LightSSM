@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>10. 高级特性与源码剖析 - LightSSM 文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏样式 */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        padding: 40px 0;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+
+      .sidebar-header {
+        padding: 0 24px 32px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 24px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-header p {
+        font-size: 13px;
+        color: #999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 10px 24px;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+      }
+
+      .sidebar-nav a:hover {
+        background: #f5f5f5;
+        color: #ff6b35;
+      }
+
+      .sidebar-nav a.active {
+        background: #fff5f2;
+        color: #ff6b35;
+        border-left-color: #ff6b35;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .section-title {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 主内容区域 */
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 60px 80px;
+        max-width: 100%;
+      }
+
+      .content-container {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      /* Markdown 样式 */
+      .markdown-body {
+        font-size: 16px;
+        line-height: 2;
+        color: #444;
+      }
+
+      .markdown-body h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .markdown-body h2 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 48px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .markdown-body h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 32px 0 16px;
+      }
+
+      .markdown-body h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 24px 0 12px;
+      }
+
+      .markdown-body p {
+        margin-bottom: 24px;
+        text-align: justify;
+      }
+
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      .markdown-body li {
+        margin-bottom: 12px;
+      }
+
+      .markdown-body a {
+        color: #ff6b35;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .markdown-body a:hover {
+        color: #e65a2b;
+        text-decoration: underline;
+      }
+
+      .markdown-body code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        background: #fafafa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #d73a49;
+      }
+
+      .markdown-body pre {
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+      }
+
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: #24292e;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .markdown-body blockquote {
+        border-left: 4px solid #ff6b35;
+        padding-left: 24px;
+        margin: 24px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid #f0f0f0;
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .markdown-body th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .markdown-body hr {
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        margin: 48px 0;
+      }
+
+      .markdown-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 24px auto;
+      }
+
+      /* 顶部导航 */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 280px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 80px;
+        z-index: 999;
+      }
+
+      .top-nav-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .top-nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-nav-links a:hover {
+        color: #ff6b35;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .sidebar {
+          width: 240px;
+        }
+
+        .main-content {
+          margin-left: 240px;
+          padding: 60px 40px;
+        }
+
+        .top-nav {
+          left: 240px;
+          padding: 0 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 24px 40px;
+        }
+
+        .top-nav {
+          left: 0;
+          padding: 0 24px;
+        }
+
+        .menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          border: 1px solid #f0f0f0;
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>LightSSM</h1>
+        <p>轻量级自研 SSM 框架文档</p>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="section-title">快速开始</li>
+        <li><a href="index.html">首页</a></li>
+        <li><a href="01-architecture.html" class="">01. 架构概述与设计哲学</a></li>
+
+        <li class="section-title">核心模块</li>
+        <li><a href="02-ioc-container.html" class="">02. IoC 容器核心实现</a></li>
+        <li><a href="03-aop-proxy.html" class="">03. AOP 代理机制</a></li>
+        <li><a href="04-mvc-framework.html" class="">04. MVC 框架实现</a></li>
+        <li><a href="05-orm-architecture.html" class="">05. ORM 核心架构</a></li>
+
+        <li class="section-title">数据层实现</li>
+        <li><a href="06-datasource-transaction.html" class="">06. 数据源与事务管理</a></li>
+        <li><a href="07-sql-parsing.html" class="">07. SQL 解析与动态 SQL</a></li>
+        <li><a href="08-type-system.html" class="">08. 类型系统与类型处理器</a></li>
+
+        <li class="section-title">扩展与高级特性</li>
+        <li><a href="09-plugin-system.html" class="">09. 插件系统与扩展机制</a></li>
+        <li><a href="10-advanced-topics.html" class="active">10. 高级特性与源码剖析</a></li>
+
+        <li class="section-title">相关链接</li>
+        <li>
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub 仓库</a
+          >
+        </li>
+        <li><a href="https://www.rongx.top" target="_blank">个人主页</a></li>
+      </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <nav class="top-nav">
+        <div class="top-nav-links">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <a href="https://www.rongx.top" target="_blank">主页</a>
+        </div>
+      </nav>
+
+      <div class="content-container">
+        <div class="markdown-body" id="content">
+          <h1>10 - 高级特性与源码深度剖析</h1>
+<h2>1. 反射系统</h2>
+<h3>1.1 Reflector反射器</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class Reflector {<br>    private final Class<?> type;<br>    private final String[] readablePropertyNames;<br>    private final String[] writablePropertyNames;<br>    private final Map<String, Method> getMethods = new HashMap<>();<br>    private final Map<String, Method> setMethods = new HashMap<>();<br>    private final Map<String, Class<?>> getTypes = new HashMap<>();<br>    private final Map<String, Class<?>> setTypes = new HashMap<>();<br>    <br>    public Reflector(Class<?> type) {<br>        this.type = type;<br>        addDefaultConstructor(type);<br>        addGetMethods(type);<br>        addSetMethods(type);<br>        addFields(type);<br>        <br>        this.readablePropertyNames = getMethods.keySet().toArray(new String[0]);<br>        this.writablePropertyNames = setMethods.keySet().toArray(new String[0]);<br>    }<br>    <br>    private void addGetMethods(Class<?> type) {<br>        Method[] methods = type.getMethods();<br>        for (Method method : methods) {<br>            String name = method.getName();<br>            if (name.startsWith("get") && name.length() > 3 <br>                && method.getParameterCount() == 0) {<br>                String propertyName = method.getName().substring(3);<br>                propertyName = propertyName.substring(0, 1).toLowerCase() <br>                    + propertyName.substring(1);<br>                getMethods.put(propertyName, method);<br>                getTypes.put(propertyName, method.getReturnType());<br>            }<br>        }<br>    }<br>    <br>    private void addSetMethods(Class<?> type) {<br>        Method[] methods = type.getMethods();<br>        for (Method method : methods) {<br>            String name = method.getName();<br>            if (name.startsWith("set") && name.length() > 3 <br>                && method.getParameterCount() == 1) {<br>                String propertyName = method.getName().substring(3);<br>                propertyName = propertyName.substring(0, 1).toLowerCase() <br>                    + propertyName.substring(1);<br>                setMethods.put(propertyName, method);<br>                setTypes.put(propertyName, method.getParameterTypes()[0]);<br>            }<br>        }<br>    }<br>    <br>    public Method getGetMethod(String propertyName) {<br>        return getMethods.get(propertyName);<br>    }<br>    <br>    public Method getSetMethod(String propertyName) {<br>        return setMethods.get(propertyName);<br>    }<br>    <br>    public Class<?> getGetterType(String propertyName) {<br>        return getTypes.get(propertyName);<br>    }<br>    <br>    public Class<?> getSetterType(String propertyName) {<br>        return setTypes.get(propertyName);<br>    }<br>}</code></pre></p>
+<h3>1.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的Reflector</strong>：<br><ul><li>支持字段直接访问（无getter/setter）</li><br><li>支持大小写不敏感属性查找</li><br><li>支持缓存方法查找结果</li><br><li>支持私有构造函数检测</li><br><li>支持协变返回类型</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>基础的getter/setter查找</li><br><li>不支持字段访问</li><br><li>不支持大小写不敏感</li><br></ul><br><h2>2. MetaObject元对象</h2></p>
+<h3>2.1 MetaObject实现</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class MetaObject {<br>    private final Object originalObject;<br>    private final ReflectorFactory reflectorFactory;<br>    private final ObjectWrapperFactory objectWrapperFactory;<br>    private final ObjectWrapper objectWrapper;<br>    <br>    private MetaObject(Object object, ReflectorFactory reflectorFactory, <br>                       ObjectWrapperFactory objectWrapperFactory) {<br>        this.originalObject = object;<br>        this.reflectorFactory = reflectorFactory;<br>        this.objectWrapperFactory = objectWrapperFactory;<br>        <br>        if (object instanceof ObjectWrapper) {<br>            this.objectWrapper = (ObjectWrapper) object;<br>        } else if (objectWrapperFactory.hasWrapperFor(object)) {<br>            this.objectWrapper = objectWrapperFactory.getWrapperFor(this, object);<br>        } else {<br>            this.objectWrapper = new BeanWrapper(this, object);<br>        }<br>    }<br>    <br>    public static MetaObject forObject(Object object, ObjectFactory objectFactory, <br>                                       ObjectWrapperFactory objectWrapperFactory) {<br>        if (object == null) {<br>            return SystemMetaObject.NULL_META_OBJECT;<br>        }<br>        return new MetaObject(object, new DefaultReflectorFactory(), <br>            objectWrapperFactory);<br>    }<br>    <br>    public String findProperty(String name, boolean useCamelCaseMapping) {<br>        return objectWrapper.findProperty(name, useCamelCaseMapping);<br>    }<br>    <br>    public Object getValue(String name) {<br>        PropertyTokenizer prop = new PropertyTokenizer(name);<br>        if (prop.hasNext()) {<br>            MetaObject metaValue = metaObjectForProperty(prop.getName());<br>            if (metaValue == null || metaValue.getOriginalObject() == null) {<br>                return null;<br>            }<br>            return metaValue.getValue(prop.getChildren());<br>        } else {<br>            return objectWrapper.get(prop);<br>        }<br>    }<br>    <br>    public void setValue(String name, Object value) {<br>        PropertyTokenizer prop = new PropertyTokenizer(name);<br>        if (prop.hasNext()) {<br>            MetaObject metaValue = metaObjectForProperty(prop.getName());<br>            if (metaValue == null) {<br>                throw new RuntimeException("Property '" + prop.getName() + "' is null");<br>            }<br>            metaValue.setValue(prop.getChildren(), value);<br>        } else {<br>            objectWrapper.set(prop, value);<br>        }<br>    }<br>    <br>    private MetaObject metaObjectForProperty(String name) {<br>        Object obj = objectWrapper.get(new PropertyTokenizer(name));<br>        return MetaObject.forObject(obj, null, objectWrapperFactory);<br>    }<br>}</code></pre></p>
+<h3>2.2 PropertyTokenizer属性解析器</h3>
+<pre><code class="language-java">public class PropertyTokenizer implements Iterable<PropertyTokenizer> {
+    private String name;           // 当前属性名
+    private String indexedName;    // 带索引的属性名
+    private String index;          // 索引值
+    private String children;       // 子属性
+    
+    public PropertyTokenizer(String fullname) {
+        int delim = fullname.indexOf('.');
+        if (delim > -1) {
+            name = fullname.substring(0, delim);
+            children = fullname.substring(delim + 1);
+        } else {
+            name = fullname;
+            children = null;
+        }
+        indexedName = name;
+        delim = name.indexOf('[');
+        if (delim > -1) {
+            index = name.substring(delim + 1, name.length() - 1);
+            name = name.substring(0, delim);
+        }
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public String getIndex() {
+        return index;
+    }
+    
+    public String getChildren() {
+        return children;
+    }
+    
+    public boolean hasNext() {
+        return children != null;
+    }
+}</code></pre>
+<h3>2.3 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的MetaObject</strong>：<br><ul><li>支持嵌套属性（user.address.city）</li><br><li>支持集合索引（list[0].name）</li><br><li>支持Map键访问（map.key）</li><br><li>支持对象包装器（ObjectWrapper）</li><br><li>支持空对象处理（NULL_META_OBJECT）</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>基础的嵌套属性支持</li><br><li>不支持集合索引</li><br><li>简化对象包装器</li><br></ul><br><h2>3. 对象工厂</h2></p>
+<h3>3.1 ObjectFactory接口</h3>
+<pre><code class="language-java">public interface ObjectFactory {
+    <T> T create(Class<T> type);
+    <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs);
+    void setProperties(Properties properties);
+}</code></pre>
+<h3>3.2 DefaultObjectFactory实现</h3>
+<pre><code class="language-java">public class DefaultObjectFactory implements ObjectFactory {
+    @Override
+    public <T> T create(Class<T> type) {
+        try {
+            return type.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create object: " + type.getName(), e);
+        }
+    }
+    
+    @Override
+    public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, 
+                       List<Object> constructorArgs) {
+        try {
+            Constructor<?> constructor = type.getDeclaredConstructor(
+                constructorArgTypes.toArray(new Class[0]));
+            return (T) constructor.newInstance(constructorArgs.toArray(new Object[0]));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create object: " + type.getName(), e);
+        }
+    }
+    
+    @Override
+    public void setProperties(Properties properties) {
+        // 可以配置工厂行为
+    }
+}</code></pre>
+<h2>4. 对象包装器</h2>
+<h3>4.1 ObjectWrapper接口</h3>
+<pre><code class="language-java">public interface ObjectWrapper {
+    Object get(PropertyTokenizer prop);
+    void set(PropertyTokenizer prop, Object value);
+    List<String> findPropertyNames(boolean useCamelCaseMapping);
+    String findProperty(String name, boolean useCamelCaseMapping);
+    MetaObject instantiatePropertyValue(String name, PropertyTokenizer prop, 
+                                        ObjectFactory objectFactory);
+    boolean hasSetter(String name);
+    Class<?> getSetterType(String name);
+    Class<?> getGetterType(String name);
+    boolean hasGetter(String name);
+}</code></pre>
+<h3>4.2 BeanWrapper实现</h3>
+<pre><code class="language-java">public class BeanWrapper implements ObjectWrapper {
+    private final Object object;
+    private final Reflector reflector;
+    
+    public BeanWrapper(MetaObject metaObject, Object object) {
+        this.object = object;
+        this.reflector = new Reflector(object.getClass());
+    }
+    
+    @Override
+    public Object get(PropertyTokenizer prop) {
+        Method method = reflector.getGetMethod(prop.getName());
+        if (method == null) {
+            throw new RuntimeException("No getter for '" + prop.getName() + "'");
+        }
+        try {
+            return method.invoke(object);
+        } catch (Exception e) {
+            throw new RuntimeException("Error getting '" + prop.getName() + "'", e);
+        }
+    }
+    
+    @Override
+    public void set(PropertyTokenizer prop, Object value) {
+        Method method = reflector.getSetMethod(prop.getName());
+        if (method == null) {
+            throw new RuntimeException("No setter for '" + prop.getName() + "'");
+        }
+        try {
+            method.invoke(object, value);
+        } catch (Exception e) {
+            throw new RuntimeException("Error setting '" + prop.getName() + "'", e);
+        }
+    }
+    
+    @Override
+    public String findProperty(String name, boolean useCamelCaseMapping) {
+        if (reflector.getGetMethod(name) != null || reflector.getSetMethod(name) != null) {
+            return name;
+        }
+        return null;
+    }
+}</code></pre>
+<h2>5. 缓存系统</h2>
+<h3>5.1 Cache接口</h3>
+<p><strong>MyBatis官方Cache接口</strong>：<br><pre><code class="language-java">public interface Cache {<br>    String getId();<br>    void putObject(Object key, Object value);<br>    Object getObject(Object key);<br>    Object removeObject(Object key);<br>    void clear();<br>    int getSize();<br>}</code></pre></p>
+<p><strong>LightSSM简化实现</strong>：<br><pre><code class="language-java">public class PerpetualCache implements Cache {<br>    private final String id;<br>    private final Map<Object, Object> cache = new HashMap<>();<br>    <br>    public PerpetualCache(String id) {<br>        this.id = id;<br>    }<br>    <br>    @Override<br>    public String getId() {<br>        return id;<br>    }<br>    <br>    @Override<br>    public void putObject(Object key, Object value) {<br>        cache.put(key, value);<br>    }<br>    <br>    @Override<br>    public Object getObject(Object key) {<br>        return cache.get(key);<br>    }<br>    <br>    @Override<br>    public Object removeObject(Object key) {<br>        return cache.remove(key);<br>    }<br>    <br>    @Override<br>    public void clear() {<br>        cache.clear();<br>    }<br>    <br>    @Override<br>    public int getSize() {<br>        return cache.size();<br>    }<br>}</code></pre></p>
+<h3>5.2 缓存装饰器</h3>
+<p><strong>MyBatis官方的缓存装饰器链</strong>：<br><pre><code class="language-">PerpetualCache（基础缓存）<br>├── LruCache（LRU淘汰）<br>├── FifoCache（FIFO淘汰）<br>├── SoftCache（软引用）<br>├── WeakCache（弱引用）<br>├── SerializedCache（序列化）<br>├── SynchronizedCache（同步）<br>├── ScheduledCache（定时清空）<br>└── LoggingCache（日志）</code></pre></p>
+<p><strong>LightSSM</strong>：仅实现基础的PerpetualCache。</p>
+<h2>6. 绑定系统</h2>
+<h3>6.1 BoundSql绑定SQL</h3>
+<pre><code class="language-java">public class BoundSql {
+    private String sql;
+    private List<ParameterMapping> parameterMappings;
+    private Object parameterObject;
+    private Map<String, Object> additionalParameters = new HashMap<>();
+    
+    public BoundSql(String sql, List<ParameterMapping> parameterMappings, 
+                    Object parameterObject) {
+        this.sql = sql;
+        this.parameterMappings = parameterMappings;
+        this.parameterObject = parameterObject;
+    }
+    
+    public String getSql() {
+        return sql;
+    }
+    
+    public List<ParameterMapping> getParameterMappings() {
+        return parameterMappings;
+    }
+    
+    public Object getParameterObject() {
+        return parameterObject;
+    }
+    
+    public boolean hasAdditionalParameter(String name) {
+        return additionalParameters.containsKey(name);
+    }
+    
+    public void setAdditionalParameter(String name, Object value) {
+        additionalParameters.put(name, value);
+    }
+    
+    public Object getAdditionalParameter(String name) {
+        return additionalParameters.get(name);
+    }
+}</code></pre>
+<h3>6.2 ParameterMapping参数映射</h3>
+<pre><code class="language-java">public class ParameterMapping {
+    private String property;
+    private Class<?> javaType;
+    private JdbcType jdbcType;
+    private TypeHandler<?> typeHandler;
+    private String mode = "IN";
+    
+    private ParameterMapping(Builder builder) {
+        this.property = builder.property;
+        this.javaType = builder.javaType;
+        this.jdbcType = builder.jdbcType;
+        this.typeHandler = builder.typeHandler;
+        this.mode = builder.mode;
+    }
+    
+    public String getProperty() {
+        return property;
+    }
+    
+    public Class<?> getJavaType() {
+        return javaType;
+    }
+    
+    public JdbcType getJdbcType() {
+        return jdbcType;
+    }
+    
+    public TypeHandler<?> getTypeHandler() {
+        return typeHandler;
+    }
+    
+    public static class Builder {
+        private String property;
+        private Class<?> javaType;
+        private JdbcType jdbcType;
+        private TypeHandler<?> typeHandler;
+        private String mode = "IN";
+        
+        public Builder(String property) {
+            this.property = property;
+        }
+        
+        public Builder javaType(Class<?> javaType) {
+            this.javaType = javaType;
+            return this;
+        }
+        
+        public Builder jdbcType(JdbcType jdbcType) {
+            this.jdbcType = jdbcType;
+            return this;
+        }
+        
+        public Builder typeHandler(TypeHandler<?> typeHandler) {
+            this.typeHandler = typeHandler;
+            return this;
+        }
+        
+        public ParameterMapping build() {
+            return new ParameterMapping(this);
+        }
+    }
+}</code></pre>
+<h2>7. 设计模式总结</h2>
+<h3>7.1 建造者模式</h3>
+<pre><code class="language-java">// ParameterMapping.Builder
+ParameterMapping mapping = new ParameterMapping.Builder("username")
+    .javaType(String.class)
+    .jdbcType(JdbcType.VARCHAR)
+    .typeHandler(new StringTypeHandler())
+    .build();
+<p>// MappedStatement.Builder<br>MappedStatement ms = new MappedStatement.Builder(configuration, id, sqlSource, type)<br>    .resource(resource)<br>    .fetchSize(fetchSize)<br>    .timeout(timeout)<br>    .statementType(StatementType.PREPARED)<br>    .build();</code></pre></p>
+<h3>7.2 装饰器模式</h3>
+<pre><code class="language-java">// MyBatis官方缓存装饰器
+Cache cache = new PerpetualCache("userCache");
+cache = new LruCache(cache);
+cache = new SynchronizedCache(cache);
+cache = new SerializedCache(cache);</code></pre>
+<h3>7.3 工厂模式</h3>
+<pre><code class="language-java">// ObjectFactory
+ObjectFactory factory = new DefaultObjectFactory();
+User user = factory.create(User.class);
+<p>// ObjectWrapperFactory<br>ObjectWrapper wrapper = objectWrapperFactory.getWrapperFor(metaObject, object);</code></pre></p>
+<h3>7.4 组合模式</h3>
+<pre><code class="language-java">// SqlNode树
+MixedSqlNode root = new MixedSqlNode();
+root.addSqlNode(new StaticTextSqlNode("SELECT * FROM user"));
+root.addSqlNode(new IfSqlNode("id != null", 
+    new StaticTextSqlNode(" WHERE id = #{id}")));</code></pre>
+<h2>8. 源码阅读技巧</h2>
+<h3>8.1 抓主线，放支线</h3>
+<p><strong>主线</strong>：<br>1. SqlSession如何接收请求<br>2. Executor如何执行SQL<br>3. StatementHandler如何准备语句<br>4. ResultSetHandler如何处理结果</p>
+<p><strong>支线</strong>（可暂时跳过）：<br><ul><li>缓存处理</li><br><li>插件处理</li><br><li>复杂类型转换</li><br><li>延迟加载</li><br></ul><br><h3>8.2 对照官方文档</h3></p>
+<p><strong>阅读顺序</strong>：<br>1. 先看官方文档了解概念<br>2. 再看LightSSM简化实现<br>3. 最后看MyBatis官方源码</p>
+<h3>8.3 调试技巧</h3>
+<p><strong>关键断点</strong>：<br><pre><code class="language-java">// 1. SqlSession入口<br>DefaultSqlSession.selectList()</p>
+<p>// 2. Executor执行<br>SimpleExecutor.doQuery()</p>
+<p>// 3. 语句处理<br>PreparedStatementHandler.prepare()</p>
+<p>// 4. 结果处理<br>DefaultResultSetHandler.handleResultSets()</p>
+<p>// 5. 参数绑定<br>DefaultParameterHandler.setParameters()</code></pre></p>
+<h2>9. 知识体系总结</h2>
+<h3>9.1 LightSSM vs Spring vs MyBatis</h3>
+<p>| 模块 | LightSSM | Spring官方 | MyBatis官方 |<br>|-----|---------|-----------|------------|<br>| IoC容器 | 完整实现 | 完整实现 | 不支持 |<br>| AOP | 基础实现 | 完整实现 | 不支持 |<br>| MVC | 完整实现 | 完整实现 | 不支持 |<br>| ORM | 完整实现 | Spring Data | 完整实现 |<br>| 事务 | 基础支持 | 完整支持 | 基础支持 |<br>| 缓存 | 不支持 | 完整支持 | 完整支持 |<br>| 插件 | 完整支持 | 完整支持 | 完整支持 |</p>
+<h3>9.2 核心技术点</h3>
+<p><strong>Spring核心</strong>：<br><ul><li>IoC容器（三级缓存）</li><br><li>AOP代理（JDK/CGLIB）</li><br><li>事务管理</li><br><li>Bean生命周期</li><br></ul><br><strong>MyBatis核心</strong>：<br><ul><li>SQL映射</li><br><li>动态SQL</li><br><li>类型系统</li><br><li>插件机制</li><br></ul><br><strong>LightSSM价值</strong>：<br><ul><li>保留核心机制</li><br><li>剥离高级特性</li><br><li>适合学习理解</li><br><li>面试准备利器</li><br></ul><br><h2>10. 面试准备</h2></p>
+<h3>10.1 Spring高频问题</h3>
+<p>1. Spring Bean的生命周期？<br>2. Spring如何解决循环依赖？<br>3. Spring AOP的实现原理？<br>4. @Autowired和@Resource的区别？<br>5. Spring事务的传播机制？</p>
+<h3>10.2 MyBatis高频问题</h3>
+<p>1. MyBatis的执行流程？<br>2. #{}和${}的区别？<br>3. MyBatis的插件原理？<br>4. MyBatis的一级缓存和二级缓存？<br>5. MyBatis的动态SQL如何实现？</p>
+<h3>10.3 进阶问题</h3>
+<p>1. Spring和MyBatis如何整合？<br>2. Spring如何管理MyBatis的SqlSession？<br>3. Spring事务如何与MyBatis集成？<br>4. MyBatis的TypeHandler使用场景？<br>5. 如何手写一个MyBatis插件？</p>
+<h2>11. 总结</h2>
+<p>通过本系列10篇文档的学习，我们：</p>
+<p>1. <strong>理解了架构设计</strong>：从整体到局部，层层递进<br>2. <strong>掌握了核心原理</strong>：IoC、AOP、MVC、ORM<br>3. <strong>学会了源码对比</strong>：LightSSM vs Spring vs MyBatis<br>4. <strong>准备了面试考点</strong>：高频问题 + 深度问题<br>5. <strong>提升了编码能力</strong>：学习优秀框架的设计思想</p>
+<p><strong>LightSSM的价值</strong>：<br><ul><li>教学导向：剥离复杂特性，保留核心机制</li><br><li>源码对照：与官方框架结构对应</li><br><li>渐进学习：从基础到高级，循序渐进</li><br><li>面试利器：理解原理，应对深度问题</li><br></ul><br><strong>下一步建议</strong>：<br>1. 动手实现一个简化版框架<br>2. 深入阅读Spring/MyBatis官方源码<br>3. 学习其他优秀框架（如Netty、Dubbo）<br>4. 参与开源项目，提升实战能力</p>
+<p>---</p>
+<p><strong>上一篇</strong>：<a href="09-插件系统与扩展机制.md">09 - 插件系统与扩展机制</a></p>
+<p><strong>系列完结</strong></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // 移动端菜单切换
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      // 自动高亮当前页面
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPage = window.location.pathname.split("/").pop();
+        const links = document.querySelectorAll(".sidebar-nav a");
+        links.forEach((link) => {
+          if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 代码块语言高亮
+      document.addEventListener("DOMContentLoaded", function () {
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
+          const language = block.className.replace("language-", "");
+          if (language) {
+            block.parentElement.setAttribute("data-language", language);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

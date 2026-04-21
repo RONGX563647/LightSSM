@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>01. 架构概述与设计哲学 - LightSSM 文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏样式 */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        padding: 40px 0;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+
+      .sidebar-header {
+        padding: 0 24px 32px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 24px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-header p {
+        font-size: 13px;
+        color: #999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 10px 24px;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+      }
+
+      .sidebar-nav a:hover {
+        background: #f5f5f5;
+        color: #ff6b35;
+      }
+
+      .sidebar-nav a.active {
+        background: #fff5f2;
+        color: #ff6b35;
+        border-left-color: #ff6b35;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .section-title {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 主内容区域 */
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 60px 80px;
+        max-width: 100%;
+      }
+
+      .content-container {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      /* Markdown 样式 */
+      .markdown-body {
+        font-size: 16px;
+        line-height: 2;
+        color: #444;
+      }
+
+      .markdown-body h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .markdown-body h2 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 48px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .markdown-body h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 32px 0 16px;
+      }
+
+      .markdown-body h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 24px 0 12px;
+      }
+
+      .markdown-body p {
+        margin-bottom: 24px;
+        text-align: justify;
+      }
+
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      .markdown-body li {
+        margin-bottom: 12px;
+      }
+
+      .markdown-body a {
+        color: #ff6b35;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .markdown-body a:hover {
+        color: #e65a2b;
+        text-decoration: underline;
+      }
+
+      .markdown-body code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        background: #fafafa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #d73a49;
+      }
+
+      .markdown-body pre {
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+      }
+
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: #24292e;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .markdown-body blockquote {
+        border-left: 4px solid #ff6b35;
+        padding-left: 24px;
+        margin: 24px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid #f0f0f0;
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .markdown-body th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .markdown-body hr {
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        margin: 48px 0;
+      }
+
+      .markdown-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 24px auto;
+      }
+
+      /* 顶部导航 */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 280px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 80px;
+        z-index: 999;
+      }
+
+      .top-nav-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .top-nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-nav-links a:hover {
+        color: #ff6b35;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .sidebar {
+          width: 240px;
+        }
+
+        .main-content {
+          margin-left: 240px;
+          padding: 60px 40px;
+        }
+
+        .top-nav {
+          left: 240px;
+          padding: 0 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 24px 40px;
+        }
+
+        .top-nav {
+          left: 0;
+          padding: 0 24px;
+        }
+
+        .menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          border: 1px solid #f0f0f0;
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>LightSSM</h1>
+        <p>轻量级自研 SSM 框架文档</p>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="section-title">快速开始</li>
+        <li><a href="index.html">首页</a></li>
+        <li><a href="01-architecture.html" class="active">01. 架构概述与设计哲学</a></li>
+
+        <li class="section-title">核心模块</li>
+        <li><a href="02-ioc-container.html" class="">02. IoC 容器核心实现</a></li>
+        <li><a href="03-aop-proxy.html" class="">03. AOP 代理机制</a></li>
+        <li><a href="04-mvc-framework.html" class="">04. MVC 框架实现</a></li>
+        <li><a href="05-orm-architecture.html" class="">05. ORM 核心架构</a></li>
+
+        <li class="section-title">数据层实现</li>
+        <li><a href="06-datasource-transaction.html" class="">06. 数据源与事务管理</a></li>
+        <li><a href="07-sql-parsing.html" class="">07. SQL 解析与动态 SQL</a></li>
+        <li><a href="08-type-system.html" class="">08. 类型系统与类型处理器</a></li>
+
+        <li class="section-title">扩展与高级特性</li>
+        <li><a href="09-plugin-system.html" class="">09. 插件系统与扩展机制</a></li>
+        <li><a href="10-advanced-topics.html" class="">10. 高级特性与源码剖析</a></li>
+
+        <li class="section-title">相关链接</li>
+        <li>
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub 仓库</a
+          >
+        </li>
+        <li><a href="https://www.rongx.top" target="_blank">个人主页</a></li>
+      </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <nav class="top-nav">
+        <div class="top-nav-links">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <a href="https://www.rongx.top" target="_blank">主页</a>
+        </div>
+      </nav>
+
+      <div class="content-container">
+        <div class="markdown-body" id="content">
+          <h1>01 - LightSSM架构概述与设计哲学</h1>
+<h2>1. 项目定位与目标</h2>
+<p>LightSSM是一个教育性质的轻量级SSM框架实现，旨在通过精简的代码帮助开发者理解Spring和MyBatis的核心原理。</p>
+<h3>1.1 设计目标</h3>
+<ul><li><strong>教学导向</strong>：剥离复杂的企业级特性，保留核心机制</li>
+<li><strong>源码对照</strong>：与Spring 6.x和MyBatis 3.x源码保持结构对应</li>
+<li><strong>渐进学习</strong>：从基础容器到高级AOP，层层递进</li>
+</ul>
+<h3>1.2 与官方框架的核心差异</h3>
+<p>| 对比维度 | Spring Framework | LightSSM |<br>|---------|------------------|----------|<br>| 代码量 | 约20万行 | 约5000行 |<br>| 配置方式 | XML/注解/Java Config | 注解+XML混合 |<br>| BeanFactory层级 | 7层接口继承 | 3层接口 |<br>| AOP支持 | 完整AspectJ集成 | 基础JDK/CGLIB代理 |<br>| 事务管理 | 声明式+编程式 | 仅编程式基础 |<br>| 适用场景 | 企业生产环境 | 学习研究 |</p>
+<h2>2. 整体架构设计</h2>
+<h3>2.1 四层架构模型</h3>
+<pre><code class="language-">com.lightframework
+├── ioc/          # 控制反转容器 - 框架基石
+│   ├── annotation/  # 注解定义
+│   ├── beans/       # Bean元数据
+│   ├── core/        # 核心工厂实现
+│   ├── context/     # 应用上下文
+│   └── exception/   # 异常体系
+│
+├── aop/          # 面向切面编程 - 横切关注点
+│   ├── annotation/  # 切面注解
+│   ├── core/        # 代理工厂
+│   ├── interceptor/ # 拦截器实现
+│   └── pointcut/    # 切入点表达式
+│
+├── mvc/          # Web MVC框架 - 请求处理
+│   ├── annotation/  # MVC注解
+│   ├── core/        # 核心接口
+│   ├── handler/     # 处理器实现
+│   ├── servlet/     # 前端控制器
+│   └── view/        # 视图解析
+│
+└── orm/          # 对象关系映射 - 数据访问
+    ├── annotations/ # SQL注解
+    ├── binding/     # Mapper代理
+    ├── builder/     # SQL构建
+    ├── datasource/  # 数据源
+    ├── executor/    # 执行器
+    ├── mapping/     # 映射定义
+    ├── plugin/      # 插件系统
+    ├── reflection/  # 反射工具
+    ├── scripting/   # 动态SQL
+    ├── session/     # 会话管理
+    ├── transaction/ # 事务管理
+    └── type/        # 类型处理</code></pre>
+<h3>2.2 模块依赖关系</h3>
+<p>IoC容器是整个框架的基石：<br><ul><li>AOP模块依赖IoC进行切面Bean的管理</li><br><li>MVC模块依赖IoC进行Controller的实例化</li><br><li>ORM模块独立运行，但可通过IoC集成</li><br></ul><br><h2>3. 核心设计原则</h2></p>
+<h3>3.1 工厂模式贯穿始终</h3>
+<p>Spring官方源码中，工厂模式无处不在：</p>
+<pre><code class="language-java">// Spring官方：BeanFactory层次结构
+BeanFactory
+└── ListableBeanFactory
+    └── HierarchicalBeanFactory
+        └── ConfigurableBeanFactory
+            └── AutowireCapableBeanFactory
+                └── ConfigurableListableBeanFactory
+<p>// LightSSM简化版本<br>BeanFactory                    # 基础接口<br>├── ListableBeanFactory        # 列表能力<br>└── DefaultListableBeanFactory # 核心实现</code></pre></p>
+<h3>3.2 模板方法模式</h3>
+<pre><code class="language-java">// Spring官方：AbstractExecutorService
+// MyBatis官方：BaseExecutor
+// LightSSM实现：BaseExecutor
+<p>public abstract class BaseExecutor implements Executor {<br>    // 模板方法：定义算法骨架<br>    public int update(MappedStatement ms, Object parameter) {<br>        // 公共逻辑：事务管理、缓存处理<br>        return doUpdate(ms, parameter); // 抽象方法：子类实现<br>    }<br>    <br>    // 抽象方法：由子类实现具体逻辑<br>    protected abstract int doUpdate(MappedStatement ms, Object parameter);<br>}</code></pre></p>
+<h3>3.3 策略模式应用</h3>
+<p>类型处理器是策略模式的典型应用：</p>
+<pre><code class="language-java">// 策略接口
+public interface TypeHandler<T> {
+    void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType);
+    T getResult(ResultSet rs, String columnName);
+}
+<p>// 具体策略<br>public class StringTypeHandler implements TypeHandler<String> { ... }<br>public class IntegerTypeHandler implements TypeHandler<Integer> { ... }</code></pre></p>
+<h2>4. 生命周期管理</h2>
+<h3>4.1 Bean的完整生命周期</h3>
+<pre><code class="language-">1. 实例化（Instantiation）
+   ↓
+2. 属性填充（Populate）
+   ↓
+3. Aware接口回调
+   ↓
+4. BeanPostProcessor前置处理
+   ↓
+5. 初始化（Initialization）
+   ↓
+6. BeanPostProcessor后置处理
+   ↓
+7. 就绪使用（Ready）
+   ↓
+8. 销毁（Destruction）</code></pre>
+<h3>4.2 与Spring官方对比</h3>
+<p>| 阶段 | Spring官方 | LightSSM |<br>|-----|-----------|----------|<br>| 实例化 | 通过Supplier/FactoryMethod/Constructor | 仅支持Constructor |<br>| Aware接口 | 10+种Aware接口 | 无 |<br>| 后置处理器 | BeanPostProcessor链 | 基础支持 |<br>| 销毁回调 | DisposableBean/@PreDestroy | 无 |</p>
+<h2>5. 学习路线建议</h2>
+<h3>5.1 渐进式学习路径</h3>
+<pre><code class="language-">第1阶段：理解IoC容器（文档02）
+  ↓
+第2阶段：掌握AOP原理（文档03）
+  ↓
+第3阶段：学习MVC流程（文档04）
+  ↓
+第4阶段：深入ORM核心（文档05-06）
+  ↓
+第5阶段：探索SQL处理（文档07）
+  ↓
+第6阶段：理解类型系统（文档08）
+  ↓
+第7阶段：插件与扩展（文档09）
+  ↓
+第8阶段：综合与深入（文档10）</code></pre>
+<h3>5.2 前置知识要求</h3>
+<ul><li>Java反射机制</li>
+<li>动态代理（JDK & CGLIB）</li>
+<li>XML解析（DOM4J）</li>
+<li>JDBC基础</li>
+<li>Servlet规范</li>
+</ul>
+<h2>6. 源码阅读技巧</h2>
+<h3>6.1 对照阅读法</h3>
+<p>推荐同时打开三个源码：<br>1. LightSSM实现<br>2. Spring官方源码（GitHub: spring-projects/spring-framework）<br>3. 官方文档</p>
+<h3>6.2 关键切入点</h3>
+<ul><li>Spring IOC：<code>AbstractAutowireCapableBeanFactory.doCreateBean()</code></li>
+<li>Spring AOP：<code>JdkDynamicAopProxy.invoke()</code></li>
+<li>MyBatis：<code>DefaultSqlSession.selectList()</code></li>
+</ul>
+<h3>6.3 调试建议</h3>
+<p>1. 在关键方法设置断点<br>2. 观察方法调用栈<br>3. 注意对象状态变化<br>4. 记录关键变量值</p>
+<h2>7. 总结</h2>
+<p>LightSSM通过精简实现保留了Spring和MyBatis的核心机制：</p>
+<ul><li><strong>IoC</strong>：三级缓存解决循环依赖</li>
+<li><strong>AOP</strong>：JDK/CGLIB双代理机制</li>
+<li><strong>MVC</strong>：完整的请求处理链</li>
+<li><strong>ORM</strong>：SQL映射与执行器模式</li>
+</ul>
+这些核心机制正是面试和实际开发中最常涉及的内容。通过本系列文档的学习，你将能够：
+<p>1. 理解Spring核心原理<br>2. 掌握MyBatis运行机制<br>3. 具备阅读源码的能力<br>4. 提升面试竞争力</p>
+<p>---</p>
+<p><strong>下一步</strong>：<a href="02-IoC容器核心实现与Spring源码对比.md">02 - IoC容器核心实现与Spring源码对比</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // 移动端菜单切换
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      // 自动高亮当前页面
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPage = window.location.pathname.split("/").pop();
+        const links = document.querySelectorAll(".sidebar-nav a");
+        links.forEach((link) => {
+          if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 代码块语言高亮
+      document.addEventListener("DOMContentLoaded", function () {
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
+          const language = block.className.replace("language-", "");
+          if (language) {
+            block.parentElement.setAttribute("data-language", language);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

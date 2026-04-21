@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>08. 类型系统与类型处理器 - LightSSM 文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏样式 */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        padding: 40px 0;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+
+      .sidebar-header {
+        padding: 0 24px 32px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 24px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-header p {
+        font-size: 13px;
+        color: #999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 10px 24px;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+      }
+
+      .sidebar-nav a:hover {
+        background: #f5f5f5;
+        color: #ff6b35;
+      }
+
+      .sidebar-nav a.active {
+        background: #fff5f2;
+        color: #ff6b35;
+        border-left-color: #ff6b35;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .section-title {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 主内容区域 */
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 60px 80px;
+        max-width: 100%;
+      }
+
+      .content-container {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      /* Markdown 样式 */
+      .markdown-body {
+        font-size: 16px;
+        line-height: 2;
+        color: #444;
+      }
+
+      .markdown-body h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .markdown-body h2 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 48px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .markdown-body h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 32px 0 16px;
+      }
+
+      .markdown-body h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 24px 0 12px;
+      }
+
+      .markdown-body p {
+        margin-bottom: 24px;
+        text-align: justify;
+      }
+
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      .markdown-body li {
+        margin-bottom: 12px;
+      }
+
+      .markdown-body a {
+        color: #ff6b35;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .markdown-body a:hover {
+        color: #e65a2b;
+        text-decoration: underline;
+      }
+
+      .markdown-body code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        background: #fafafa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #d73a49;
+      }
+
+      .markdown-body pre {
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+      }
+
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: #24292e;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .markdown-body blockquote {
+        border-left: 4px solid #ff6b35;
+        padding-left: 24px;
+        margin: 24px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid #f0f0f0;
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .markdown-body th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .markdown-body hr {
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        margin: 48px 0;
+      }
+
+      .markdown-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 24px auto;
+      }
+
+      /* 顶部导航 */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 280px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 80px;
+        z-index: 999;
+      }
+
+      .top-nav-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .top-nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-nav-links a:hover {
+        color: #ff6b35;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .sidebar {
+          width: 240px;
+        }
+
+        .main-content {
+          margin-left: 240px;
+          padding: 60px 40px;
+        }
+
+        .top-nav {
+          left: 240px;
+          padding: 0 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 24px 40px;
+        }
+
+        .top-nav {
+          left: 0;
+          padding: 0 24px;
+        }
+
+        .menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          border: 1px solid #f0f0f0;
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>LightSSM</h1>
+        <p>轻量级自研 SSM 框架文档</p>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="section-title">快速开始</li>
+        <li><a href="index.html">首页</a></li>
+        <li><a href="01-architecture.html" class="">01. 架构概述与设计哲学</a></li>
+
+        <li class="section-title">核心模块</li>
+        <li><a href="02-ioc-container.html" class="">02. IoC 容器核心实现</a></li>
+        <li><a href="03-aop-proxy.html" class="">03. AOP 代理机制</a></li>
+        <li><a href="04-mvc-framework.html" class="">04. MVC 框架实现</a></li>
+        <li><a href="05-orm-architecture.html" class="">05. ORM 核心架构</a></li>
+
+        <li class="section-title">数据层实现</li>
+        <li><a href="06-datasource-transaction.html" class="">06. 数据源与事务管理</a></li>
+        <li><a href="07-sql-parsing.html" class="">07. SQL 解析与动态 SQL</a></li>
+        <li><a href="08-type-system.html" class="active">08. 类型系统与类型处理器</a></li>
+
+        <li class="section-title">扩展与高级特性</li>
+        <li><a href="09-plugin-system.html" class="">09. 插件系统与扩展机制</a></li>
+        <li><a href="10-advanced-topics.html" class="">10. 高级特性与源码剖析</a></li>
+
+        <li class="section-title">相关链接</li>
+        <li>
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub 仓库</a
+          >
+        </li>
+        <li><a href="https://www.rongx.top" target="_blank">个人主页</a></li>
+      </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <nav class="top-nav">
+        <div class="top-nav-links">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <a href="https://www.rongx.top" target="_blank">主页</a>
+        </div>
+      </nav>
+
+      <div class="content-container">
+        <div class="markdown-body" id="content">
+          <h1>08 - 类型系统与类型处理器</h1>
+<h2>1. 类型系统架构</h2>
+<h3>1.1 TypeHandler接口</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public interface TypeHandler<T> {<br>    void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;<br>    T getResult(ResultSet rs, String columnName) throws SQLException;<br>    T getResult(ResultSet rs, int columnIndex) throws SQLException;<br>}</code></pre></p>
+<p><strong>MyBatis官方TypeHandler</strong>：<br><pre><code class="language-java">public interface TypeHandler<T> {<br>    void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;<br>    T getResult(ResultSet rs, String columnName) throws SQLException;<br>    T getResult(ResultSet rs, int columnIndex) throws SQLException;<br>    T getResult(CallableStatement cs, int columnIndex) throws SQLException;<br>}</code></pre></p>
+<p><strong>对比</strong>：LightSSM不支持CallableStatement（存储过程）。</p>
+<h3>1.2 TypeHandler层次结构</h3>
+<pre><code class="language-">TypeHandler（接口）
+├── BaseTypeHandler（抽象基类）
+│   ├── StringTypeHandler
+│   ├── IntegerTypeHandler
+│   ├── LongTypeHandler
+│   ├── DoubleTypeHandler
+│   ├── BooleanTypeHandler
+│   ├── DateTypeHandler
+│   └── ...
+└── ObjectTypeHandler（通用对象）</code></pre>
+<h2>2. 基础类型处理器</h2>
+<h3>2.1 BaseTypeHandler基类</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public abstract class BaseTypeHandler<T> implements TypeHandler<T> {<br>    <br>    @Override<br>    public void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException {<br>        if (parameter == null) {<br>            if (jdbcType == null) {<br>                throw new TypeException("JDBC type is null");<br>            }<br>            ps.setNull(i, jdbcType.TYPE_CODE);<br>        } else {<br>            setNonNullParameter(ps, i, parameter, jdbcType);<br>        }<br>    }<br>    <br>    protected abstract void setNonNullParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;<br>}</code></pre></p>
+<h3>2.2 StringTypeHandler</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class StringTypeHandler extends BaseTypeHandler<String> {<br>    <br>    @Override<br>    protected void setNonNullParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType) throws SQLException {<br>        ps.setString(i, parameter);<br>    }<br>    <br>    @Override<br>    public String getResult(ResultSet rs, String columnName) throws SQLException {<br>        return rs.getString(columnName);<br>    }<br>    <br>    @Override<br>    public String getResult(ResultSet rs, int columnIndex) throws SQLException {<br>        return rs.getString(columnIndex);<br>    }<br>}</code></pre></p>
+<h3>2.3 IntegerTypeHandler</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class IntegerTypeHandler extends BaseTypeHandler<Integer> {<br>    <br>    @Override<br>    protected void setNonNullParameter(PreparedStatement ps, int i, Integer parameter, JdbcType jdbcType) throws SQLException {<br>        ps.setInt(i, parameter);<br>    }<br>    <br>    @Override<br>    public Integer getResult(ResultSet rs, String columnName) throws SQLException {<br>        return rs.getInt(columnName);<br>    }<br>    <br>    @Override<br>    public Integer getResult(ResultSet rs, int columnIndex) throws SQLException {<br>        return rs.getInt(columnIndex);<br>    }<br>}</code></pre></p>
+<h3>2.4 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方TypeHandler体系</strong>：</p>
+<p>| 类型 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| String | StringTypeHandler | StringTypeHandler |<br>| Integer | IntegerTypeHandler | IntegerTypeHandler |<br>| Long | LongTypeHandler | LongTypeHandler |<br>| Double | DoubleTypeHandler | DoubleTypeHandler |<br>| Boolean | BooleanTypeHandler | BooleanTypeHandler |<br>| Date | DateTypeHandler | DateTypeHandler |<br>| BigDecimal | BigDecimalTypeHandler | BigDecimalTypeHandler |<br>| Byte | ByteTypeHandler | ByteTypeHandler |<br>| Short | ShortTypeHandler | ShortTypeHandler |<br>| Float | FloatTypeHandler | FloatTypeHandler |<br>| Blob | BlobTypeHandler | 不支持 |<br>| Clob | ClobTypeHandler | 不支持 |<br>| Enum | EnumTypeHandler | EnumTypeHandler |<br>| Object | ObjectTypeHandler | ObjectTypeHandler |<br>| 数组 | ArrayTypeHandler | 不支持 |<br>| 集合 | CollectionTypeHandler | 不支持 |<br>| JSON | JsonTypeHandler | 不支持 |</p>
+<h2>3. 类型处理器注册表</h2>
+<h3>3.1 TypeHandlerRegistry</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class TypeHandlerRegistry {<br>    private final Map<JdbcType, TypeHandler<?>> jdbcTypeHandlerMap = new HashMap<>();<br>    private final Map<String, TypeHandler<?>> typeHandlerStringMap = new HashMap<>();<br>    private final Map<Class<?>, TypeHandler<?>> typeHandlerClassMap = new HashMap<>();<br>    <br>    public TypeHandlerRegistry() {<br>        // 注册内置类型处理器<br>        register(String.class, new StringTypeHandler());<br>        register(Integer.class, new IntegerTypeHandler());<br>        register(int.class, new IntegerTypeHandler());<br>        register(Long.class, new LongTypeHandler());<br>        register(long.class, new LongTypeHandler());<br>        register(Double.class, new DoubleTypeHandler());<br>        register(double.class, new DoubleTypeHandler());<br>        register(Boolean.class, new BooleanTypeHandler());<br>        register(boolean.class, new BooleanTypeHandler());<br>        register(Date.class, new DateTypeHandler());<br>        // ... 更多注册<br>    }<br>    <br>    @SuppressWarnings("unchecked")<br>    public <T> void register(Class<T> javaTypeClass, TypeHandler<?> handler) {<br>        if (javaTypeClass != null) {<br>            typeHandlerClassMap.put(javaTypeClass, handler);<br>        }<br>    }<br>    <br>    @SuppressWarnings("unchecked")<br>    public <T> TypeHandler<T> getTypeHandler(Class<T> type) {<br>        TypeHandler<?> handler = typeHandlerClassMap.get(type);<br>        if (handler == null) {<br>            // 查找父类<br>            for (Map.Entry<Class<?>, TypeHandler<?>> entry : typeHandlerClassMap.entrySet()) {<br>                if (entry.getKey().isAssignableFrom(type)) {<br>                    return (TypeHandler<T>) entry.getValue();<br>                }<br>            }<br>            // 默认返回Object类型处理器<br>            handler = typeHandlerClassMap.get(Object.class);<br>        }<br>        return (TypeHandler<T>) handler;<br>    }<br>}</code></pre></p>
+<h3>3.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的TypeHandlerRegistry</strong>：<br><ul><li>支持类型超类查找</li><br><li>支持JDBC类型映射</li><br><li>支持类型处理器工厂</li><br><li>支持泛型类型处理器</li><br><li>支持TypeHandler包扫描</li><br><li>包含100+个内置TypeHandler</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>基础的类型映射</li><br><li>20+个内置TypeHandler</li><br><li>不支持工厂和扫描</li><br></ul><br><h2>4. 类型别名系统</h2></p>
+<h3>4.1 TypeAliasRegistry</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class TypeAliasRegistry {<br>    private final Map<String, Class<?>> typeAliases = new HashMap<>();<br>    <br>    public TypeAliasRegistry() {<br>        // 注册内置类型别名<br>        registerAlias("string", String.class);<br>        registerAlias("int", Integer.class);<br>        registerAlias("integer", Integer.class);<br>        registerAlias("long", Long.class);<br>        registerAlias("double", Double.class);<br>        registerAlias("boolean", Boolean.class);<br>        registerAlias("date", Date.class);<br>        registerAlias("map", Map.class);<br>        registerAlias("list", List.class);<br>    }<br>    <br>    public void registerAlias(String alias, Class<?> value) {<br>        if (alias == null) {<br>            throw new TypeException("Alias cannot be null");<br>        }<br>        typeAliases.put(alias.toLowerCase(Locale.ENGLISH), value);<br>    }<br>    <br>    public void registerAlias(String className) {<br>        try {<br>            registerAlias(className, Resources.classForName(className));<br>        } catch (ClassNotFoundException e) {<br>            throw new TypeException("Error registering type alias: " + className, e);<br>        }<br>    }<br>    <br>    public <T> Class<T> resolveAlias(String string) {<br>        if (string == null) return null;<br>        String key = string.toLowerCase(Locale.ENGLISH);<br>        Class<?> value = typeAliases.get(key);<br>        if (value == null) {<br>            try {<br>                return (Class<T>) Resources.classForName(string);<br>            } catch (ClassNotFoundException e) {<br>                throw new TypeException("Could not resolve type alias: " + string, e);<br>            }<br>        }<br>        return (Class<T>) value;<br>    }<br>}</code></pre></p>
+<h3>4.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的TypeAliasRegistry</strong>：<br><ul><li>支持包扫描自动注册</li><br><li>支持内部类</li><br><li>支持泛型类</li><br><li>包含50+个内置别名</li><br><li>支持注解@Alias</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>手动注册</li><br><li>基础类型别名</li><br><li>不支持包扫描</li><br></ul><br><h2>5. JdbcType枚举</h2></p>
+<h3>5.1 JdbcType定义</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public enum JdbcType {<br>    INTEGER(Types.INTEGER),<br>    VARCHAR(Types.VARCHAR),<br>    CHAR(Types.CHAR),<br>    DATE(Types.DATE),<br>    TIME(Types.TIME),<br>    TIMESTAMP(Types.TIMESTAMP),<br>    DOUBLE(Types.DOUBLE),<br>    FLOAT(Types.FLOAT),<br>    BIGINT(Types.BIGINT),<br>    SMALLINT(Types.SMALLINT),<br>    DECIMAL(Types.DECIMAL),<br>    NUMERIC(Types.NUMERIC),<br>    BIT(Types.BIT),<br>    TINYINT(Types.TINYINT),<br>    REAL(Types.REAL),<br>    LONGVARCHAR(Types.LONGVARCHAR),<br>    BLOB(Types.BLOB),<br>    CLOB(Types.CLOB),<br>    BOOLEAN(Types.BOOLEAN),<br>    NULL(Types.NULL);<br>    <br>    public final int TYPE_CODE;<br>    <br>    JdbcType(int code) {<br>        this.TYPE_CODE = code;<br>    }<br>}</code></pre></p>
+<p><strong>MyBatis官方JdbcType</strong>包含30+个枚举值，LightSSM包含20个常用枚举值。</p>
+<h2>6. 类型转换场景</h2>
+<h3>6.1 参数绑定</h3>
+<pre><code class="language-java">// PreparedStatement参数绑定
+public class DefaultParameterHandler implements ParameterHandler {
+    @Override
+    public void setParameters(PreparedStatement ps) throws SQLException {
+        BoundSql boundSql = mappedStatement.getBoundSql();
+        List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
+        
+        for (int i = 0; i < parameterMappings.size(); i++) {
+            ParameterMapping parameterMapping = parameterMappings.get(i);
+            Object value = boundSql.getParameterObject();
+            JdbcType jdbcType = parameterMapping.getJdbcType();
+            
+            // 获取TypeHandler
+            TypeHandler<?> typeHandler = parameterMapping.getTypeHandler();
+            
+            // 设置参数
+            ((TypeHandler) typeHandler).setParameter(ps, i + 1, value, jdbcType);
+        }
+    }
+}</code></pre>
+<h3>6.2 结果映射</h3>
+<pre><code class="language-java">// ResultSet结果映射
+public class DefaultResultSetHandler implements ResultSetHandler {
+    @Override
+    public List<Object> handleResultSets(Statement stmt) throws SQLException {
+        ResultSet rs = stmt.getResultSet();
+        List<Object> resultObjects = new ArrayList<>();
+        
+        while (rs.next()) {
+            Object resultObject = createResultObject(rs, resultMap);
+            if (resultObject != null) {
+                resultObjects.add(resultObject);
+            }
+        }
+        
+        return resultObjects;
+    }
+    
+    private Object createResultObject(ResultSet rs, ResultMap resultMap) throws SQLException {
+        Object resultObject = objectFactory.create(resultClass);
+        
+        for (ResultMapping resultMapping : resultMap.getResultMappings()) {
+            String column = resultMapping.getColumn();
+            String property = resultMapping.getProperty();
+            Class<?> propertyType = resultMapping.getPropertyType();
+            
+            // 获取TypeHandler
+            TypeHandler<?> typeHandler = resultMapping.getTypeHandler();
+            
+            // 获取结果值
+            Object value = typeHandler.getResult(rs, column);
+            
+            // 设置属性
+            MetaObject metaObject = configuration.newMetaObject(resultObject);
+            metaObject.setValue(property, value);
+        }
+        
+        return resultObject;
+    }
+}</code></pre>
+<h2>7. 自定义类型处理器</h2>
+<h3>7.1 实现方式</h3>
+<p><strong>LightSSM支持两种实现方式</strong>：</p>
+<p>方式一：继承BaseTypeHandler<br><pre><code class="language-java">public class MyStringTypeHandler extends BaseTypeHandler<String> {<br>    @Override<br>    protected void setNonNullParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType) throws SQLException {<br>        ps.setString(i, parameter.toUpperCase()); // 转为大写<br>    }<br>    <br>    @Override<br>    public String getResult(ResultSet rs, String columnName) throws SQLException {<br>        return rs.getString(columnName).toLowerCase(); // 转为小写<br>    }<br>    <br>    @Override<br>    public String getResult(ResultSet rs, int columnIndex) throws SQLException {<br>        return rs.getString(columnIndex).toLowerCase();<br>    }<br>}</code></pre></p>
+<p>方式二：实现TypeHandler接口<br><pre><code class="language-java">public class MyIntegerTypeHandler implements TypeHandler<Integer> {<br>    @Override<br>    public void setParameter(PreparedStatement ps, int i, Integer parameter, JdbcType jdbcType) throws SQLException {<br>        ps.setInt(i, parameter * 100); // 放大100倍<br>    }<br>    <br>    @Override<br>    public Integer getResult(ResultSet rs, String columnName) throws SQLException {<br>        return rs.getInt(columnName) / 100; // 缩小100倍<br>    }<br>    <br>    @Override<br>    public Integer getResult(ResultSet rs, int columnIndex) throws SQLException {<br>        return rs.getInt(columnIndex) / 100;<br>    }<br>}</code></pre></p>
+<h3>7.2 注册方式</h3>
+<p><strong>方式一：XML配置</strong><br><pre><code class="language-xml"><configuration><br>    <typeHandlers><br>        <typeHandler handler="com.example.MyStringTypeHandler"/><br>        <typeHandler javaType="java.lang.String" jdbcType="VARCHAR" <br>                     handler="com.example.MyStringTypeHandler"/><br>    </typeHandlers><br></configuration></code></pre></p>
+<p><strong>方式二：注解配置</strong><br><pre><code class="language-java">@MappedJdbcTypes(JdbcType.VARCHAR)<br>@MappedTypes(String.class)<br>public class MyStringTypeHandler extends BaseTypeHandler<String> {<br>    // ...<br>}</code></pre></p>
+<p><strong>方式三：代码注册</strong><br><pre><code class="language-java">Configuration configuration = new Configuration();<br>configuration.getTypeHandlerRegistry().register(String.class, new MyStringTypeHandler());</code></pre></p>
+<h2>8. 设计模式总结</h2>
+<h3>8.1 策略模式</h3>
+<pre><code class="language-java">// TypeHandler是策略接口
+public interface TypeHandler<T> {
+    void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType);
+    T getResult(ResultSet rs, String columnName);
+}
+<p>// 具体策略<br>public class StringTypeHandler implements TypeHandler<String> { ... }<br>public class IntegerTypeHandler implements TypeHandler<Integer> { ... }</code></pre></p>
+<h3>8.2 注册表模式</h3>
+<pre><code class="language-java">// 类型处理器注册表
+public class TypeHandlerRegistry {
+    private final Map<Class<?>, TypeHandler<?>> typeHandlerClassMap;
+    
+    public <T> TypeHandler<T> getTypeHandler(Class<T> type) {
+        // 查找TypeHandler
+    }
+}
+<p>// 类型别名注册表<br>public class TypeAliasRegistry {<br>    private final Map<String, Class<?>> typeAliases;<br>    <br>    public <T> Class<T> resolveAlias(String alias) {<br>        // 解析别名<br>    }<br>}</code></pre></p>
+<h2>9. 面试考点</h2>
+<h3>9.1 高频问题</h3>
+<p>1. <strong>TypeHandler的作用是什么？</strong><br>   - Java类型与JDBC类型的转换桥梁<br>   - 参数绑定和结果映射</p>
+<p>2. <strong>如何自定义TypeHandler？</strong><br>   - 继承BaseTypeHandler<br>   - 实现TypeHandler接口<br>   - 注册到TypeHandlerRegistry</p>
+<p>3. <strong>MyBatis有哪些内置TypeHandler？</strong><br>   - 基础类型：String/Integer/Long等<br>   - 日期类型：Date/Time/Timestamp<br>   - 大对象：Blob/Clob<br>   - 枚举：EnumTypeHandler</p>
+<h3>9.2 深度问题</h3>
+<p>1. <strong>TypeHandler的查找顺序？</strong><br>   - 直接匹配javaType<br>   - 查找父类的TypeHandler<br>   - 使用默认的ObjectTypeHandler</p>
+<p>2. <strong>如何处理NULL值？</strong><br>   - setParameter时检查null<br>   - 使用setNull设置NULL<br>   - JdbcType必须指定</p>
+<h2>10. 总结</h2>
+<p>LightSSM的类型系统实现了：</p>
+<ul><li><strong>TypeHandler接口</strong>：类型转换策略</li>
+<li><strong>TypeHandlerRegistry</strong>：类型处理器注册表</li>
+<li><strong>TypeAliasRegistry</strong>：类型别名注册表</li>
+<li><strong>基础TypeHandler</strong>：20+个内置处理器</li>
+<li><strong>JdbcType枚举</strong>：20个JDBC类型</li>
+</ul>
+通过对照MyBatis官方源码，可以看到LightSSM保留了类型系统的核心机制，剥离了高级特性（如泛型处理、包扫描等），非常适合学习理解。
+<p>---</p>
+<p><strong>上一篇</strong>：<a href="07-SQL解析与动态SQL实现.md">07 - SQL解析与动态SQL实现</a></p>
+<p><strong>下一篇</strong>：<a href="09-插件系统与扩展机制.md">09 - 插件系统与扩展机制</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // 移动端菜单切换
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      // 自动高亮当前页面
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPage = window.location.pathname.split("/").pop();
+        const links = document.querySelectorAll(".sidebar-nav a");
+        links.forEach((link) => {
+          if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 代码块语言高亮
+      document.addEventListener("DOMContentLoaded", function () {
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
+          const language = block.className.replace("language-", "");
+          if (language) {
+            block.parentElement.setAttribute("data-language", language);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

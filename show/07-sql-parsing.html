@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>07. SQL 解析与动态 SQL - LightSSM 文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏样式 */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        padding: 40px 0;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+
+      .sidebar-header {
+        padding: 0 24px 32px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 24px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-header p {
+        font-size: 13px;
+        color: #999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 10px 24px;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+      }
+
+      .sidebar-nav a:hover {
+        background: #f5f5f5;
+        color: #ff6b35;
+      }
+
+      .sidebar-nav a.active {
+        background: #fff5f2;
+        color: #ff6b35;
+        border-left-color: #ff6b35;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .section-title {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 主内容区域 */
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 60px 80px;
+        max-width: 100%;
+      }
+
+      .content-container {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      /* Markdown 样式 */
+      .markdown-body {
+        font-size: 16px;
+        line-height: 2;
+        color: #444;
+      }
+
+      .markdown-body h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .markdown-body h2 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 48px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .markdown-body h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 32px 0 16px;
+      }
+
+      .markdown-body h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 24px 0 12px;
+      }
+
+      .markdown-body p {
+        margin-bottom: 24px;
+        text-align: justify;
+      }
+
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      .markdown-body li {
+        margin-bottom: 12px;
+      }
+
+      .markdown-body a {
+        color: #ff6b35;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .markdown-body a:hover {
+        color: #e65a2b;
+        text-decoration: underline;
+      }
+
+      .markdown-body code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        background: #fafafa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #d73a49;
+      }
+
+      .markdown-body pre {
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+      }
+
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: #24292e;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .markdown-body blockquote {
+        border-left: 4px solid #ff6b35;
+        padding-left: 24px;
+        margin: 24px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid #f0f0f0;
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .markdown-body th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .markdown-body hr {
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        margin: 48px 0;
+      }
+
+      .markdown-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 24px auto;
+      }
+
+      /* 顶部导航 */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 280px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 80px;
+        z-index: 999;
+      }
+
+      .top-nav-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .top-nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-nav-links a:hover {
+        color: #ff6b35;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .sidebar {
+          width: 240px;
+        }
+
+        .main-content {
+          margin-left: 240px;
+          padding: 60px 40px;
+        }
+
+        .top-nav {
+          left: 240px;
+          padding: 0 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 24px 40px;
+        }
+
+        .top-nav {
+          left: 0;
+          padding: 0 24px;
+        }
+
+        .menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          border: 1px solid #f0f0f0;
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>LightSSM</h1>
+        <p>轻量级自研 SSM 框架文档</p>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="section-title">快速开始</li>
+        <li><a href="index.html">首页</a></li>
+        <li><a href="01-architecture.html" class="">01. 架构概述与设计哲学</a></li>
+
+        <li class="section-title">核心模块</li>
+        <li><a href="02-ioc-container.html" class="">02. IoC 容器核心实现</a></li>
+        <li><a href="03-aop-proxy.html" class="">03. AOP 代理机制</a></li>
+        <li><a href="04-mvc-framework.html" class="">04. MVC 框架实现</a></li>
+        <li><a href="05-orm-architecture.html" class="">05. ORM 核心架构</a></li>
+
+        <li class="section-title">数据层实现</li>
+        <li><a href="06-datasource-transaction.html" class="">06. 数据源与事务管理</a></li>
+        <li><a href="07-sql-parsing.html" class="active">07. SQL 解析与动态 SQL</a></li>
+        <li><a href="08-type-system.html" class="">08. 类型系统与类型处理器</a></li>
+
+        <li class="section-title">扩展与高级特性</li>
+        <li><a href="09-plugin-system.html" class="">09. 插件系统与扩展机制</a></li>
+        <li><a href="10-advanced-topics.html" class="">10. 高级特性与源码剖析</a></li>
+
+        <li class="section-title">相关链接</li>
+        <li>
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub 仓库</a
+          >
+        </li>
+        <li><a href="https://www.rongx.top" target="_blank">个人主页</a></li>
+      </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <nav class="top-nav">
+        <div class="top-nav-links">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <a href="https://www.rongx.top" target="_blank">主页</a>
+        </div>
+      </nav>
+
+      <div class="content-container">
+        <div class="markdown-body" id="content">
+          <h1>07 - SQL解析与动态SQL实现</h1>
+<h2>1. SQL解析架构</h2>
+<h3>1.1 SqlSource接口</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public interface SqlSource {<br>    BoundSql getBoundSql(Object parameterObject);<br>}</code></pre></p>
+<p><strong>MyBatis官方SqlSource</strong>：<br><pre><code class="language-java">public interface SqlSource {<br>    BoundSql getBoundSql(Object parameterObject);<br>}</code></pre></p>
+<p><strong>接口完全一致</strong>。</p>
+<h3>1.2 SqlSource层次结构</h3>
+<pre><code class="language-">SqlSource（接口）
+├── StaticSqlSource（静态SQL）
+└── DynamicSqlSource（动态SQL）</code></pre>
+<h2>2. 静态SQL解析</h2>
+<h3>2.1 StaticSqlSource</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class StaticSqlSource implements SqlSource {<br>    private String sql;<br>    private List<ParameterMapping> parameterMappings;<br>    <br>    public StaticSqlSource(String sql) {<br>        this.sql = sql;<br>        this.parameterMappings = new ArrayList<>();<br>    }<br>    <br>    @Override<br>    public BoundSql getBoundSql(Object parameterObject) {<br>        return new BoundSql(sql, parameterMappings, parameterObject);<br>    }<br>}</code></pre></p>
+<h3>2.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的StaticSqlSource</strong>：<br><ul><li>支持多个SQL片段</li><br><li>支持参数映射列表</li><br><li>支持额外的参数对象</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>单一SQL字符串</li><br><li>基础参数映射</li><br></ul><br><h2>3. 动态SQL解析</h2></p>
+<h3>3.1 DynamicSqlSource</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class DynamicSqlSource implements SqlSource {<br>    private Configuration configuration;<br>    private SqlNode rootSqlNode;<br>    <br>    public DynamicSqlSource(Configuration configuration, SqlNode rootSqlNode) {<br>        this.configuration = configuration;<br>        this.rootSqlNode = rootSqlNode;<br>    }<br>    <br>    @Override<br>    public BoundSql getBoundSql(Object parameterObject) {<br>        // 创建动态上下文<br>        DynamicContext context = new DynamicContext(configuration, parameterObject);<br>        <br>        // 执行SQL节点树<br>        rootSqlNode.apply(context);<br>        <br>        // 获取生成的SQL<br>        String sql = context.getSql();<br>        <br>        // 创建BoundSql<br>        return new BoundSql(sql, null, parameterObject);<br>    }<br>}</code></pre></p>
+<h3>3.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的DynamicSqlSource</strong>：<br><pre><code class="language-java">public BoundSql getBoundSql(Object parameterObject) {<br>    DynamicContext context = new DynamicContext(configuration, parameterObject);<br>    rootSqlNode.apply(context);<br>    SqlSource sqlSource = new StaticSqlSource(configuration, context.getSql(), <br>        context.getBindings());<br>    return sqlSource.getBoundSql(parameterObject);<br>}</code></pre></p>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| 动态上下文 | DynamicContext | DynamicContext |<br>| SQL节点树 | SqlNode.apply() | SqlNode.apply() |<br>| 参数绑定 | 完整的Bindings处理 | 简化处理 |<br>| 二次解析 | StaticSqlSource再次解析 | 直接创建BoundSql |</p>
+<h2>4. SQL节点体系</h2>
+<h3>4.1 SqlNode接口</h3>
+<p><strong>LightSSM定义</strong>：<br><pre><code class="language-java">public interface SqlNode {<br>    boolean apply(DynamicContext context);<br>}</code></pre></p>
+<p><strong>MyBatis官方SqlNode</strong>：<br><pre><code class="language-java">public interface SqlNode {<br>    boolean apply(DynamicContext context);<br>}</code></pre></p>
+<p><strong>接口完全一致</strong>。</p>
+<h3>4.2 SqlNode实现类</h3>
+<pre><code class="language-">SqlNode（接口）
+├── StaticTextSqlNode（静态文本）
+├── DynamicContext（动态内容）
+├── IfSqlNode（IF条件）
+├── TrimSqlNode（TRIM修剪）
+├── WhereSqlNode（WHERE子句）
+├── SetSqlNode（SET子句）
+├── ForEachSqlNode（循环）
+└── MixedSqlNode（混合节点）</code></pre>
+<h3>4.3 IfSqlNode条件节点</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class IfSqlNode implements SqlNode {<br>    private SqlNode contents;<br>    private String test;<br>    <br>    @Override<br>    public boolean apply(DynamicContext context) {<br>        // 绑定根对象<br>        context.bind("rootObject", context.getOriginalParameterObject());<br>        <br>        // 绑定参数对象<br>        context.bind("_parameter", context.getOriginalParameterObject());<br>        <br>        // 解析表达式<br>        ExpressionEvaluator evaluator = new ExpressionEvaluator();<br>        if (evaluator.evaluateBoolean(test, context)) {<br>            return contents.apply(context);<br>        }<br>        return true;<br>    }<br>}</code></pre></p>
+<h3>4.4 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的IfSqlNode</strong>：<br><pre><code class="language-java">public boolean apply(DynamicContext context) {<br>    // 使用OGNL表达式引擎<br>    if (evaluator.evaluateBoolean(test, context.getBindings())) {<br>        contents.apply(context);<br>        return true;<br>    }<br>    return true;<br>}</code></pre></p>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| 表达式引擎 | OGNL | OGNL |<br>| 绑定对象 | 完整的Bindings | 简化绑定 |<br>| 表达式缓存 | ExpressionCache | 不支持 |</p>
+<h3>4.5 ForEachSqlNode循环节点</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class ForEachSqlNode implements SqlNode {<br>    private String collection;<br>    private String item;<br>    private String index;<br>    private String open;<br>    private String close;<br>    private String separator;<br>    private SqlNode contents;<br>    <br>    @Override<br>    public boolean apply(DynamicContext context) {<br>        // 获取集合对象<br>        Object collectionObject = getCollectionObject(context);<br>        <br>        // 处理数组或集合<br>        if (collectionObject instanceof Iterable) {<br>            Iterable<?> iterable = (Iterable<?>) collectionObject;<br>            processIterable(iterable, context);<br>        } else if (collectionObject.getClass().isArray()) {<br>            processArray(collectionObject, context);<br>        } else if (collectionObject instanceof Map) {<br>            processMap((Map<?, ?>) collectionObject, context);<br>        }<br>        <br>        return true;<br>    }<br>    <br>    private void processIterable(Iterable<?> iterable, DynamicContext context) {<br>        int i = 0;<br>        for (Object itemObject : iterable) {<br>            applyPrefix(context, i);<br>            <br>            // 绑定循环变量<br>            context.bind(item, itemObject);<br>            if (index != null) {<br>                context.bind(index, i);<br>            }<br>            <br>            // 执行内容<br>            contents.apply(context);<br>            <br>            applySuffix(context, i);<br>            i++;<br>        }<br>    }<br>}</code></pre></p>
+<h3>4.6 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的ForEachSqlNode</strong>：<br><ul><li>支持Iterable、数组、Map、Iterator</li><br><li>支持可索引的对象</li><br><li>完整的前缀/后缀/分隔符处理</li><br><li>支持去除最后一个分隔符</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>支持基础的Iterable和数组</li><br><li>基础的前缀/后缀处理</li><br><li>不支持Iterator和Map的完整处理</li><br></ul><br><h2>5. OGNL表达式解析</h2></p>
+<h3>5.1 ExpressionEvaluator</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class ExpressionEvaluator {<br>    <br>    public boolean evaluateBoolean(String expression, Object parameterObject) {<br>        try {<br>            OgnlContext context = new OgnlContext(null, null, new OgnlMemberAccess());<br>            Object value = Ognl.getValue(expression, context, parameterObject);<br>            <br>            if (value instanceof Boolean) {<br>                return (Boolean) value;<br>            } else if (value instanceof Number) {<br>                return ((Number) value).doubleValue() != 0.0;<br>            } else {<br>                return value != null;<br>            }<br>        } catch (Exception e) {<br>            throw new RuntimeException("Error evaluating expression: " + expression, e);<br>        }<br>    }<br>    <br>    public Object evaluate(String expression, Object parameterObject) {<br>        try {<br>            OgnlContext context = new OgnlContext(null, null, new OgnlMemberAccess());<br>            return Ognl.getValue(expression, context, parameterObject);<br>        } catch (Exception e) {<br>            throw new RuntimeException("Error evaluating expression: " + expression, e);<br>        }<br>    }<br>}</code></pre></p>
+<h3>5.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的ExpressionEvaluator</strong>：<br><pre><code class="language-java">public class ExpressionEvaluator {<br>    public boolean evaluateBoolean(String expression, Object parameterObject) {<br>        try {<br>            Object value = OgnlCache.getValue(expression, parameterObject);<br>            if (value instanceof Boolean) {<br>                return (Boolean) value;<br>            } else if (value instanceof Number) {<br>                return ((Number) value).doubleValue() != 0.0;<br>            } else {<br>                return value != null;<br>            }<br>        } catch (OgnlException e) {<br>            throw new OgnlException("Error evaluating expression: " + expression, e);<br>        }<br>    }<br>}</code></pre></p>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| OGNL缓存 | OgnlCache | 直接调用Ognl |<br>| 异常处理 | OgnlException | RuntimeException |<br>| 类型转换 | 完整的类型转换 | 基础类型转换 |</p>
+<h2>6. 动态上下文</h2>
+<h3>6.1 DynamicContext</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class DynamicContext {<br>    private final ContextMap bindings;<br>    private final StringBuilder sql = new StringBuilder();<br>    <br>    public DynamicContext(Configuration configuration, Object parameterObject) {<br>        this.bindings = new ContextMap();<br>        <br>        if (parameterObject != null) {<br>            if (parameterObject instanceof Map) {<br>                bindings.putAll((Map) parameterObject);<br>            } else {<br>                MetaObject metaObject = configuration.newMetaObject(parameterObject);<br>                bindings.put("parameterObject", parameterObject);<br>                // 绑定对象属性<br>                for (String propertyName : metaObject.getGetterNames()) {<br>                    bindings.put(propertyName, metaObject.getValue(propertyName));<br>                }<br>            }<br>        }<br>    }<br>    <br>    public void bind(String key, Object value) {<br>        bindings.put(key, value);<br>    }<br>    <br>    public void appendSql(String sql) {<br>        this.sql.append(sql);<br>        this.sql.append(" ");<br>    }<br>    <br>    public String getSql() {<br>        return this.sql.toString().trim();<br>    }<br>    <br>    public Object get(String key) {<br>        return bindings.get(key);<br>    }<br>    <br>    private static class ContextMap extends HashMap<String, Object> {<br>        @Override<br>        public Object get(Object key) {<br>            Object value = super.get(key);<br>            if (value == null && key != null) {<br>                // 尝试使用MetaObject获取<br>                Object parameterObject = get("parameterObject");<br>                if (parameterObject != null) {<br>                    MetaObject metaObject = MetaObject.forObject(parameterObject);<br>                    value = metaObject.getValue(key.toString());<br>                }<br>            }<br>            return value;<br>        }<br>    }<br>}</code></pre></p>
+<h3>6.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的DynamicContext</strong>：<br><pre><code class="language-java">public class DynamicContext {<br>    private final ContextMap bindings;<br>    private final GenericTokenParser parser;<br>    private final StringBuilder sql = new StringBuilder();<br>    <br>    public DynamicContext(Configuration configuration, Object parameterObject) {<br>        this.bindings = new ContextMap(configuration, parameterObject);<br>        this.parser = new TokenParser(new TokenHandler() {<br>            public String handleToken(String content) {<br>                Object parameter = bindings.get(content);<br>                return parameter == null ? "" : String.valueOf(parameter);<br>            }<br>        });<br>    }<br>    <br>    public void appendSql(String sql) {<br>        this.sql.append(sql);<br>        this.sql.append(" ");<br>    }<br>}</code></pre></p>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| Token解析 | GenericTokenParser | 不支持 |<br>| 属性访问 | 完整的MetaObject | 基础MetaObject |<br>| 上下文Map | 支持嵌套属性 | 简化实现 |</p>
+<h2>7. XML解析器</h2>
+<h3>7.1 XMLMapperBuilder</h3>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public class XMLMapperBuilder {<br>    private Configuration configuration;<br>    private XNode root;<br>    <br>    public void parse() {<br>        // 解析mapper根节点<br>        mapperElement(root.evalNode("mapper"));<br>    }<br>    <br>    private void mapperElement(XNode context) {<br>        // 解析namespace<br>        String namespace = context.getStringAttribute("namespace");<br>        <br>        // 解析select/insert/update/delete<br>        List<XNode> selectNodes = context.evalNodes("select");<br>        for (XNode node : selectNodes) {<br>            parseSelectNode(node, namespace);<br>        }<br>        <br>        // 解析resultMap<br>        List<XNode> resultMapNodes = context.evalNodes("resultMap");<br>        for (XNode node : resultMapNodes) {<br>            parseResultMapNode(node, namespace);<br>        }<br>        <br>        // 解析动态SQL标签<br>        parseDynamicTags(context);<br>    }<br>    <br>    private void parseSelectNode(XNode node, String namespace) {<br>        String id = node.getStringAttribute("id");<br>        String resultType = node.getStringAttribute("resultType");<br>        String statementId = namespace + "." + id;<br>        <br>        // 解析SQL内容<br>        SqlSource sqlSource = createSqlSource(node);<br>        <br>        // 创建MappedStatement<br>        MappedStatement.Builder statementBuilder = new MappedStatement.Builder(<br>            configuration, statementId, sqlSource, SqlCommandType.SELECT);<br>        statementBuilder.resultMaps(Collections.singletonList(<br>            new ResultMap.Builder(configuration, "defaultResultMap", <br>                resultType, null).build()));<br>        <br>        configuration.addMappedStatement(statementBuilder.build());<br>    }<br>}</code></pre></p>
+<h3>7.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的XMLMapperBuilder</strong>：<br><ul><li>支持完整的XML解析</li><br><li>支持include标签</li><br><li>支持cache和cache-ref</li><br><li>支持parameterMap</li><br><li>支持discriminator</li><br><li>支持完整的resultMap继承</li><br></ul><br><strong>LightSSM简化</strong>：<br><ul><li>基础的select/insert/update/delete解析</li><br><li>基础的resultMap解析</li><br><li>不支持include/cache</li><br><li>不支持parameterMap</li><br></ul><br><h2>8. 设计模式总结</h2></p>
+<h3>8.1 组合模式</h3>
+<pre><code class="language-java">// SqlNode树形结构
+public class MixedSqlNode implements SqlNode {
+    private List<SqlNode> contents;
+    
+    @Override
+    public boolean apply(DynamicContext context) {
+        for (SqlNode sqlNode : contents) {
+            sqlNode.apply(context);
+        }
+        return true;
+    }
+}</code></pre>
+<h3>8.2 解释器模式</h3>
+<pre><code class="language-java">// OGNL表达式解释器
+public class ExpressionEvaluator {
+    public Object evaluate(String expression, Object parameterObject) {
+        // 解释并执行表达式
+        return Ognl.getValue(expression, context, parameterObject);
+    }
+}</code></pre>
+<h3>8.3 访问者模式</h3>
+<pre><code class="language-java">// XNode访问XML节点
+public class XNode {
+    public String getStringAttribute(String name) { ... }
+    public List<XNode> evalNodes(String expression) { ... }
+    public XNode evalNode(String expression) { ... }
+}</code></pre>
+<h2>9. 面试考点</h2>
+<h3>9.1 高频问题</h3>
+<p>1. <strong>#{}和${}的区别？</strong><br>   - #{}：预编译，防止SQL注入<br>   - ${}：字符串替换，有SQL注入风险</p>
+<p>2. <strong>动态SQL有哪些标签？</strong><br>   - if/choose/when/otherwise<br>   - where/set/trim<br>   - foreach/bind</p>
+<p>3. <strong>MyBatis如何解析XML？</strong><br>   - XMLMapperBuilder<br>   - XPath解析<br>   - DOM4J库</p>
+<h3>9.2 深度问题</h3>
+<p>1. <strong>动态SQL的执行流程？</strong><br>   - XML解析为SqlNode树<br>   - SqlNode.apply()生成SQL<br>   - OGNL表达式求值<br>   - 创建BoundSql</p>
+<p>2. <strong>OGNL表达式如何工作？</strong><br>   - 表达式编译缓存<br>   - 对象属性访问<br>   - 方法调用</p>
+<h2>10. 总结</h2>
+<p>LightSSM的SQL解析模块实现了：</p>
+<ul><li><strong>静态SQL</strong>：StaticSqlSource</li>
+<li><strong>动态SQL</strong>：DynamicSqlSource + SqlNode树</li>
+<li><strong>OGNL表达式</strong>：ExpressionEvaluator</li>
+<li><strong>XML解析</strong>：XMLMapperBuilder</li>
+<li><strong>动态上下文</strong>：DynamicContext</li>
+</ul>
+通过对照MyBatis官方源码，可以看到LightSSM保留了SQL解析的核心机制，剥离了高级特性（如缓存、include等），非常适合学习理解。
+<p>---</p>
+<p><strong>上一篇</strong>：<a href="06-数据源与事务管理实现.md">06 - 数据源与事务管理实现</a></p>
+<p><strong>下一篇</strong>：<a href="08-类型系统与类型处理器.md">08 - 类型系统与类型处理器</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // 移动端菜单切换
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      // 自动高亮当前页面
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPage = window.location.pathname.split("/").pop();
+        const links = document.querySelectorAll(".sidebar-nav a");
+        links.forEach((link) => {
+          if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 代码块语言高亮
+      document.addEventListener("DOMContentLoaded", function () {
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
+          const language = block.className.replace("language-", "");
+          if (language) {
+            block.parentElement.setAttribute("data-language", language);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

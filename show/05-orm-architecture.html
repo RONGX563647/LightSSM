@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>05. ORM 核心架构 - LightSSM 文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏样式 */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        padding: 40px 0;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+
+      .sidebar-header {
+        padding: 0 24px 32px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 24px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-header p {
+        font-size: 13px;
+        color: #999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 10px 24px;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+      }
+
+      .sidebar-nav a:hover {
+        background: #f5f5f5;
+        color: #ff6b35;
+      }
+
+      .sidebar-nav a.active {
+        background: #fff5f2;
+        color: #ff6b35;
+        border-left-color: #ff6b35;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .section-title {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 主内容区域 */
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 60px 80px;
+        max-width: 100%;
+      }
+
+      .content-container {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      /* Markdown 样式 */
+      .markdown-body {
+        font-size: 16px;
+        line-height: 2;
+        color: #444;
+      }
+
+      .markdown-body h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .markdown-body h2 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 48px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .markdown-body h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 32px 0 16px;
+      }
+
+      .markdown-body h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 24px 0 12px;
+      }
+
+      .markdown-body p {
+        margin-bottom: 24px;
+        text-align: justify;
+      }
+
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      .markdown-body li {
+        margin-bottom: 12px;
+      }
+
+      .markdown-body a {
+        color: #ff6b35;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .markdown-body a:hover {
+        color: #e65a2b;
+        text-decoration: underline;
+      }
+
+      .markdown-body code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        background: #fafafa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #d73a49;
+      }
+
+      .markdown-body pre {
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+      }
+
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: #24292e;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .markdown-body blockquote {
+        border-left: 4px solid #ff6b35;
+        padding-left: 24px;
+        margin: 24px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid #f0f0f0;
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .markdown-body th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .markdown-body hr {
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        margin: 48px 0;
+      }
+
+      .markdown-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 24px auto;
+      }
+
+      /* 顶部导航 */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 280px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 80px;
+        z-index: 999;
+      }
+
+      .top-nav-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .top-nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-nav-links a:hover {
+        color: #ff6b35;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .sidebar {
+          width: 240px;
+        }
+
+        .main-content {
+          margin-left: 240px;
+          padding: 60px 40px;
+        }
+
+        .top-nav {
+          left: 240px;
+          padding: 0 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 24px 40px;
+        }
+
+        .top-nav {
+          left: 0;
+          padding: 0 24px;
+        }
+
+        .menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          border: 1px solid #f0f0f0;
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>LightSSM</h1>
+        <p>轻量级自研 SSM 框架文档</p>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="section-title">快速开始</li>
+        <li><a href="index.html">首页</a></li>
+        <li><a href="01-architecture.html" class="">01. 架构概述与设计哲学</a></li>
+
+        <li class="section-title">核心模块</li>
+        <li><a href="02-ioc-container.html" class="">02. IoC 容器核心实现</a></li>
+        <li><a href="03-aop-proxy.html" class="">03. AOP 代理机制</a></li>
+        <li><a href="04-mvc-framework.html" class="">04. MVC 框架实现</a></li>
+        <li><a href="05-orm-architecture.html" class="active">05. ORM 核心架构</a></li>
+
+        <li class="section-title">数据层实现</li>
+        <li><a href="06-datasource-transaction.html" class="">06. 数据源与事务管理</a></li>
+        <li><a href="07-sql-parsing.html" class="">07. SQL 解析与动态 SQL</a></li>
+        <li><a href="08-type-system.html" class="">08. 类型系统与类型处理器</a></li>
+
+        <li class="section-title">扩展与高级特性</li>
+        <li><a href="09-plugin-system.html" class="">09. 插件系统与扩展机制</a></li>
+        <li><a href="10-advanced-topics.html" class="">10. 高级特性与源码剖析</a></li>
+
+        <li class="section-title">相关链接</li>
+        <li>
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub 仓库</a
+          >
+        </li>
+        <li><a href="https://www.rongx.top" target="_blank">个人主页</a></li>
+      </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <nav class="top-nav">
+        <div class="top-nav-links">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <a href="https://www.rongx.top" target="_blank">主页</a>
+        </div>
+      </nav>
+
+      <div class="content-container">
+        <div class="markdown-body" id="content">
+          <h1>05 - ORM核心架构与MyBatis源码对比</h1>
+<h2>1. MyBatis架构概述</h2>
+<p>MyBatis是一款优秀的持久层框架，它支持自定义 SQL、存储过程以及高级映射。</p>
+<h3>1.1 核心架构层次</h3>
+<pre><code class="language-">应用层
+    ↓
+API接口层（SqlSession）
+    ↓
+数据处理层（Executor）
+    ↓
+SQL解析层（StatementHandler）
+    ↓
+JDBC支撑层（Connection/Statement/ResultSet）
+    ↓
+数据库</code></pre>
+<h3>1.2 核心组件</h3>
+<p>| 组件 | 职责 |<br>|-----|------|<br>| SqlSession | 数据库会话接口 |<br>| Executor | SQL执行器 |<br>| StatementHandler | SQL语句处理器 |<br>| ParameterHandler | 参数处理器 |<br>| ResultSetHandler | 结果集处理器 |<br>| Configuration | 全局配置 |<br>| MappedStatement | 映射语句 |</p>
+<h2>2. SqlSession接口设计</h2>
+<h3>2.1 接口定义</h3>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/orm/session/SqlSession.java">SqlSession.java</a>）：</p>
+<pre><code class="language-java">public interface SqlSession extends Closeable {
+    <T> T selectOne(String statement);
+    <T> T selectOne(String statement, Object parameter);
+    <E> List<E> selectList(String statement, Object parameter);
+    int insert(String statement, Object parameter);
+    int update(String statement, Object parameter);
+    Object delete(String statement, Object parameter);
+    void commit();
+    Configuration getConfiguration();
+    <T> T getMapper(Class<T> type);
+}</code></pre>
+<h3>2.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方SqlSession接口</strong>：</p>
+<pre><code class="language-java">public interface SqlSession extends Closeable {
+    // 查询方法
+    <T> T selectOne(String statement);
+    <T> T selectOne(String statement, Object parameter);
+    <E> List<E> selectList(String statement);
+    <E> List<E> selectList(String statement, Object parameter);
+    <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds);
+    <K, V> Map<K, V> selectMap(String statement, String mapKey);
+    <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey);
+    <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey, RowBounds rowBounds);
+    <T> Cursor<T> selectCursor(String statement);
+    <T> Cursor<T> selectCursor(String statement, Object parameter);
+    <T> Cursor<T> selectCursor(String statement, Object parameter, RowBounds rowBounds);
+    
+    // 增删改方法
+    int insert(String statement);
+    int insert(String statement, Object parameter);
+    int update(String statement);
+    int update(String statement, Object parameter);
+    int delete(String statement);
+    int delete(String statement, Object parameter);
+    
+    // 事务方法
+    void commit();
+    void commit(boolean forceCommit);
+    void rollback();
+    void rollback(boolean forceRollback);
+    
+    // 其他方法
+    void flushStatements();
+    void clearCache();
+    Configuration getConfiguration();
+    <T> T getMapper(Class<T> type);
+    boolean isConnectionOwned();
+    Connection getConnection();
+}</code></pre>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| 查询方法 | selectOne/selectList/selectMap/selectCursor | selectOne/selectList |<br>| 分页支持 | RowBounds参数 | 不支持 |<br>| Cursor流式查询 | 支持 | 不支持 |<br>| 增删改方法 | 完整支持 | 支持 |<br>| 事务方法 | commit/rollback（带force选项） | 仅commit |<br>| 缓存管理 | clearCache | 不支持 |<br>| 连接管理 | getConnection/isConnectionOwned | 不支持 |</p>
+<h2>3. DefaultSqlSession实现</h2>
+<h3>3.1 核心实现</h3>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/orm/session/defaults/DefaultSqlSession.java">DefaultSqlSession.java</a>）：</p>
+<pre><code class="language-java">public class DefaultSqlSession implements SqlSession {
+    private Configuration configuration;
+    private Executor executor;
+    
+    @Override
+    public <E> List<E> selectList(String statement, Object parameter) {
+        logger.info("执行查询 statement：{} parameter：{}", statement, JSON.toJSONString(parameter));
+        MappedStatement ms = configuration.getMappedStatement(statement);
+        try {
+            return executor.query(ms, parameter, RowBounds.DEFAULT, 
+                Executor.NO_RESULT_HANDLER, ms.getSqlSource().getBoundSql(parameter));
+        } catch (SQLException e) {
+            throw new RuntimeException("Error querying database.  Cause: " + e);
+        }
+    }
+    
+    @Override
+    public int update(String statement, Object parameter) {
+        MappedStatement ms = configuration.getMappedStatement(statement);
+        try {
+            return executor.update(ms, parameter);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating database.  Cause: " + e);
+        }
+    }
+    
+    @Override
+    public <T> T getMapper(Class<T> type) {
+        return configuration.getMapper(type, this);
+    }
+}</code></pre>
+<h3>3.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的DefaultSqlSession</strong>核心逻辑：</p>
+<pre><code class="language-java">public class DefaultSqlSession implements SqlSession {
+    private final Configuration configuration;
+    private final Executor executor;
+    
+    @Override
+    public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
+        try {
+            MappedStatement ms = configuration.getMappedStatement(statement);
+            return executor.query(ms, wrapCollection(parameter), rowBounds, 
+                Executor.NO_RESULT_HANDLER);
+        } catch (Exception e) {
+            throw ExceptionFactory.wrapException("Error querying database.", e);
+        } finally {
+            ErrorContext.instance().reset();
+        }
+    }
+    
+    @Override
+    public int update(String statement, Object parameter) {
+        try {
+            MappedStatement ms = configuration.getMappedStatement(statement);
+            return executor.update(ms, wrapCollection(parameter));
+        } catch (Exception e) {
+            throw ExceptionFactory.wrapException("Error updating database.", e);
+        } finally {
+            ErrorContext.instance().reset();
+        }
+    }
+    
+    // 参数包装：处理集合和数组参数
+    private Object wrapCollection(final Object object) {
+        if (object instanceof List) {
+            StrictMap<Object> map = new StrictMap<>();
+            map.put("list", object);
+            return map;
+        } else if (object != null && object.getClass().isArray()) {
+            StrictMap<Object> map = new StrictMap<>();
+            map.put("array", object);
+            return map;
+        }
+        return object;
+    }
+}</code></pre>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| 参数包装 | wrapCollection处理集合/数组 | 不支持 |<br>| 异常处理 | ExceptionFactory统一包装 | 直接包装为RuntimeException |<br>| ErrorContext | 上下文重置 | 不支持 |<br>| 日志 | 使用JDK Logger | 使用SLF4J |</p>
+<h2>4. Executor执行器</h2>
+<h3>4.1 Executor接口</h3>
+<p><strong>LightSSM定义</strong>：<br><pre><code class="language-java">public interface Executor {<br>    ResultHandler NO_RESULT_HANDLER = null;<br>    <br>    int update(MappedStatement ms, Object parameter) throws SQLException;<br>    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, <br>        ResultHandler resultHandler, BoundSql boundSql) throws SQLException;<br>    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, <br>        ResultHandler resultHandler) throws SQLException;<br>    <br>    Transaction getTransaction();<br>    void commit(boolean required) throws SQLException;<br>    void rollback(boolean required) throws SQLException;<br>    void close(boolean forceRollback);<br>}</code></pre></p>
+<p><strong>MyBatis官方Executor接口</strong>：</p>
+<pre><code class="language-java">public interface Executor {
+    int update(MappedStatement ms, Object parameter) throws SQLException;
+    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, 
+        ResultHandler resultHandler, CacheKey cacheKey, BoundSql boundSql) throws SQLException;
+    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, 
+        ResultHandler resultHandler) throws SQLException;
+    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds) throws SQLException;
+    <E> List<E> query(MappedStatement ms, Object parameter) throws SQLException;
+    
+    void deferLoad(MappedStatement ms, MetaObject resultObject, String property, 
+        CacheKey key, Class<?> targetType);
+    CacheKey createCacheKey(MappedStatement ms, Object parameterObject, 
+        RowBounds rowBounds, BoundSql boundSql);
+    boolean isCached(MappedStatement ms, CacheKey key);
+    void clearLocalCache();
+    void flushStatements();
+    
+    void commit(boolean required) throws SQLException;
+    void rollback(boolean required) throws SQLException;
+    void close(boolean forceRollback);
+    boolean isClosed();
+    void setExecutorWrapper(Executor executor);
+    void deferLoad(MappedStatement ms, MetaObject resultObject, String property, 
+        CacheKey key, Class<?> targetType);
+}</code></pre>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| 查询方法 | 4个重载方法（含CacheKey） | 2个重载方法 |<br>| 缓存支持 | createCacheKey/isCached/clearLocalCache | 不支持 |<br>| 延迟加载 | deferLoad | 不支持 |<br>| 批量操作 | flushStatements | 不支持 |<br>| 状态检查 | isClosed | 不支持 |</p>
+<h3>4.2 BaseExecutor模板基类</h3>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/orm/executor/BaseExecutor.java">BaseExecutor.java</a>）：</p>
+<pre><code class="language-java">public abstract class BaseExecutor implements Executor {
+    protected Configuration configuration;
+    protected Transaction transaction;
+    protected Executor wrapper;
+    private boolean closed;
+    
+    @Override
+    public int update(MappedStatement ms, Object parameter) throws SQLException {
+        return doUpdate(ms, parameter);
+    }
+    
+    @Override
+    public <E> List<E> query(MappedStatement ms, Object parameter, 
+        RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
+        if (closed) {
+            throw new RuntimeException("Executor was closed.");
+        }
+        return doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
+    }
+    
+    protected abstract int doUpdate(MappedStatement ms, Object parameter) throws SQLException;
+    protected abstract <E> List<E> doQuery(MappedStatement ms, Object parameter, 
+        RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException;
+}</code></pre>
+<p><strong>MyBatis官方的BaseExecutor</strong>包含：<br><ul><li>一级缓存（PerpetualCache）</li><br><li>延迟加载（DeferredLoad）</li><br><li>查询缓存（queryFromDatabase）</li><br><li>事务日志（Transaction）</li><br></ul><br><h3>4.3 SimpleExecutor简单执行器</h3></p>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/orm/executor/SimpleExecutor.java">SimpleExecutor.java</a>）：</p>
+<pre><code class="language-java">public class SimpleExecutor extends BaseExecutor {
+    @Override
+    protected int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
+        Statement stmt = null;
+        try {
+            Configuration configuration = ms.getConfiguration();
+            StatementHandler handler = configuration.newStatementHandler(
+                this, ms, parameter, RowBounds.DEFAULT, null, null);
+            stmt = prepareStatement(handler);
+            return handler.update(stmt);
+        } finally {
+            closeStatement(stmt);
+        }
+    }
+    
+    @Override
+    protected <E> List<E> doQuery(MappedStatement ms, Object parameter, 
+        RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
+        Statement stmt = null;
+        try {
+            Configuration configuration = ms.getConfiguration();
+            StatementHandler handler = configuration.newStatementHandler(
+                wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+            stmt = prepareStatement(handler);
+            return handler.query(stmt, resultHandler);
+        } finally {
+            closeStatement(stmt);
+        }
+    }
+    
+    private Statement prepareStatement(StatementHandler handler) throws SQLException {
+        Statement stmt;
+        Connection connection = transaction.getConnection();
+        stmt = handler.prepare(connection);
+        handler.parameterize(stmt);
+        return stmt;
+    }
+}</code></pre>
+<p><strong>MyBatis官方Executor层次</strong>：</p>
+<pre><code class="language-">Executor（接口）
+├── BaseExecutor（抽象基类）
+│   ├── SimpleExecutor（简单执行器）
+│   ├── ReuseExecutor（可重用执行器）
+│   └── BatchExecutor（批量执行器）
+└── CachingExecutor（缓存执行器）</code></pre>
+<p><strong>对比分析</strong>：</p>
+<p>| 执行器类型 | MyBatis官方 | LightSSM |<br>|-----------|-----------|----------|<br>| SimpleExecutor | 每次创建新Statement | 每次创建新Statement |<br>| ReuseExecutor | 重用Statement | 不支持 |<br>| BatchExecutor | 批量操作 | 不支持 |<br>| CachingExecutor | 二级缓存 | 不支持 |</p>
+<h2>5. Mapper代理机制</h2>
+<h3>5.1 MapperRegistry注册中心</h3>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/orm/binding/MapperRegistry.java">MapperRegistry.java</a>）：</p>
+<pre><code class="language-java">public class MapperRegistry {
+    private Configuration config;
+    private final Map<Class<?>, MapperProxyFactory<?>> knownMappers = new HashMap<>();
+    
+    public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
+        final MapperProxyFactory<T> mapperProxyFactory = 
+            (MapperProxyFactory<T>) knownMappers.get(type);
+        if (mapperProxyFactory == null) {
+            throw new RuntimeException("Type " + type + " is not known to the MapperRegistry.");
+        }
+        try {
+            return mapperProxyFactory.newInstance(sqlSession);
+        } catch (Exception e) {
+            throw new RuntimeException("Error getting mapper instance. Cause: " + e, e);
+        }
+    }
+    
+    public <T> void addMapper(Class<T> type) {
+        if (type.isInterface()) {
+            if (hasMapper(type)) {
+                throw new RuntimeException("Type " + type + " is already known to the MapperRegistry.");
+            }
+            knownMappers.put(type, new MapperProxyFactory<>(type));
+            
+            // 解析注解类语句配置
+            MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
+            parser.parse();
+        }
+    }
+}</code></pre>
+<h3>5.2 MapperProxy代理</h3>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/orm/binding/MapperProxy.java">MapperProxy.java</a>）：</p>
+<pre><code class="language-java">public class MapperProxy<T> implements InvocationHandler, Serializable {
+    private SqlSession sqlSession;
+    private final Class<T> mapperInterface;
+    private final Map<Method, MapperMethod> methodCache;
+    
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (Object.class.equals(method.getDeclaringClass())) {
+            return method.invoke(this, args);
+        } else {
+            final MapperMethod mapperMethod = cachedMapperMethod(method);
+            return mapperMethod.execute(sqlSession, args);
+        }
+    }
+    
+    private MapperMethod cachedMapperMethod(Method method) {
+        MapperMethod mapperMethod = methodCache.get(method);
+        if (mapperMethod == null) {
+            mapperMethod = new MapperMethod(mapperInterface, method, sqlSession.getConfiguration());
+            methodCache.put(method, mapperMethod);
+        }
+        return mapperMethod;
+    }
+}</code></pre>
+<h3>5.3 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方的MapperProxy.invoke()</strong>：</p>
+<pre><code class="language-java">public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    try {
+        if (Object.class.equals(method.getDeclaringClass())) {
+            return method.invoke(this, args);
+        } else if (isDefaultMethod(method)) {
+            return invokeDefaultMethod(proxy, method, args);
+        }
+    } catch (Throwable t) {
+        throw ExceptionUtil.unwrapThrowable(t);
+    }
+    final MapperMethod mapperMethod = cachedMapperMethod(method);
+    return mapperMethod.execute(sqlSession, args);
+}
+<p>// Java 8默认方法支持<br>private Object invokeDefaultMethod(Object proxy, Method method, Object[] args) throws Throwable {<br>    final Class<?> declaringClass = method.getDeclaringClass();<br>    return MethodHandles.lookup()<br>        .findSpecial(declaringClass, method.getName(), <br>            MethodType.methodType(method.getReturnType(), method.getParameterTypes()),<br>            declaringClass)<br>        .bindTo(proxy)<br>        .invokeWithArguments(args);<br>}</code></pre></p>
+<p><strong>对比分析</strong>：</p>
+<p>| 功能 | MyBatis官方 | LightSSM |<br>|-----|-----------|----------|<br>| Object方法处理 | 支持（equals/hashCode/toString） | 支持 |<br>| Java 8默认方法 | 支持（MethodHandles） | 不支持 |<br>| 方法缓存 | ConcurrentHashMap | HashMap |<br>| 异常处理 | ExceptionUtil.unwrapThrowable | 直接抛出 |</p>
+<h2>6. Configuration配置中心</h2>
+<h3>6.1 Configuration核心属性</h3>
+<p><strong>LightSSM实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/orm/session/Configuration.java">Configuration.java</a>）：</p>
+<pre><code class="language-java">public class Configuration {
+    protected Environment environment;
+    protected boolean useGeneratedKeys = false;
+    
+    // 注册机
+    protected MapperRegistry mapperRegistry = new MapperRegistry(this);
+    protected final Map<String, MappedStatement> mappedStatements = new HashMap<>();
+    protected final Map<String, ResultMap> resultMaps = new HashMap<>();
+    protected final Map<String, KeyGenerator> keyGenerators = new HashMap<>();
+    
+    // 插件链
+    protected final InterceptorChain interceptorChain = new InterceptorChain();
+    
+    // 类型处理
+    protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
+    protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
+    protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
+    
+    // 对象工厂
+    protected ObjectFactory objectFactory = new DefaultObjectFactory();
+    protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
+    
+    protected final Set<String> loadedResources = new HashSet<>();
+    protected String databaseId;
+}</code></pre>
+<h3>6.2 与MyBatis官方对比</h3>
+<p><strong>MyBatis官方Configuration</strong>包含500+个属性和方法：</p>
+<pre><code class="language-java">public class Configuration {
+    // 环境配置
+    protected Environment environment;
+    protected boolean useGeneratedKeys;
+    protected boolean useActualParamName = true;
+    protected boolean safeRowBoundsEnabled = false;
+    protected boolean safeResultHandlerEnabled = true;
+    protected boolean mapUnderscoreToCamelCase = false;
+    protected boolean aggressiveLazyLoading = false;
+    // ... 100+个配置项
+    
+    // 注册机
+    protected final MapperRegistry mapperRegistry;
+    protected final Map<String, MappedStatement> mappedStatements;
+    protected final Map<String, ResultMap> resultMaps;
+    protected final Map<String, Cache> caches;
+    // ... 20+个Map
+    
+    // 工厂
+    protected ObjectFactory objectFactory;
+    protected ObjectWrapperFactory objectWrapperFactory;
+    protected ReflectorFactory reflectorFactory;
+    // ... 10+个工厂
+    
+    // 其他配置
+    protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
+    protected Integer defaultFetchSize = null;
+    protected Integer defaultStatementTimeout = null;
+    protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
+    // ... 50+个配置
+}</code></pre>
+<p><strong>对比分析</strong>：</p>
+<p>| 配置项 | MyBatis官方 | LightSSM |<br>|-------|-----------|----------|<br>| 基础配置 | 完整支持 | 基础支持 |<br>| 缓存配置 | Cache/CacheManager | 不支持 |<br>| 懒加载 | aggressiveLazyLoading等 | 不支持 |<br>| 自动映射 | mapUnderscoreToCamelCase | 不支持 |<br>| 默认配置 | fetchSize/timeout/executorType | 不支持 |<br>| 反射工厂 | ReflectorFactory | 不支持 |</p>
+<h2>7. 设计模式总结</h2>
+<h3>7.1 工厂模式</h3>
+<pre><code class="language-java">// Configuration作为工厂
+public class Configuration {
+    public Executor newExecutor(Transaction transaction) {
+        return new SimpleExecutor(this, transaction);
+    }
+    
+    public StatementHandler newStatementHandler(...) {
+        return new PreparedStatementHandler(...);
+    }
+    
+    public ResultSetHandler newResultSetHandler(...) {
+        return new DefaultResultSetHandler(...);
+    }
+}</code></pre>
+<h3>7.2 代理模式</h3>
+<pre><code class="language-java">// Mapper接口代理
+public class MapperProxy<T> implements InvocationHandler {
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) {
+        MapperMethod mapperMethod = cachedMapperMethod(method);
+        return mapperMethod.execute(sqlSession, args);
+    }
+}</code></pre>
+<h3>7.3 模板方法模式</h3>
+<pre><code class="language-java">// BaseExecutor定义模板
+public abstract class BaseExecutor implements Executor {
+    public int update(MappedStatement ms, Object parameter) {
+        return doUpdate(ms, parameter); // 抽象方法
+    }
+    
+    protected abstract int doUpdate(MappedStatement ms, Object parameter);
+    protected abstract <E> List<E> doQuery(...);
+}</code></pre>
+<h3>7.4 注册表模式</h3>
+<pre><code class="language-java">// 各种注册表
+public class Configuration {
+    protected final MapperRegistry mapperRegistry;
+    protected final Map<String, MappedStatement> mappedStatements;
+    protected final TypeAliasRegistry typeAliasRegistry;
+    protected final TypeHandlerRegistry typeHandlerRegistry;
+}</code></pre>
+<h2>8. 面试考点</h2>
+<h3>8.1 高频问题</h3>
+<p>1. <strong>MyBatis的执行流程是什么？</strong><br>   - SqlSession接收请求<br>   - Executor执行SQL<br>   - StatementHandler处理语句<br>   - ResultSetHandler处理结果</p>
+<p>2. <strong>Mapper接口为什么不需要实现类？</strong><br>   - JDK动态代理<br>   - MapperProxy拦截方法调用<br>   - 根据方法名查找MappedStatement</p>
+<p>3. <strong>#{}和${}的区别？</strong><br>   - #{}：预编译，防止SQL注入<br>   - ${}：字符串替换，有SQL注入风险</p>
+<h3>8.2 深度问题</h3>
+<p>1. <strong>MyBatis的一级缓存和二级缓存？</strong><br>   - 一级缓存：SqlSession级别，默认开启<br>   - 二级缓存：Namespace级别，需要配置</p>
+<p>2. <strong>MyBatis的插件原理？</strong><br>   - 拦截四大对象（Executor/StatementHandler/ParameterHandler/ResultSetHandler）<br>   - 责任链模式<br>   - 动态代理</p>
+<h2>9. 总结</h2>
+<p>LightSSM的ORM模块完整实现了MyBatis的核心机制：</p>
+<ul><li><strong>SqlSession</strong>：数据库会话接口</li>
+<li><strong>Executor</strong>：SQL执行器（SimpleExecutor）</li>
+<li><strong>Mapper代理</strong>：JDK动态代理</li>
+<li><strong>Configuration</strong>：配置中心</li>
+<li><strong>StatementHandler</strong>：语句处理器</li>
+</ul>
+通过对照MyBatis官方源码，可以看到LightSSM保留了ORM的核心流程，剥离了高级特性（如缓存、懒加载、批量操作等），非常适合学习理解MyBatis原理。
+<p>---</p>
+<p><strong>上一篇</strong>：<a href="04-MVC框架实现与SpringMVC源码对比.md">04 - MVC框架实现与Spring MVC源码对比</a></p>
+<p><strong>下一篇</strong>：<a href="06-数据源与事务管理实现.md">06 - 数据源与事务管理实现</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // 移动端菜单切换
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      // 自动高亮当前页面
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPage = window.location.pathname.split("/").pop();
+        const links = document.querySelectorAll(".sidebar-nav a");
+        links.forEach((link) => {
+          if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 代码块语言高亮
+      document.addEventListener("DOMContentLoaded", function () {
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
+          const language = block.className.replace("language-", "");
+          if (language) {
+            block.parentElement.setAttribute("data-language", language);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

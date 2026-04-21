@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>02. IoC 容器核心实现 - LightSSM 文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        line-height: 1.8;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* 侧边栏样式 */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        padding: 40px 0;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+
+      .sidebar-header {
+        padding: 0 24px 32px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 24px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-header p {
+        font-size: 13px;
+        color: #999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 10px 24px;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+      }
+
+      .sidebar-nav a:hover {
+        background: #f5f5f5;
+        color: #ff6b35;
+      }
+
+      .sidebar-nav a.active {
+        background: #fff5f2;
+        color: #ff6b35;
+        border-left-color: #ff6b35;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .section-title {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 主内容区域 */
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 60px 80px;
+        max-width: 100%;
+      }
+
+      .content-container {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      /* Markdown 样式 */
+      .markdown-body {
+        font-size: 16px;
+        line-height: 2;
+        color: #444;
+      }
+
+      .markdown-body h1 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .markdown-body h2 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 48px 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .markdown-body h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 32px 0 16px;
+      }
+
+      .markdown-body h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 24px 0 12px;
+      }
+
+      .markdown-body p {
+        margin-bottom: 24px;
+        text-align: justify;
+      }
+
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      .markdown-body li {
+        margin-bottom: 12px;
+      }
+
+      .markdown-body a {
+        color: #ff6b35;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .markdown-body a:hover {
+        color: #e65a2b;
+        text-decoration: underline;
+      }
+
+      .markdown-body code {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 14px;
+        background: #fafafa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #d73a49;
+      }
+
+      .markdown-body pre {
+        background: #fafafa;
+        padding: 24px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+      }
+
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: #24292e;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .markdown-body blockquote {
+        border-left: 4px solid #ff6b35;
+        padding-left: 24px;
+        margin: 24px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid #f0f0f0;
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .markdown-body th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .markdown-body hr {
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        margin: 48px 0;
+      }
+
+      .markdown-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 24px auto;
+      }
+
+      /* 顶部导航 */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 280px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 80px;
+        z-index: 999;
+      }
+
+      .top-nav-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .top-nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .top-nav-links a:hover {
+        color: #ff6b35;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .sidebar {
+          width: 240px;
+        }
+
+        .main-content {
+          margin-left: 240px;
+          padding: 60px 40px;
+        }
+
+        .top-nav {
+          left: 240px;
+          padding: 0 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 80px 24px 40px;
+        }
+
+        .top-nav {
+          left: 0;
+          padding: 0 24px;
+        }
+
+        .menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: white;
+          border: 1px solid #f0f0f0;
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>LightSSM</h1>
+        <p>轻量级自研 SSM 框架文档</p>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="section-title">快速开始</li>
+        <li><a href="index.html">首页</a></li>
+        <li><a href="01-architecture.html" class="">01. 架构概述与设计哲学</a></li>
+
+        <li class="section-title">核心模块</li>
+        <li><a href="02-ioc-container.html" class="active">02. IoC 容器核心实现</a></li>
+        <li><a href="03-aop-proxy.html" class="">03. AOP 代理机制</a></li>
+        <li><a href="04-mvc-framework.html" class="">04. MVC 框架实现</a></li>
+        <li><a href="05-orm-architecture.html" class="">05. ORM 核心架构</a></li>
+
+        <li class="section-title">数据层实现</li>
+        <li><a href="06-datasource-transaction.html" class="">06. 数据源与事务管理</a></li>
+        <li><a href="07-sql-parsing.html" class="">07. SQL 解析与动态 SQL</a></li>
+        <li><a href="08-type-system.html" class="">08. 类型系统与类型处理器</a></li>
+
+        <li class="section-title">扩展与高级特性</li>
+        <li><a href="09-plugin-system.html" class="">09. 插件系统与扩展机制</a></li>
+        <li><a href="10-advanced-topics.html" class="">10. 高级特性与源码剖析</a></li>
+
+        <li class="section-title">相关链接</li>
+        <li>
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub 仓库</a
+          >
+        </li>
+        <li><a href="https://www.rongx.top" target="_blank">个人主页</a></li>
+      </ul>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <nav class="top-nav">
+        <div class="top-nav-links">
+          <a href="https://github.com/rongx563647/LightSSM" target="_blank"
+            >GitHub</a
+          >
+          <a href="https://www.rongx.top" target="_blank">主页</a>
+        </div>
+      </nav>
+
+      <div class="content-container">
+        <div class="markdown-body" id="content">
+          <h1>02 - IoC容器核心实现与Spring源码对比</h1>
+<h2>1. IoC容器概述</h2>
+<p>IoC（Inversion of Control，控制反转）是Spring框架的核心，它通过依赖注入（DI）实现了组件之间的解耦。</p>
+<h3>1.1 什么是IoC</h3>
+<p>IoC的核心思想是：将对象的创建、管理和依赖关系的维护交给容器，而不是由对象自己创建依赖。</p>
+<p>传统方式：<br><pre><code class="language-java">// 对象自己管理依赖<br>public class UserService {<br>    private UserDao userDao = new UserDaoImpl(); // 硬编码依赖<br>}</code></pre></p>
+<p>IoC方式：<br><pre><code class="language-java">// 容器注入依赖<br>public class UserService {<br>    @Autowired<br>    private UserDao userDao; // 由容器注入<br>}</code></pre></p>
+<h3>1.2 Spring官方的IoC架构</h3>
+<p>Spring官方的IoC容器是一个复杂的层次结构：</p>
+<pre><code class="language-">BeanFactory（基础接口）
+├── HierarchicalBeanFactory（层次化能力）
+├── ListableBeanFactory（列表能力）
+│   └── ApplicationContext（应用上下文）
+├── ConfigurableBeanFactory（可配置能力）
+├── AutowireCapableBeanFactory（自动装配能力）
+└── ConfigurableListableBeanFactory（完整能力）
+    └── DefaultListableBeanFactory（核心实现）</code></pre>
+<h3>1.3 LightSSM的简化架构</h3>
+<pre><code class="language-">BeanFactory（基础接口）
+├── ListableBeanFactory（列表能力）
+└── DefaultListableBeanFactory（核心实现）
+<p>ApplicationContext（应用上下文）<br>└── AnnotationConfigApplicationContext（注解配置实现）</code></pre></p>
+<h2>2. 核心接口设计</h2>
+<h3>2.1 BeanFactory接口对比</h3>
+<p><strong>Spring官方源码</strong>（spring-beans）：<br><pre><code class="language-java">public interface BeanFactory {<br>    String FACTORY_BEAN_PREFIX = "&";<br>    <br>    Object getBean(String name) throws BeansException;<br>    <T> T getBean(String name, Class<T> requiredType) throws BeansException;<br>    <T> T getBean(Class<T> requiredType) throws BeansException;<br>    Object getBean(String name, Object... args) throws BeansException;<br>    boolean containsBean(String name);<br>    boolean isSingleton(String name) throws NoSuchBeanDefinitionException;<br>    boolean isPrototype(String name) throws NoSuchBeanDefinitionException;<br>    boolean isTypeMatch(String name, ResolvableType typeToMatch);<br>    Class<?> getType(String name);<br>    String[] getAliases(String name);<br>}</code></pre></p>
+<p><strong>LightSSM实现</strong>：<br><pre><code class="language-java">public interface BeanFactory {<br>    Object getBean(String name) throws Exception;<br>    <T> T getBean(String name, Class<T> requiredType) throws Exception;<br>    <T> T getBean(Class<T> requiredType) throws Exception;<br>    boolean containsBean(String name);<br>    boolean isSingleton(String name);<br>    boolean isPrototype(String name);<br>    Class<?> getType(String name);<br>    String[] getAliases(String name);<br>}</code></pre></p>
+<p><strong>关键差异分析</strong>：</p>
+<p>| 方法 | Spring官方 | LightSSM | 说明 |<br>|-----|-----------|----------|------|<br>| getBean参数 | 支持args构造注入 | 不支持 | LightSSM仅支持无参构造 |<br>| isTypeMatch | 支持ResolvableType | 不支持 | 泛型类型匹配 |<br>| 异常类型 | BeansException | Exception | 简化异常体系 |</p>
+<h3>2.2 ListableBeanFactory接口</h3>
+<p><strong>Spring官方</strong>提供了10+个方法用于批量获取Bean：<br><pre><code class="language-java">public interface ListableBeanFactory extends BeanFactory {<br>    boolean containsBeanDefinition(String beanName);<br>    int getBeanDefinitionCount();<br>    String[] getBeanDefinitionNames();<br>    String[] getBeanNamesForType(ResolvableType type);<br>    String[] getBeanNamesForType(Class<?> type);<br>    String[] getBeanNamesForType(Class<?> type, boolean includeNonSingletons, boolean allowEagerInit);<br>    <T> Map<String, T> getBeansOfType(Class<T> type) throws BeansException;<br>    Map<String, Object> getBeansWithAnnotation(Class<? extends Annotation> annotationType);<br>    // ... 更多方法<br>}</code></pre></p>
+<p><strong>LightSSM简化版本</strong>：<br><pre><code class="language-java">public interface ListableBeanFactory extends BeanFactory {<br>    boolean containsBeanDefinition(String beanName);<br>    int getBeanDefinitionCount();<br>    String[] getBeanDefinitionNames();<br>    String[] getBeanNamesForType(Class<?> type);<br>    <T> List<T> getBeansOfType(Class<T> type) throws Exception;<br>    <T> T getPrimaryBean(Class<T> type) throws Exception;<br>}</code></pre></p>
+<h2>3. 三级缓存解决循环依赖</h2>
+<h3>3.1 什么是循环依赖</h3>
+<p>循环依赖是指两个或多个Bean互相引用对方，形成闭环：</p>
+<pre><code class="language-java">@Component("a")
+public class A {
+    @Autowired
+    private B b;
+}
+<p>@Component("b")<br>public class B {<br>    @Autowired<br>    private A a;<br>}</code></pre></p>
+<p>如果不做特殊处理，创建A需要B，创建B又需要A，导致无限递归。</p>
+<h3>3.2 Spring官方的三级缓存</h3>
+<p>Spring官方使用三级缓存来解决循环依赖问题：</p>
+<pre><code class="language-java">public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry 
+        implements SingletonBeanRegistry {
+    
+    // 一级缓存：存放完全初始化好的Bean
+    private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+    
+    // 二级缓存：存放早期引用（已实例化但未填充属性）
+    private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16);
+    
+    // 三级缓存：存放ObjectFactory，用于创建早期引用
+    private final Map<String, ObjectFactory<?>> singletonFactories = new ConcurrentHashMap<>(16);
+    
+    // 记录正在创建的Bean名称
+    private final Set<String> singletonsCurrentlyInCreation = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
+}</code></pre>
+<h3>3.3 LightSSM的三级缓存实现</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L23-L34">DefaultListableBeanFactory.java</a></p>
+<pre><code class="language-java">public class DefaultListableBeanFactory implements ListableBeanFactory {
+    // 一级缓存：完整Bean实例
+    private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+    
+    // 二级缓存：早期引用
+    private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16);
+    
+    // 三级缓存：ObjectFactory
+    private final Map<String, ObjectFactory<?>> singletonFactories = new ConcurrentHashMap<>(16);
+    
+    // 正在创建中的Bean集合
+    private final Set<String> singletonsCurrentlyInCreation = 
+        Collections.newSetFromMap(new ConcurrentHashMap<>(16));
+}</code></pre>
+<p><strong>完全对应</strong>：LightSSM的缓存结构与Spring官方完全一致，只是变量名略有不同。</p>
+<h3>3.4 三级缓存工作流程</h3>
+<p><strong>阶段一：实例化A</strong><br><pre><code class="language-">1. 创建A的实例（newInstance）<br>2. 将A的ObjectFactory放入三级缓存<br>3. 将A加入singletonsCurrentlyInCreation集合</code></pre></p>
+<p><strong>阶段二：填充A的属性（发现需要B）</strong><br><pre><code class="language-">4. 扫描A的@Autowired字段，发现需要注入B<br>5. 调用getBean(B.class)<br>6. 缓存中找不到B，开始创建B</code></pre></p>
+<p><strong>阶段三：实例化B</strong><br><pre><code class="language-">7. 创建B的实例<br>8. 将B的ObjectFactory放入三级缓存<br>9. 将B加入singletonsCurrentlyInCreation集合</code></pre></p>
+<p><strong>阶段四：填充B的属性（发现需要A）</strong><br><pre><code class="language-">10. 扫描B的@Autowired字段，发现需要注入A<br>11. 调用getBean(A.class)<br>12. 一级缓存找不到A<br>13. singletonsCurrentlyInCreation包含A，说明A正在创建<br>14. 从三级缓存获取A的ObjectFactory，调用getObject()得到早期引用<br>15. 将A的早期引用放入二级缓存，删除三级缓存<br>16. 返回A的早期引用给B</code></pre></p>
+<p><strong>阶段五：完成B的创建</strong><br><pre><code class="language-">17. B的属性填充完成<br>18. B初始化完成<br>19. B放入一级缓存，清理二三级缓存<br>20. 返回B给A</code></pre></p>
+<p><strong>阶段六：完成A的创建</strong><br><pre><code class="language-">21. A获得B的引用，属性填充完成<br>22. A初始化完成<br>23. A放入一级缓存，清理二三级缓存</code></pre></p>
+<h3>3.5 核心源码解析</h3>
+<p><strong>获取单例Bean</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L167-L186">DefaultListableBeanFactory.java:L167-186</a>）：</p>
+<pre><code class="language-java">protected Object getSingleton(String beanName) {
+    // 第一级：查找完整Bean
+    Object singletonObject = this.singletonObjects.get(beanName);
+    
+    // 如果没找到且正在创建中
+    if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+        // 第二级：查找早期引用
+        singletonObject = this.earlySingletonObjects.get(beanName);
+        
+        // 如果还没找到
+        if (singletonObject == null) {
+            // 第三级：查找ObjectFactory
+            ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+            if (singletonFactory != null) {
+                // 通过工厂创建早期引用
+                singletonObject = singletonFactory.getObject();
+                
+                // 提升到二级缓存
+                this.earlySingletonObjects.put(beanName, singletonObject);
+                this.singletonFactories.remove(beanName);
+                
+                logger.debug("Exposed early singleton bean: {}", beanName);
+            }
+        }
+    }
+    return singletonObject;
+}</code></pre>
+<p><strong>添加单例Bean</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L321-L327">DefaultListableBeanFactory.java:L321-327</a>）：</p>
+<pre><code class="language-java">protected void addSingleton(String beanName, Object singletonObject) {
+    this.singletonObjects.put(beanName, singletonObject);        // 放入一级缓存
+    this.singletonFactories.remove(beanName);                    // 清理三级缓存
+    this.earlySingletonObjects.remove(beanName);                 // 清理二级缓存
+    this.createdBeanNames.add(beanName);                         // 记录已创建
+    logger.debug("Added singleton bean to cache: {}", beanName);
+}</code></pre>
+<h3>3.6 为什么需要三级缓存？</h3>
+<p>很多面试题会问：为什么需要三级缓存？二级不够吗？</p>
+<p><strong>答案</strong>：三级缓存的核心作用是<strong>支持AOP代理</strong>。</p>
+<p>在Spring官方实现中，<code>singletonFactories</code>存储的ObjectFactory会调用<code>getEarlyBeanReference()</code>方法，这个方法会执行：</p>
+<pre><code class="language-java">// Spring官方源码 AbstractAutowireCapableBeanFactory
+protected Object getEarlyBeanReference(String beanName, RootBeanDefinition mbd, Object bean) {
+    Object exposedObject = bean;
+    if (mbd != null && !mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+        // 执行BeanPostProcessor，可能返回代理对象
+        exposedObject = applyBeanPostProcessorsAfterCreation(bean, beanName);
+    }
+    return exposedObject;
+}</code></pre>
+<p>如果某个Bean需要被AOP代理，那么通过三级缓存返回的早期引用就是<strong>代理对象</strong>，而不是原始对象。</p>
+<p><strong>LightSSM的实现</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L286-L292">DefaultListableBeanFactory.java:L286-292</a>）：</p>
+<pre><code class="language-java">protected Object getEarlyBeanReference(String beanName, BeanDefinition bd, Object bean) {
+    Object exposedObject = bean;
+    // 执行BeanPostProcessor的早期引用处理（可用于AOP）
+    for (BeanPostProcessor bp : this.beanPostProcessors) {
+        exposedObject = bp.getEarlyBeanReference(exposedObject, beanName);
+    }
+    return exposedObject;
+}</code></pre>
+<h2>4. Bean的生命周期</h2>
+<h3>4.1 完整的Bean创建流程</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L198-L229">DefaultListableBeanFactory.java:L198-229</a></p>
+<pre><code class="language-java">protected Object doCreateBean(String beanName, BeanDefinition bd) throws Exception {
+    // 1. 检查是否正在创建（防止循环依赖）
+    if (isSingletonCurrentlyInCreation(beanName)) {
+        throw new BeanCurrentlyInCreationException(beanName);
+    }
+    
+    // 2. 标记为正在创建
+    beforeSingletonCreation(beanName);
+    
+    try {
+        // 3. 实例化Bean
+        Object beanInstance = instantiateBean(beanName, bd);
+        
+        // 4. 早期暴露引用（用于循环依赖）
+        boolean earlySingletonExposure = bd.isSingleton() 
+            && this.singletonsCurrentlyInCreation.contains(beanName);
+        if (earlySingletonExposure) {
+            addSingletonFactory(beanName, 
+                () -> getEarlyBeanReference(beanName, bd, beanInstance));
+        }
+        
+        // 5. 属性填充（依赖注入）
+        populateBean(beanName, bd, beanInstance);
+        
+        // 6. 初始化Bean
+        Object exposedObject = initializeBean(beanName, beanInstance, bd);
+        
+        // 7. 处理早期引用
+        if (earlySingletonExposure) {
+            Object earlySingletonReference = getSingleton(beanName);
+            if (earlySingletonReference != null 
+                && earlySingletonReference != beanInstance) {
+                exposedObject = earlySingletonReference;
+            }
+        }
+        
+        return exposedObject;
+    } finally {
+        // 8. 清理创建标记
+        afterSingletonCreation(beanName);
+    }
+}</code></pre>
+<h3>4.2 实例化过程</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L231-L240">DefaultListableBeanFactory.java:L231-240</a></p>
+<pre><code class="language-java">protected Object instantiateBean(String beanName, BeanDefinition bd) throws Exception {
+    Class<?> beanClass = bd.getBeanClass();
+    try {
+        // 通过反射调用无参构造方法
+        Object instance = beanClass.getDeclaredConstructor().newInstance();
+        logger.debug("Instantiated bean: {}", beanName);
+        return instance;
+    } catch (Exception e) {
+        throw new BeanCreationException(beanName, "Failed to instantiate bean", e);
+    }
+}</code></pre>
+<p><strong>Spring官方的实例化方式更丰富</strong>：<br><pre><code class="language-java">// 1. 通过Supplier<br>BeanDefinition bd = new RootBeanDefinition();<br>bd.setInstanceSupplier(() -> new MyBean());</p>
+<p>// 2. 通过工厂方法<br>@Bean<br>public MyBean myBean() {<br>    return new MyBean();<br>}</p>
+<p>// 3. 通过构造方法（LightSSM仅支持这种）<br>@Autowired<br>public MyBean(Dependency dep) { ... }</code></pre></p>
+<h3>4.3 属性填充（依赖注入）</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L242-L260">DefaultListableBeanFactory.java:L242-260</a></p>
+<pre><code class="language-java">protected void populateBean(String beanName, BeanDefinition bd, Object bean) throws Exception {
+    Class<?> beanClass = bd.getBeanClass();
+    Field[] fields = beanClass.getDeclaredFields();
+    
+    for (Field field : fields) {
+        Autowired autowired = field.getAnnotation(Autowired.class);
+        if (autowired != null) {
+            // 解析依赖
+            Object dependency = resolveDependency(
+                field.getType(), field.getName(), autowired.required());
+            
+            if (dependency != null) {
+                // 反射注入
+                field.setAccessible(true);
+                field.set(bean, dependency);
+                logger.debug("Autowired field {} in bean {}", 
+                    field.getName(), beanName);
+            } else if (autowired.required()) {
+                throw new BeanCreationException(beanName,
+                    "Required dependency not found for field: " + field.getName());
+            }
+        }
+    }
+}</code></pre>
+<p><strong>依赖解析逻辑</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L274-L284">DefaultListableBeanFactory.java:L274-284</a>）：</p>
+<pre><code class="language-java">protected Object resolveDependency(Class<?> type, String fieldName, 
+                                   boolean required) throws Exception {
+    try {
+        return getBean(type); // 递归获取依赖Bean
+    } catch (NoSuchBeanDefinitionException e) {
+        if (!required) {
+            logger.debug("Optional dependency not found: {}#{}", 
+                type.getSimpleName(), fieldName);
+            return null; // 非必需依赖返回null
+        }
+        throw e; // 必需依赖抛出异常
+    }
+}</code></pre>
+<h3>4.4 初始化过程</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L262-L272">DefaultListableBeanFactory.java:L262-272</a></p>
+<pre><code class="language-java">protected Object initializeBean(String beanName, Object bean, BeanDefinition bd) throws Exception {
+    Object wrappedBean = bean;
+    
+    // 1. 执行BeanPostProcessor前置处理
+    wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+    
+    // 2. 调用初始化方法（LightSSM为空实现）
+    invokeInitMethods(beanName, wrappedBean, bd);
+    
+    // 3. 执行BeanPostProcessor后置处理
+    wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+    
+    return wrappedBean;
+}</code></pre>
+<p><strong>BeanPostProcessor执行</strong>（<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L297-L319">DefaultListableBeanFactory.java:L297-319</a>）：</p>
+<pre><code class="language-java">protected Object applyBeanPostProcessorsBeforeInitialization(
+        Object existingBean, String beanName) throws Exception {
+    Object result = existingBean;
+    for (BeanPostProcessor bp : this.beanPostProcessors) {
+        Object current = bp.postProcessBeforeInitialization(result, beanName);
+        if (current == null) {
+            return result; // 返回null则使用原对象
+        }
+        result = current; // 可以替换Bean
+    }
+    return result;
+}</code></pre>
+<h2>5. BeanDefinition设计</h2>
+<h3>5.1 BeanDefinition的作用</h3>
+<p>BeanDefinition是Bean的元数据描述，容器通过它来创建Bean实例。</p>
+<h3>5.2 LightSSM的BeanDefinition</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/beans/BeanDefinition.java">BeanDefinition.java</a></p>
+<pre><code class="language-java">public class BeanDefinition {
+    private String beanName;           // Bean名称
+    private Class<?> beanClass;        // Bean类
+    private String scope = "singleton"; // 作用域
+    private boolean lazyInit = false;   // 是否懒加载
+    private boolean primary = false;    // 是否主Bean
+    
+    // 构造函数、Getter/Setter...
+}</code></pre>
+<h3>5.3 Spring官方的BeanDefinition层次</h3>
+<pre><code class="language-">BeanDefinition（接口）
+├── AbstractBeanDefinition（抽象基类）
+│   ├── RootBeanDefinition（原始定义）
+│   ├── ChildBeanDefinition（子定义）
+│   └── GenericBeanDefinition（通用定义）
+└── AnnotatedBeanDefinition（注解定义）
+    └── AnnotatedGenericBeanDefinition</code></pre>
+<p><strong>Spring官方的AbstractBeanDefinition包含50+个属性</strong>：<br><pre><code class="language-java">public abstract class AbstractBeanDefinition implements BeanDefinition {<br>    private volatile Object beanClass;           // Bean类<br>    private String scope = SCOPE_DEFAULT;        // 作用域<br>    private boolean abstractFlag = false;        // 是否抽象<br>    private boolean lazyInit = false;            // 懒加载<br>    private int autowireMode = AUTOWIRE_NO;      // 自动装配模式<br>    private int dependencyCheck = DEPENDENCY_CHECK_ALL; // 依赖检查<br>    private String[] dependsOn;                  // 依赖的Bean<br>    private boolean autowireCandidate = true;    // 是否候选<br>    private boolean primary = false;             // 是否主Bean<br>    private String initMethodName;               // 初始化方法<br>    private String destroyMethodName;            // 销毁方法<br>    // ... 更多属性<br>}</code></pre></p>
+<h2>6. 类扫描与注册</h2>
+<h3>6.1 ClassPathBeanDefinitionScanner</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/context/ClassPathBeanDefinitionScanner.java">ClassPathBeanDefinitionScanner.java</a></p>
+<p>扫描器负责扫描指定包下的类，识别带有@Component注解的类并注册为BeanDefinition。</p>
+<p>核心流程：<br><pre><code class="language-">1. 将包名转换为路径（com.example -> com/example）<br>2. 通过ClassLoader获取资源URL<br>3. 遍历目录或Jar包中的类文件<br>4. 加载类并检查@Component注解<br>5. 生成Bean名称<br>6. 创建BeanDefinition并注册</code></pre></p>
+<h3>6.2 Bean名称生成策略</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/context/AnnotationConfigApplicationContext.java#L103-L106">AnnotationConfigApplicationContext.java:L103-106</a></p>
+<pre><code class="language-java">protected String generateBeanName(Class<?> beanClass) {
+    String shortName = beanClass.getSimpleName();
+    // 首字母小写：UserService -> userService
+    return shortName.substring(0, 1).toLowerCase() + shortName.substring(1);
+}</code></pre>
+<p>这与Spring官方的<code>AnnotationBeanNameGenerator</code>策略一致。</p>
+<h2>7. ApplicationContext的refresh流程</h2>
+<h3>7.1 Spring官方的refresh方法</h3>
+<p>Spring官方的<code>AbstractApplicationContext.refresh()</code>包含12个步骤：</p>
+<pre><code class="language-java">public void refresh() throws BeansException, IllegalStateException {
+    synchronized (this.startupShutdownMonitor) {
+        prepareRefresh();                    // 1. 准备刷新
+        ConfigurableListableBeanFactory bf = obtainFreshBeanFactory();  // 2. 获取BeanFactory
+        prepareBeanFactory(bf);              // 3. 配置BeanFactory
+        postProcessBeanFactory(bf);          // 4. 后置处理
+        invokeBeanFactoryPostProcessors(bf); // 5. 调用BFPP
+        registerBeanPostProcessors(bf);      // 6. 注册BPP
+        initMessageSource();                 // 7. 初始化消息源
+        initApplicationEventMulticaster();   // 8. 初始化事件广播
+        onRefresh();                         // 9. 模板方法
+        registerListeners();                 // 10. 注册监听器
+        finishBeanFactoryInitialization(bf); // 11. 初始化单例Bean
+        finishRefresh();                     // 12. 完成刷新
+    }
+}</code></pre>
+<h3>7.2 LightSSM的简化refresh</h3>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/context/AnnotationConfigApplicationContext.java#L60-L72">AnnotationConfigApplicationContext.java:L60-72</a></p>
+<pre><code class="language-java">@Override
+public void refresh() throws Exception {
+    this.startupDate = System.currentTimeMillis();
+    this.active = true;
+    
+    // 1. 注册Bean定义
+    registerBeanDefinitions();
+    
+    // 2. 注册BeanPostProcessor
+    registerBeanPostProcessors();
+    
+    // 3. 预实例化单例Bean
+    this.beanFactory.preInstantiateSingletons();
+    
+    logger.info("ApplicationContext refreshed successfully, {} beans instantiated", 
+        this.beanFactory.getBeanDefinitionCount());
+}</code></pre>
+<p><strong>简化对比</strong>：</p>
+<p>| 步骤 | Spring官方 | LightSSM |<br>|-----|-----------|----------|<br>| 准备刷新 | 环境变量、监听器 | 设置时间戳和状态 |<br>| BeanFactory | 创建并配置 | 构造函数已创建 |<br>| BFPP调用 | 支持 | 不支持 |<br>| 事件系统 | 完整实现 | 不支持 |<br>| 消息源 | 国际化支持 | 不支持 |<br>| Bean初始化 | 条件触发 | 直接预实例化 |</p>
+<h2>8. 预实例化单例Bean</h2>
+<h3>8.1 作用</h3>
+<p>容器启动时预实例化所有非懒加载的单例Bean，好处：<br><ul><li>尽早发现配置错误</li><br><li>避免首次请求延迟</li><br><li>提前完成依赖注入</li><br></ul><br><h3>8.2 实现</h3></p>
+<p><strong>源码位置</strong>：<a href="file:///e:/CODE/developed-project/LightSSM/light-framework/src/main/java/com/lightframework/ioc/core/DefaultListableBeanFactory.java#L349-L360">DefaultListableBeanFactory.java:L349-360</a></p>
+<pre><code class="language-java">public void preInstantiateSingletons() throws Exception {
+    List<String> beanNames = new ArrayList<>(this.beanDefinitionMap.keySet());
+    
+    for (String beanName : beanNames) {
+        BeanDefinition bd = this.beanDefinitionMap.get(beanName);
+        if (bd != null && bd.isSingleton() && !bd.isLazyInit()) {
+            getBean(beanName); // 触发Bean创建
+        }
+    }
+    
+    logger.info("Pre-instantiated {} singleton beans", 
+        this.singletonObjects.size());
+}</code></pre>
+<h2>9. 异常体系</h2>
+<h3>9.1 LightSSM的异常层次</h3>
+<pre><code class="language-">BeansException（基础异常）
+├── BeanCreationException（创建异常）
+├── BeanCurrentlyInCreationException（循环依赖异常）
+└── NoSuchBeanDefinitionException（找不到Bean异常）</code></pre>
+<h3>9.2 与Spring官方对比</h3>
+<p>Spring官方的异常体系更完整：<br><pre><code class="language-">BeansException（100+子类）<br>├── BeanCreationException<br>│   ├── UnsatisfiedDependencyException<br>│   ├── BeanInstantiationException<br>│   └── ...<br>├── BeanNotOfRequiredTypeException<br>├── NoSuchBeanDefinitionException<br>│   └── NoUniqueBeanDefinitionException<br>└── ...</code></pre></p>
+<h2>10. 设计模式总结</h2>
+<h3>10.1 工厂模式</h3>
+<pre><code class="language-java">// 产品接口
+public interface BeanFactory { ... }
+<p>// 具体工厂<br>public class DefaultListableBeanFactory implements ListableBeanFactory { ... }</code></pre></p>
+<h3>10.2 注册表模式</h3>
+<pre><code class="language-java">// BeanDefinition注册表
+private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(256);
+<p>// 单例注册表<br>private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);</code></pre></p>
+<h3>10.3 模板方法模式</h3>
+<pre><code class="language-java">// 模板方法
+protected Object doCreateBean(String beanName, BeanDefinition bd) throws Exception {
+    // 定义算法骨架
+    instantiateBean(...);
+    populateBean(...);
+    initializeBean(...);
+}</code></pre>
+<h3>10.4 策略模式</h3>
+<pre><code class="language-java">// ObjectFactory策略
+@FunctionalInterface
+public interface ObjectFactory<T> {
+    T getObject() throws Exception;
+}</code></pre>
+<h2>11. 面试考点</h2>
+<h3>11.1 高频问题</h3>
+<p>1. <strong>Spring如何解决循环依赖？</strong><br>   - 三级缓存机制<br>   - 早期引用暴露</p>
+<p>2. <strong>Bean的生命周期有哪些步骤？</strong><br>   - 实例化、属性填充、初始化、销毁</p>
+<p>3. <strong>BeanFactory和ApplicationContext的区别？</strong><br>   - ApplicationContext是高级容器，提供更多企业功能</p>
+<p>4. <strong>@Autowired和@Resource的区别？</strong><br>   - @Autowired按类型注入，@Resource按名称注入</p>
+<h3>11.2 深度问题</h3>
+<p>1. <strong>为什么需要三级缓存？二级不够吗？</strong><br>   - 三级缓存支持AOP代理的早期引用</p>
+<p>2. <strong>Spring的单例Bean是线程安全的吗？</strong><br>   - 不是，需要自己保证线程安全</p>
+<p>3. <strong>BeanPostProcessor的作用？</strong><br>   - 在Bean初始化前后执行自定义逻辑，是AOP的基础</p>
+<h2>12. 总结</h2>
+<p>LightSSM的IoC容器完整实现了Spring的核心机制：</p>
+<ul><li><strong>三级缓存</strong>：完美解决循环依赖</li>
+<li><strong>生命周期管理</strong>：实例化、属性填充、初始化</li>
+<li><strong>注解支持</strong>：@Component、@Autowired、@Scope</li>
+<li><strong>扩展点</strong>：BeanPostProcessor</li>
+</ul>
+通过对照Spring官方源码，可以清晰看到LightSSM保留了核心逻辑，剥离了企业级特性，非常适合学习理解。
+<p>---</p>
+<p><strong>上一篇</strong>：<a href="01-LightSSM架构概述与设计哲学.md">01 - LightSSM架构概述与设计哲学</a></p>
+<p><strong>下一篇</strong>：<a href="03-AOP代理机制与SpringAOP源码对比.md">03 - AOP代理机制与Spring AOP源码对比</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // 移动端菜单切换
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      // 自动高亮当前页面
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPage = window.location.pathname.split("/").pop();
+        const links = document.querySelectorAll(".sidebar-nav a");
+        links.forEach((link) => {
+          if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 代码块语言高亮
+      document.addEventListener("DOMContentLoaded", function () {
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
+          const language = block.className.replace("language-", "");
+          if (language) {
+            block.parentElement.setAttribute("data-language", language);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
