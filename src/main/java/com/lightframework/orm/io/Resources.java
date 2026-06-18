@@ -1,4 +1,4 @@
-package com.rongx.mybatis.io;
+package com.lightframework.orm.io;
 
 import java.io.IOException;
 import java.io.InputStream;

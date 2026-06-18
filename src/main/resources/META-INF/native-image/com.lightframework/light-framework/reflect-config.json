@@ -1,0 +1,14 @@
+[
+  { "type": "com.lightframework.ioc.annotation.Component" },
+  { "type": "com.lightframework.ioc.annotation.Autowired" },
+  { "type": "com.lightframework.ioc.annotation.Resource" },
+  { "type": "com.lightframework.ioc.annotation.Value" },
+  { "type": "com.lightframework.ioc.annotation.Lazy" },
+  { "type": "com.lightframework.ioc.annotation.Primary" },
+  { "type": "com.lightframework.ioc.annotation.Qualifier" },
+  { "type": "com.lightframework.ioc.annotation.Scope" },
+  { "type": "com.lightframework.ioc.annotation.DependsOn" },
+  { "type": "org.objectweb.asm.ClassReader", "methods": true },
+  { "type": "org.objectweb.asm.ClassVisitor", "methods": true },
+  { "type": "org.objectweb.asm.AnnotationVisitor", "methods": true }
+]

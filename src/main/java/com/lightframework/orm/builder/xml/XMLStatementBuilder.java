@@ -1,16 +1,16 @@
-package com.rongx.mybatis.builder.xml;
+package com.lightframework.orm.builder.xml;
 
-import com.rongx.mybatis.builder.BaseBuilder;
-import com.rongx.mybatis.builder.MapperBuilderAssistant;
-import com.rongx.mybatis.executor.keygen.Jdbc3KeyGenerator;
-import com.rongx.mybatis.executor.keygen.KeyGenerator;
-import com.rongx.mybatis.executor.keygen.NoKeyGenerator;
-import com.rongx.mybatis.executor.keygen.SelectKeyGenerator;
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.mapping.SqlCommandType;
-import com.rongx.mybatis.mapping.SqlSource;
-import com.rongx.mybatis.scripting.LanguageDriver;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.builder.BaseBuilder;
+import com.lightframework.orm.builder.MapperBuilderAssistant;
+import com.lightframework.orm.executor.keygen.Jdbc3KeyGenerator;
+import com.lightframework.orm.executor.keygen.KeyGenerator;
+import com.lightframework.orm.executor.keygen.NoKeyGenerator;
+import com.lightframework.orm.executor.keygen.SelectKeyGenerator;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.mapping.SqlCommandType;
+import com.lightframework.orm.mapping.SqlSource;
+import com.lightframework.orm.scripting.LanguageDriver;
+import com.lightframework.orm.session.Configuration;
 import org.dom4j.Element;
 
 import java.util.List;

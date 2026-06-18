@@ -5,6 +5,7 @@ import com.lightframework.mvc.annotation.RequestParam;
 import com.lightframework.mvc.annotation.ResponseBody;
 import com.lightframework.mvc.core.HandlerAdapter;
 import com.lightframework.mvc.core.ModelAndView;
+import com.lightframework.mvc.handler.RequestMappingInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -96,16 +97,13 @@ public class RequestMappingHandlerAdapter implements HandlerAdapter {
             varName = pathVariable.name();
         }
         
-        String uri = request.getRequestURI();
-        String contextPath = request.getContextPath();
-        if (contextPath.length() > 0) {
-            uri = uri.substring(contextPath.length());
+        Map<String, String> pathVariables = (Map<String, String>) request.getAttribute(
+            RequestMappingInfo.PATH_VARIABLES_ATTRIBUTE);
+        if (pathVariables != null && pathVariables.containsKey(varName)) {
+            return convertValue(pathVariables.get(varName), paramType);
         }
         
-        String[] uriParts = uri.split("/");
-        String value = uriParts[uriParts.length - 1];
-        
-        return convertValue(value, paramType);
+        return null;
     }
     
     protected Object resolveDefaultArgument(Class<?> paramType, HttpServletRequest request) {

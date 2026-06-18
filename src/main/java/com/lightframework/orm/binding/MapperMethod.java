@@ -1,10 +1,10 @@
-package com.rongx.mybatis.binding;
+package com.lightframework.orm.binding;
 
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.mapping.SqlCommandType;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.session.ResultHandler;
-import com.rongx.mybatis.session.SqlSession;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.mapping.SqlCommandType;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.session.ResultHandler;
+import com.lightframework.orm.session.SqlSession;
 
 import java.lang.reflect.Method;
 import java.util.*;

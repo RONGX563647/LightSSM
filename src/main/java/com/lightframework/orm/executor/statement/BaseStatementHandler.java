@@ -1,14 +1,14 @@
-package com.rongx.mybatis.executor.statement;
+package com.lightframework.orm.executor.statement;
 
-import com.rongx.mybatis.executor.Executor;
-import com.rongx.mybatis.executor.keygen.KeyGenerator;
-import com.rongx.mybatis.executor.parameter.ParameterHandler;
-import com.rongx.mybatis.executor.resultset.ResultSetHandler;
-import com.rongx.mybatis.mapping.BoundSql;
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.session.ResultHandler;
-import com.rongx.mybatis.session.RowBounds;
+import com.lightframework.orm.executor.Executor;
+import com.lightframework.orm.executor.keygen.KeyGenerator;
+import com.lightframework.orm.executor.parameter.ParameterHandler;
+import com.lightframework.orm.executor.resultset.ResultSetHandler;
+import com.lightframework.orm.mapping.BoundSql;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.session.ResultHandler;
+import com.lightframework.orm.session.RowBounds;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -64,7 +64,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
     }
 
     @Override
-    public com.rongx.mybatis.mapping.BoundSql getBoundSql() {
+    public com.lightframework.orm.mapping.BoundSql getBoundSql() {
         return boundSql;
     }
 

@@ -1,6 +1,6 @@
-package com.rongx.mybatis.datasource.druid;
+package com.lightframework.orm.datasource.druid;
 
-import com.rongx.mybatis.datasource.DataSourceFactory;
+import com.lightframework.orm.datasource.DataSourceFactory;
 import com.alibaba.druid.pool.DruidDataSource;
 
 import javax.sql.DataSource;

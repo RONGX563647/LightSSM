@@ -1,4 +1,4 @@
-package com.rongx.mybatis.type;
+package com.lightframework.orm.type;
 
 import java.math.BigDecimal;
 import java.sql.*;

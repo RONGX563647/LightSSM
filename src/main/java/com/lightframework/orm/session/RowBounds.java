@@ -1,4 +1,4 @@
-package com.rongx.mybatis.session;
+package com.lightframework.orm.session;
 public class RowBounds {
 
     public static final int NO_ROW_OFFSET = 0;

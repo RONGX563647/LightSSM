@@ -1,7 +1,7 @@
-package com.rongx.mybatis.executor.statement;
+package com.lightframework.orm.executor.statement;
 
-import com.rongx.mybatis.mapping.BoundSql;
-import com.rongx.mybatis.session.ResultHandler;
+import com.lightframework.orm.mapping.BoundSql;
+import com.lightframework.orm.session.ResultHandler;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -34,6 +34,6 @@ public interface StatementHandler {
     /**
      * 获取绑定SQL
      */
-    com.rongx.mybatis.mapping.BoundSql getBoundSql();
+    com.lightframework.orm.mapping.BoundSql getBoundSql();
 
 }

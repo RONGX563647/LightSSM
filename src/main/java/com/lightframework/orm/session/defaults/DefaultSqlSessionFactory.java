@@ -1,13 +1,13 @@
-package com.rongx.mybatis.session.defaults;
+package com.lightframework.orm.session.defaults;
 
-import com.rongx.mybatis.executor.Executor;
-import com.rongx.mybatis.mapping.Environment;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.session.SqlSession;
-import com.rongx.mybatis.session.SqlSessionFactory;
-import com.rongx.mybatis.session.TransactionIsolationLevel;
-import com.rongx.mybatis.transaction.Transaction;
-import com.rongx.mybatis.transaction.TransactionFactory;
+import com.lightframework.orm.executor.Executor;
+import com.lightframework.orm.mapping.Environment;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.session.SqlSession;
+import com.lightframework.orm.session.SqlSessionFactory;
+import com.lightframework.orm.session.TransactionIsolationLevel;
+import com.lightframework.orm.transaction.Transaction;
+import com.lightframework.orm.transaction.TransactionFactory;
 
 import java.sql.SQLException;
 

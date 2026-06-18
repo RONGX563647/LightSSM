@@ -1,7 +1,7 @@
-package com.rongx.mybatis.executor.keygen;
+package com.lightframework.orm.executor.keygen;
 
-import com.rongx.mybatis.executor.Executor;
-import com.rongx.mybatis.mapping.MappedStatement;
+import com.lightframework.orm.executor.Executor;
+import com.lightframework.orm.mapping.MappedStatement;
 
 import java.sql.Statement;
 

@@ -10,13 +10,14 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RequestMappingHandlerMapping implements HandlerMapping {
     
     private static final Logger logger = LoggerFactory.getLogger(RequestMappingHandlerMapping.class);
     
-    private final Map<String, HandlerMethod> handlerMethods = new ConcurrentHashMap<>(256);
+    private final Map<RequestMappingInfo, HandlerMethod> handlerMethods = new ConcurrentHashMap<>(256);
     
     private final Map<String, HandlerExecutionChain> handlerCache = new ConcurrentHashMap<>(256);
     
@@ -63,7 +64,7 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
         String path = getPath(mapping);
         HandlerMethod handlerMethod = new HandlerMethod(beanName, method, applicationContext);
         
-        this.handlerMethods.put(path, handlerMethod);
+        this.handlerMethods.put(new RequestMappingInfo(path), handlerMethod);
         logger.debug("Mapped \"{}\" to {}", path, handlerMethod);
     }
     
@@ -84,15 +85,19 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
             return handlerChain;
         }
         
-        HandlerMethod handlerMethod = this.handlerMethods.get(lookupPath);
-        if (handlerMethod == null) {
-            return null;
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : this.handlerMethods.entrySet()) {
+            RequestMappingInfo info = entry.getKey();
+            Map<String, String> variables = info.match(lookupPath);
+            if (variables != null) {
+                request.setAttribute(RequestMappingInfo.PATH_VARIABLES_ATTRIBUTE, variables);
+                HandlerMethod handlerMethod = entry.getValue();
+                handlerChain = getHandlerExecutionChain(handlerMethod, request);
+                this.handlerCache.put(lookupPath, handlerChain);
+                return handlerChain;
+            }
         }
         
-        handlerChain = getHandlerExecutionChain(handlerMethod, request);
-        this.handlerCache.put(lookupPath, handlerChain);
-        
-        return handlerChain;
+        return null;
     }
     
     protected String getLookupPath(HttpServletRequest request) {
@@ -128,6 +133,10 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
     }
     
     public Map<String, HandlerMethod> getHandlerMethods() {
-        return Collections.unmodifiableMap(this.handlerMethods);
+        Map<String, HandlerMethod> result = new LinkedHashMap<>();
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : this.handlerMethods.entrySet()) {
+            result.put(entry.getKey().getPattern(), entry.getValue());
+        }
+        return Collections.unmodifiableMap(result);
     }
 }

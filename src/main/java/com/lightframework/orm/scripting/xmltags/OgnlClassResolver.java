@@ -1,6 +1,6 @@
-package com.rongx.mybatis.scripting.xmltags;
+package com.lightframework.orm.scripting.xmltags;
 
-import com.rongx.mybatis.io.Resources;
+import com.lightframework.orm.io.Resources;
 import ognl.ClassResolver;
 
 import java.util.HashMap;

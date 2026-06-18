@@ -1,0 +1,7 @@
+# LightSSM SPI 自动配置
+# 每行一个自动配置类的全限定名, # 开头的行为注释
+
+com.lightframework.spi.hutool.autoconfigure.HutoolAutoConfiguration
+com.lightframework.spi.jackson.autoconfigure.JacksonAutoConfiguration
+com.lightframework.spi.caffeine.autoconfigure.CaffeineAutoConfiguration
+com.lightframework.spi.mybatis.autoconfigure.MyBatisAutoConfiguration

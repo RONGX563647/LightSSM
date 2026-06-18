@@ -1,13 +1,13 @@
-package com.rongx.mybatis.builder.xml;
+package com.lightframework.orm.builder.xml;
 
-import com.rongx.mybatis.builder.BaseBuilder;
-import com.rongx.mybatis.builder.MapperBuilderAssistant;
-import com.rongx.mybatis.builder.ResultMapResolver;
-import com.rongx.mybatis.io.Resources;
-import com.rongx.mybatis.mapping.ResultFlag;
-import com.rongx.mybatis.mapping.ResultMap;
-import com.rongx.mybatis.mapping.ResultMapping;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.builder.BaseBuilder;
+import com.lightframework.orm.builder.MapperBuilderAssistant;
+import com.lightframework.orm.builder.ResultMapResolver;
+import com.lightframework.orm.io.Resources;
+import com.lightframework.orm.mapping.ResultFlag;
+import com.lightframework.orm.mapping.ResultMap;
+import com.lightframework.orm.mapping.ResultMapping;
+import com.lightframework.orm.session.Configuration;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -86,7 +86,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
 
     /**
-     * <resultMap id="activityMap" type="com.rongx.mybatis.test.po.Activity">
+     * <resultMap id="activityMap" type="com.lightframework.orm.test.po.Activity">
      * <id column="id" property="id"/>
      * <result column="activity_id" property="activityId"/>
      * <result column="activity_name" property="activityName"/>

@@ -1,13 +1,13 @@
-package com.rongx.mybatis.scripting.xmltags;
+package com.lightframework.orm.scripting.xmltags;
 
-import com.rongx.mybatis.executor.parameter.ParameterHandler;
-import com.rongx.mybatis.mapping.BoundSql;
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.mapping.SqlSource;
-import com.rongx.mybatis.scripting.LanguageDriver;
-import com.rongx.mybatis.scripting.defaults.DefaultParameterHandler;
-import com.rongx.mybatis.scripting.defaults.RawSqlSource;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.executor.parameter.ParameterHandler;
+import com.lightframework.orm.mapping.BoundSql;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.mapping.SqlSource;
+import com.lightframework.orm.scripting.LanguageDriver;
+import com.lightframework.orm.scripting.defaults.DefaultParameterHandler;
+import com.lightframework.orm.scripting.defaults.RawSqlSource;
+import com.lightframework.orm.session.Configuration;
 import org.dom4j.Element;
 
 

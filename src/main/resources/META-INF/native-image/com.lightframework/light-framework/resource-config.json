@@ -1,0 +1,6 @@
+{
+  "resources": [
+    { "pattern": "META-INF/lightssm.components" },
+    { "pattern": "META-INF/lightssm.spi" }
+  ]
+}

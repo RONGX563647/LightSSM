@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.rongx.mybatis.type;
+package com.lightframework.orm.type;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;

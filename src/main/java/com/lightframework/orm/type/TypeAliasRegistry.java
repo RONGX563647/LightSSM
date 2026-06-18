@@ -1,6 +1,6 @@
-package com.rongx.mybatis.type;
+package com.lightframework.orm.type;
 
-import com.rongx.mybatis.io.Resources;
+import com.lightframework.orm.io.Resources;
 
 import java.util.HashMap;
 import java.util.Locale;

@@ -1,4 +1,4 @@
-package com.rongx.mybatis.datasource.pooled;
+package com.lightframework.orm.datasource.pooled;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

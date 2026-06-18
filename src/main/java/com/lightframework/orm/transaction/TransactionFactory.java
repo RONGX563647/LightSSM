@@ -1,6 +1,6 @@
-package com.rongx.mybatis.transaction;
+package com.lightframework.orm.transaction;
 
-import com.rongx.mybatis.session.TransactionIsolationLevel;
+import com.lightframework.orm.session.TransactionIsolationLevel;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

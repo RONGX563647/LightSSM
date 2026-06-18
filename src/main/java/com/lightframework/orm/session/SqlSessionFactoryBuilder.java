@@ -1,7 +1,7 @@
-package com.rongx.mybatis.session;
+package com.lightframework.orm.session;
 
-import com.rongx.mybatis.builder.xml.XMLConfigBuilder;
-import com.rongx.mybatis.session.defaults.DefaultSqlSessionFactory;
+import com.lightframework.orm.builder.xml.XMLConfigBuilder;
+import com.lightframework.orm.session.defaults.DefaultSqlSessionFactory;
 
 import java.io.Reader;
 

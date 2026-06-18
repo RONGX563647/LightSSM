@@ -1,4 +1,4 @@
-package com.rongx.mybatis.reflection.factory;
+package com.lightframework.orm.reflection.factory;
 
 import java.util.List;
 import java.util.Properties;

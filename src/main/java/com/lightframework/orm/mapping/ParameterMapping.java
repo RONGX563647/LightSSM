@@ -1,9 +1,9 @@
-package com.rongx.mybatis.mapping;
+package com.lightframework.orm.mapping;
 
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.type.JdbcType;
-import com.rongx.mybatis.type.TypeHandler;
-import com.rongx.mybatis.type.TypeHandlerRegistry;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.type.JdbcType;
+import com.lightframework.orm.type.TypeHandler;
+import com.lightframework.orm.type.TypeHandlerRegistry;
 
 
 public class ParameterMapping {

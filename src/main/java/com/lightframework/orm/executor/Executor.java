@@ -1,10 +1,10 @@
-package com.rongx.mybatis.executor;
+package com.lightframework.orm.executor;
 
-import com.rongx.mybatis.mapping.BoundSql;
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.session.ResultHandler;
-import com.rongx.mybatis.session.RowBounds;
-import com.rongx.mybatis.transaction.Transaction;
+import com.lightframework.orm.mapping.BoundSql;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.session.ResultHandler;
+import com.lightframework.orm.session.RowBounds;
+import com.lightframework.orm.transaction.Transaction;
 
 import java.sql.SQLException;
 import java.util.List;

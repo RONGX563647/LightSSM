@@ -1,4 +1,4 @@
-package com.rongx.mybatis.plugin;
+package com.lightframework.orm.plugin;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,6 +1,6 @@
-package com.rongx.mybatis.binding;
+package com.lightframework.orm.binding;
 
-import com.rongx.mybatis.session.SqlSession;
+import com.lightframework.orm.session.SqlSession;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;

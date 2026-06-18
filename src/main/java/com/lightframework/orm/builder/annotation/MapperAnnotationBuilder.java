@@ -1,20 +1,20 @@
-package com.rongx.mybatis.builder.annotation;
+package com.lightframework.orm.builder.annotation;
 
-import com.rongx.mybatis.annotations.Delete;
-import com.rongx.mybatis.annotations.Insert;
-import com.rongx.mybatis.annotations.Select;
-import com.rongx.mybatis.annotations.Update;
-import com.rongx.mybatis.binding.MapperMethod;
-import com.rongx.mybatis.builder.MapperBuilderAssistant;
-import com.rongx.mybatis.executor.keygen.Jdbc3KeyGenerator;
-import com.rongx.mybatis.executor.keygen.KeyGenerator;
-import com.rongx.mybatis.executor.keygen.NoKeyGenerator;
-import com.rongx.mybatis.mapping.SqlCommandType;
-import com.rongx.mybatis.mapping.SqlSource;
-import com.rongx.mybatis.scripting.LanguageDriver;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.session.ResultHandler;
-import com.rongx.mybatis.session.RowBounds;
+import com.lightframework.orm.annotations.Delete;
+import com.lightframework.orm.annotations.Insert;
+import com.lightframework.orm.annotations.Select;
+import com.lightframework.orm.annotations.Update;
+import com.lightframework.orm.binding.MapperMethod;
+import com.lightframework.orm.builder.MapperBuilderAssistant;
+import com.lightframework.orm.executor.keygen.Jdbc3KeyGenerator;
+import com.lightframework.orm.executor.keygen.KeyGenerator;
+import com.lightframework.orm.executor.keygen.NoKeyGenerator;
+import com.lightframework.orm.mapping.SqlCommandType;
+import com.lightframework.orm.mapping.SqlSource;
+import com.lightframework.orm.scripting.LanguageDriver;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.session.ResultHandler;
+import com.lightframework.orm.session.RowBounds;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;

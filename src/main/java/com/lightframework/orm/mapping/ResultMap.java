@@ -1,6 +1,6 @@
-package com.rongx.mybatis.mapping;
+package com.lightframework.orm.mapping;
 
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.session.Configuration;
 
 import java.util.HashSet;
 import java.util.List;

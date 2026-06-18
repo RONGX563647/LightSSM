@@ -1,10 +1,10 @@
-package com.rongx.mybatis.executor.keygen;
+package com.lightframework.orm.executor.keygen;
 
-import com.rongx.mybatis.executor.Executor;
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.reflection.MetaObject;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.session.RowBounds;
+import com.lightframework.orm.executor.Executor;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.reflection.MetaObject;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.session.RowBounds;
 
 import java.sql.Statement;
 import java.util.List;

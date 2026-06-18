@@ -1,7 +1,7 @@
-package com.rongx.mybatis.reflection.wrapper;
+package com.lightframework.orm.reflection.wrapper;
 
-import com.rongx.mybatis.reflection.MetaObject;
-import com.rongx.mybatis.reflection.property.PropertyTokenizer;
+import com.lightframework.orm.reflection.MetaObject;
+import com.lightframework.orm.reflection.property.PropertyTokenizer;
 
 import java.util.List;
 import java.util.Map;

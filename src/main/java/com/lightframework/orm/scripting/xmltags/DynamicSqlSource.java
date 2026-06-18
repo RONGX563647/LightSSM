@@ -1,9 +1,9 @@
-package com.rongx.mybatis.scripting.xmltags;
+package com.lightframework.orm.scripting.xmltags;
 
-import com.rongx.mybatis.builder.SqlSourceBuilder;
-import com.rongx.mybatis.mapping.BoundSql;
-import com.rongx.mybatis.mapping.SqlSource;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.builder.SqlSourceBuilder;
+import com.lightframework.orm.mapping.BoundSql;
+import com.lightframework.orm.mapping.SqlSource;
+import com.lightframework.orm.session.Configuration;
 
 import java.util.Map;
 

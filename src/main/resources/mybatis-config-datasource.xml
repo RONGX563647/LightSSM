@@ -3,7 +3,7 @@
 <configuration>`
 
     <plugins>
-        <plugin interceptor="com.rongx.mybatis.test.plugin.TestPlugin">
+        <plugin interceptor="com.lightframework.orm.test.plugin.TestPlugin">
             <property name="test00" value="100"/>
             <property name="test01" value="200"/>
         </plugin>

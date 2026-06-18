@@ -1,4 +1,4 @@
-package com.rongx.mybatis.mapping;
+package com.lightframework.orm.mapping;
 
 
 public enum ResultFlag {

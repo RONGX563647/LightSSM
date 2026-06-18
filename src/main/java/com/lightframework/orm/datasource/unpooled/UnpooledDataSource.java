@@ -1,4 +1,4 @@
-package com.rongx.mybatis.datasource.unpooled;
+package com.lightframework.orm.datasource.unpooled;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;

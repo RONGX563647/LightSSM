@@ -1,7 +1,7 @@
-package com.rongx.mybatis.mapping;
+package com.lightframework.orm.mapping;
 
-import com.rongx.mybatis.reflection.MetaObject;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.reflection.MetaObject;
+import com.lightframework.orm.session.Configuration;
 
 import java.util.HashMap;
 import java.util.List;

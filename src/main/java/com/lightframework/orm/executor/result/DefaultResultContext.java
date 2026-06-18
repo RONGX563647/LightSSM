@@ -1,6 +1,6 @@
-package com.rongx.mybatis.executor.result;
+package com.lightframework.orm.executor.result;
 
-import com.rongx.mybatis.session.ResultContext;
+import com.lightframework.orm.session.ResultContext;
 
 
 public class DefaultResultContext implements ResultContext {

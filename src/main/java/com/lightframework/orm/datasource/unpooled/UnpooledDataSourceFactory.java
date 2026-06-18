@@ -1,8 +1,8 @@
-package com.rongx.mybatis.datasource.unpooled;
+package com.lightframework.orm.datasource.unpooled;
 
-import com.rongx.mybatis.datasource.DataSourceFactory;
-import com.rongx.mybatis.reflection.MetaObject;
-import com.rongx.mybatis.reflection.SystemMetaObject;
+import com.lightframework.orm.datasource.DataSourceFactory;
+import com.lightframework.orm.reflection.MetaObject;
+import com.lightframework.orm.reflection.SystemMetaObject;
 
 import javax.sql.DataSource;
 import java.util.Properties;

@@ -1,4 +1,4 @@
-package com.rongx.mybatis.reflection.invoker;
+package com.lightframework.orm.reflection.invoker;
 
 
 public interface Invoker {

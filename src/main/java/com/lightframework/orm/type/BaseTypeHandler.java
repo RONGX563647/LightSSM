@@ -1,6 +1,6 @@
-package com.rongx.mybatis.type;
+package com.lightframework.orm.type;
 
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.session.Configuration;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -1,12 +1,12 @@
-package com.rongx.mybatis.builder;
+package com.lightframework.orm.builder;
 
-import com.rongx.mybatis.mapping.ParameterMapping;
-import com.rongx.mybatis.mapping.SqlSource;
-import com.rongx.mybatis.parsing.GenericTokenParser;
-import com.rongx.mybatis.parsing.TokenHandler;
-import com.rongx.mybatis.reflection.MetaClass;
-import com.rongx.mybatis.reflection.MetaObject;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.mapping.ParameterMapping;
+import com.lightframework.orm.mapping.SqlSource;
+import com.lightframework.orm.parsing.GenericTokenParser;
+import com.lightframework.orm.parsing.TokenHandler;
+import com.lightframework.orm.reflection.MetaClass;
+import com.lightframework.orm.reflection.MetaObject;
+import com.lightframework.orm.session.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

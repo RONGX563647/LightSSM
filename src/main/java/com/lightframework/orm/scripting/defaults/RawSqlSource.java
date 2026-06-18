@@ -1,11 +1,11 @@
-package com.rongx.mybatis.scripting.defaults;
+package com.lightframework.orm.scripting.defaults;
 
-import com.rongx.mybatis.builder.SqlSourceBuilder;
-import com.rongx.mybatis.mapping.BoundSql;
-import com.rongx.mybatis.mapping.SqlSource;
-import com.rongx.mybatis.scripting.xmltags.DynamicContext;
-import com.rongx.mybatis.scripting.xmltags.SqlNode;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.builder.SqlSourceBuilder;
+import com.lightframework.orm.mapping.BoundSql;
+import com.lightframework.orm.mapping.SqlSource;
+import com.lightframework.orm.scripting.xmltags.DynamicContext;
+import com.lightframework.orm.scripting.xmltags.SqlNode;
+import com.lightframework.orm.session.Configuration;
 
 import java.util.HashMap;
 

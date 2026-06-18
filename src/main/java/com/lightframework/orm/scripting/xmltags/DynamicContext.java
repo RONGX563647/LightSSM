@@ -1,7 +1,7 @@
-package com.rongx.mybatis.scripting.xmltags;
+package com.lightframework.orm.scripting.xmltags;
 
-import com.rongx.mybatis.reflection.MetaObject;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.reflection.MetaObject;
+import com.lightframework.orm.session.Configuration;
 import ognl.OgnlContext;
 import ognl.OgnlException;
 import ognl.OgnlRuntime;

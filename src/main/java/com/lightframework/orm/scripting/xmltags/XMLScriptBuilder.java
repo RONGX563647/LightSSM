@@ -1,9 +1,9 @@
-package com.rongx.mybatis.scripting.xmltags;
+package com.lightframework.orm.scripting.xmltags;
 
-import com.rongx.mybatis.builder.BaseBuilder;
-import com.rongx.mybatis.mapping.SqlSource;
-import com.rongx.mybatis.scripting.defaults.RawSqlSource;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.builder.BaseBuilder;
+import com.lightframework.orm.mapping.SqlSource;
+import com.lightframework.orm.scripting.defaults.RawSqlSource;
+import com.lightframework.orm.session.Configuration;
 import org.dom4j.Element;
 import org.dom4j.Node;
 

@@ -1,4 +1,4 @@
-    package com.rongx.mybatis.session;
+    package com.lightframework.orm.session;
 
     import java.io.Closeable;
     import java.util.List;

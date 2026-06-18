@@ -1,10 +1,10 @@
-package com.rongx.mybatis.reflection;
+package com.lightframework.orm.reflection;
 
-import com.rongx.mybatis.reflection.invoker.GetFieldInvoker;
-import com.rongx.mybatis.reflection.invoker.Invoker;
-import com.rongx.mybatis.reflection.invoker.MethodInvoker;
-import com.rongx.mybatis.reflection.invoker.SetFieldInvoker;
-import com.rongx.mybatis.reflection.property.PropertyNamer;
+import com.lightframework.orm.reflection.invoker.GetFieldInvoker;
+import com.lightframework.orm.reflection.invoker.Invoker;
+import com.lightframework.orm.reflection.invoker.MethodInvoker;
+import com.lightframework.orm.reflection.invoker.SetFieldInvoker;
+import com.lightframework.orm.reflection.property.PropertyNamer;
 
 import java.lang.reflect.*;
 import java.util.*;

@@ -1,4 +1,4 @@
-package com.rongx.mybatis.executor.parameter;
+package com.lightframework.orm.executor.parameter;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

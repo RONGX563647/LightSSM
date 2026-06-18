@@ -1,11 +1,11 @@
-package com.rongx.mybatis.executor.resultset;
+package com.lightframework.orm.executor.resultset;
 
-import com.rongx.mybatis.io.Resources;
-import com.rongx.mybatis.mapping.ResultMap;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.type.JdbcType;
-import com.rongx.mybatis.type.TypeHandler;
-import com.rongx.mybatis.type.TypeHandlerRegistry;
+import com.lightframework.orm.io.Resources;
+import com.lightframework.orm.mapping.ResultMap;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.type.JdbcType;
+import com.lightframework.orm.type.TypeHandler;
+import com.lightframework.orm.type.TypeHandlerRegistry;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;

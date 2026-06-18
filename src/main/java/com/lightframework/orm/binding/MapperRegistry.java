@@ -1,8 +1,8 @@
-package com.rongx.mybatis.binding;
+package com.lightframework.orm.binding;
 
-import com.rongx.mybatis.builder.annotation.MapperAnnotationBuilder;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.session.SqlSession;
+import com.lightframework.orm.builder.annotation.MapperAnnotationBuilder;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.session.SqlSession;
 import cn.hutool.core.lang.ClassScanner;
 
 import java.util.HashMap;

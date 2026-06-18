@@ -1,14 +1,14 @@
-package com.rongx.mybatis.scripting.defaults;
+package com.lightframework.orm.scripting.defaults;
 
-import com.rongx.mybatis.executor.parameter.ParameterHandler;
-import com.rongx.mybatis.mapping.BoundSql;
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.mapping.ParameterMapping;
-import com.rongx.mybatis.reflection.MetaObject;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.type.JdbcType;
-import com.rongx.mybatis.type.TypeHandler;
-import com.rongx.mybatis.type.TypeHandlerRegistry;
+import com.lightframework.orm.executor.parameter.ParameterHandler;
+import com.lightframework.orm.mapping.BoundSql;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.mapping.ParameterMapping;
+import com.lightframework.orm.reflection.MetaObject;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.type.JdbcType;
+import com.lightframework.orm.type.TypeHandler;
+import com.lightframework.orm.type.TypeHandlerRegistry;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

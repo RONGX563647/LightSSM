@@ -1,6 +1,6 @@
-package com.rongx.mybatis.scripting.xmltags;
+package com.lightframework.orm.scripting.xmltags;
 
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.session.Configuration;
 
 import java.util.*;
 

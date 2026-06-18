@@ -1,6 +1,6 @@
-package com.rongx.mybatis.datasource.pooled;
+package com.lightframework.orm.datasource.pooled;
 
-import com.rongx.mybatis.datasource.unpooled.UnpooledDataSource;
+import com.lightframework.orm.datasource.unpooled.UnpooledDataSource;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;

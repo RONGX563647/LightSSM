@@ -1,9 +1,9 @@
-package com.rongx.mybatis.reflection;
+package com.lightframework.orm.reflection;
 
-import com.rongx.mybatis.reflection.factory.DefaultObjectFactory;
-import com.rongx.mybatis.reflection.factory.ObjectFactory;
-import com.rongx.mybatis.reflection.wrapper.DefaultObjectWrapperFactory;
-import com.rongx.mybatis.reflection.wrapper.ObjectWrapperFactory;
+import com.lightframework.orm.reflection.factory.DefaultObjectFactory;
+import com.lightframework.orm.reflection.factory.ObjectFactory;
+import com.lightframework.orm.reflection.wrapper.DefaultObjectWrapperFactory;
+import com.lightframework.orm.reflection.wrapper.ObjectWrapperFactory;
 
 public class SystemMetaObject {
 

@@ -1,4 +1,4 @@
-package com.rongx.mybatis.datasource;
+package com.lightframework.orm.datasource;
 
 import javax.sql.DataSource;
 import java.util.Properties;

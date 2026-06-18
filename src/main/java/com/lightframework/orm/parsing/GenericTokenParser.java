@@ -1,4 +1,4 @@
-package com.rongx.mybatis.parsing;
+package com.lightframework.orm.parsing;
 
 
 public class GenericTokenParser {

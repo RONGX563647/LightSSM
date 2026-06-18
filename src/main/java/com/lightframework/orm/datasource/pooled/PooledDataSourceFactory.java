@@ -1,6 +1,6 @@
-package com.rongx.mybatis.datasource.pooled;
+package com.lightframework.orm.datasource.pooled;
 
-import com.rongx.mybatis.datasource.unpooled.UnpooledDataSourceFactory;
+import com.lightframework.orm.datasource.unpooled.UnpooledDataSourceFactory;
 
 
 public class PooledDataSourceFactory extends UnpooledDataSourceFactory {

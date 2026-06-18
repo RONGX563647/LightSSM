@@ -20,17 +20,26 @@ public class AspectJExpressionPointcut {
     
     protected String convertExpressionToRegex(String expression) {
         if (expression.startsWith("execution(")) {
-            String content = expression.substring("execution(".length(), expression.length() - 1);
-            
-            content = content.replace("*", ".*");
-            content = content.replace("..", ".*");
-            content = content.replace("(", "\\(");
-            content = content.replace(")", "\\)");
-            
-            return content;
+            // Strip the execution(...) wrapper; the inner content is what we match against
+            String content = expression.substring("execution(".length(), expression.length() - 1).trim();
+            // Remove the return-type part (up to the first space, e.g. "* " or "void ")
+            int spaceIdx = content.indexOf(' ');
+            if (spaceIdx > 0) {
+                content = content.substring(spaceIdx + 1).trim();
+            }
+            // * matches a single segment (no dots), .. matches any segments
+            String regex = content
+                .replace(".", "\\.")
+                .replace("*", "[^.]*")
+                .replace("(", "\\(")
+                .replace(")", "\\)")
+                .replace(" ", "\\s+");
+            // .. was replaced by [^.]*[^.]* by the two above steps; collapse to .*
+            regex = regex.replace("[^.]*[^.]*", ".*");
+            return regex;
         }
         
-        return expression.replace("*", ".*").replace("..", ".*");
+        return expression.replace(".", "\\.").replace("*", "[^.]*").replace("..", ".*");
     }
     
     public boolean matches(Class<?> targetClass) {
@@ -44,7 +53,7 @@ public class AspectJExpressionPointcut {
     }
     
     public boolean matches(Class<?> targetClass, Method method) {
-        return matches(targetClass) || matches(method);
+        return matches(targetClass) && matches(method);
     }
     
     public String getExpression() {

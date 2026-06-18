@@ -1,4 +1,4 @@
-package com.rongx.mybatis.plugin;
+package com.lightframework.orm.plugin;
 
 
 public @interface Signature {

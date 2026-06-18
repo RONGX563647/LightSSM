@@ -1,11 +1,11 @@
-package com.rongx.mybatis.builder;
+package com.lightframework.orm.builder;
 
-import com.rongx.mybatis.executor.keygen.KeyGenerator;
-import com.rongx.mybatis.mapping.*;
-import com.rongx.mybatis.reflection.MetaClass;
-import com.rongx.mybatis.scripting.LanguageDriver;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.type.TypeHandler;
+import com.lightframework.orm.executor.keygen.KeyGenerator;
+import com.lightframework.orm.mapping.*;
+import com.lightframework.orm.reflection.MetaClass;
+import com.lightframework.orm.scripting.LanguageDriver;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.type.TypeHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,7 +94,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
             String keyProperty,
             LanguageDriver lang
     ) {
-        // 给id加上namespace前缀：com.rongx.mybatis.test.dao.IUserDao.queryUserInfoById
+        // 给id加上namespace前缀：com.lightframework.orm.test.dao.IUserDao.queryUserInfoById
         id = applyCurrentNamespace(id, false);
 
         MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration, id, sqlCommandType, sqlSource, resultType);
@@ -129,7 +129,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
         }
         /*
          * 通常使用 resultType 即可满足大部分场景
-         * <select id="queryUserInfoById" resultType="com.rongx.mybatis.test.po.User">
+         * <select id="queryUserInfoById" resultType="com.lightframework.orm.test.po.User">
          * 使用 resultType 的情况下，Mybatis 会自动创建一个 ResultMap，基于属性名称映射列到 JavaBean 的属性上。
          */
         else if (resultType != null) {
@@ -145,7 +145,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
 
     // step-13 新增方法
     public ResultMap addResultMap(String id, Class<?> type, List<ResultMapping> resultMappings) {
-        // 补全ID全路径，如：com.rongx.mybatis.test.dao.IActivityDao + activityMap
+        // 补全ID全路径，如：com.lightframework.orm.test.dao.IActivityDao + activityMap
         id = applyCurrentNamespace(id, false);
 
         ResultMap.Builder inlineResultMapBuilder = new ResultMap.Builder(

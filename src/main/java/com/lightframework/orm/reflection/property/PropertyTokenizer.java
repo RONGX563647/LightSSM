@@ -1,4 +1,4 @@
-package com.rongx.mybatis.reflection.property;
+package com.lightframework.orm.reflection.property;
 
 import java.util.Iterator;
 

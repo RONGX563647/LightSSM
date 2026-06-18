@@ -1,8 +1,8 @@
-package com.rongx.mybatis.scripting.xmltags;
+package com.lightframework.orm.scripting.xmltags;
 
-import com.rongx.mybatis.parsing.GenericTokenParser;
-import com.rongx.mybatis.parsing.TokenHandler;
-import com.rongx.mybatis.type.SimpleTypeRegistry;
+import com.lightframework.orm.parsing.GenericTokenParser;
+import com.lightframework.orm.parsing.TokenHandler;
+import com.lightframework.orm.type.SimpleTypeRegistry;
 
 import java.util.regex.Pattern;
 

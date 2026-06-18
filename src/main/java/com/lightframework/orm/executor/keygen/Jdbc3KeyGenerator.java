@@ -1,11 +1,11 @@
-package com.rongx.mybatis.executor.keygen;
+package com.lightframework.orm.executor.keygen;
 
-import com.rongx.mybatis.executor.Executor;
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.reflection.MetaObject;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.type.TypeHandler;
-import com.rongx.mybatis.type.TypeHandlerRegistry;
+import com.lightframework.orm.executor.Executor;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.reflection.MetaObject;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.type.TypeHandler;
+import com.lightframework.orm.type.TypeHandlerRegistry;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;

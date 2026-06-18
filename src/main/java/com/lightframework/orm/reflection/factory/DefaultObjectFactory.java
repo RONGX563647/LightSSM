@@ -1,4 +1,4 @@
-package com.rongx.mybatis.reflection.factory;
+package com.lightframework.orm.reflection.factory;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;

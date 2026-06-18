@@ -1,4 +1,4 @@
-package com.rongx.mybatis.scripting;
+package com.lightframework.orm.scripting;
 
 import java.util.HashMap;
 import java.util.Map;

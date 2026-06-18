@@ -1,10 +1,10 @@
-package com.rongx.mybatis.mapping;
+package com.lightframework.orm.mapping;
 
-import com.rongx.mybatis.executor.keygen.Jdbc3KeyGenerator;
-import com.rongx.mybatis.executor.keygen.KeyGenerator;
-import com.rongx.mybatis.executor.keygen.NoKeyGenerator;
-import com.rongx.mybatis.scripting.LanguageDriver;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.executor.keygen.Jdbc3KeyGenerator;
+import com.lightframework.orm.executor.keygen.KeyGenerator;
+import com.lightframework.orm.executor.keygen.NoKeyGenerator;
+import com.lightframework.orm.scripting.LanguageDriver;
+import com.lightframework.orm.session.Configuration;
 
 import java.util.Collections;
 import java.util.List;

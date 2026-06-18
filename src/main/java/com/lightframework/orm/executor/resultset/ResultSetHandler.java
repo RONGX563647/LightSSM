@@ -1,4 +1,4 @@
-package com.rongx.mybatis.executor.resultset;
+package com.lightframework.orm.executor.resultset;
 
 import java.sql.SQLException;
 import java.sql.Statement;

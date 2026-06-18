@@ -1,8 +1,8 @@
-package com.rongx.mybatis.executor.result;
+package com.lightframework.orm.executor.result;
 
-import com.rongx.mybatis.reflection.factory.ObjectFactory;
-import com.rongx.mybatis.session.ResultContext;
-import com.rongx.mybatis.session.ResultHandler;
+import com.lightframework.orm.reflection.factory.ObjectFactory;
+import com.lightframework.orm.session.ResultContext;
+import com.lightframework.orm.session.ResultHandler;
 
 import java.util.ArrayList;
 import java.util.List;

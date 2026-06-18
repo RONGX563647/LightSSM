@@ -1,4 +1,4 @@
-package com.rongx.mybatis.scripting.xmltags;
+package com.lightframework.orm.scripting.xmltags;
 
 
 public interface SqlNode {

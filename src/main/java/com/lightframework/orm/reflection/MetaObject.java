@@ -1,8 +1,8 @@
-package com.rongx.mybatis.reflection;
+package com.lightframework.orm.reflection;
 
-import com.rongx.mybatis.reflection.factory.ObjectFactory;
-import com.rongx.mybatis.reflection.property.PropertyTokenizer;
-import com.rongx.mybatis.reflection.wrapper.*;
+import com.lightframework.orm.reflection.factory.ObjectFactory;
+import com.lightframework.orm.reflection.property.PropertyTokenizer;
+import com.lightframework.orm.reflection.wrapper.*;
 
 import java.util.Collection;
 import java.util.List;

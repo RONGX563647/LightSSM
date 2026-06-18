@@ -1,15 +1,15 @@
-package com.rongx.mybatis.builder.xml;
+package com.lightframework.orm.builder.xml;
 
-import com.rongx.mybatis.builder.BaseBuilder;
-import com.rongx.mybatis.datasource.DataSourceFactory;
-import com.rongx.mybatis.io.Resources;
-import com.rongx.mybatis.mapping.BoundSql;
-import com.rongx.mybatis.mapping.Environment;
-import com.rongx.mybatis.mapping.MappedStatement;
-import com.rongx.mybatis.mapping.SqlCommandType;
-import com.rongx.mybatis.plugin.Interceptor;
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.transaction.TransactionFactory;
+import com.lightframework.orm.builder.BaseBuilder;
+import com.lightframework.orm.datasource.DataSourceFactory;
+import com.lightframework.orm.io.Resources;
+import com.lightframework.orm.mapping.BoundSql;
+import com.lightframework.orm.mapping.Environment;
+import com.lightframework.orm.mapping.MappedStatement;
+import com.lightframework.orm.mapping.SqlCommandType;
+import com.lightframework.orm.plugin.Interceptor;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.transaction.TransactionFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -62,7 +62,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     /**
      * Mybatis 允许你在某一点切入映射语句执行的调度
      * <plugins>
-     * <plugin interceptor="com.rongx.mybatis.test.plugin.TestPlugin">
+     * <plugin interceptor="com.lightframework.orm.test.plugin.TestPlugin">
      * <property name="test00" value="100"/>
      * <property name="test01" value="100"/>
      * </plugin>
@@ -80,7 +80,7 @@ public class XMLConfigBuilder extends BaseBuilder {
             for (Element property : propertyElementList) {
                 properties.setProperty(property.attributeValue("name"), property.attributeValue("value"));
             }
-            // 获取插件实现类并实例化：com.rongx.mybatis.test.plugin.TestPlugin
+            // 获取插件实现类并实例化：com.lightframework.orm.test.plugin.TestPlugin
             Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).newInstance();
             interceptorInstance.setProperties(properties);
             configuration.addInterceptor(interceptorInstance);
@@ -141,7 +141,7 @@ public class XMLConfigBuilder extends BaseBuilder {
      *	 <mapper resource="org/mybatis/builder/BlogMapper.xml"/>
      *	 <mapper resource="org/mybatis/builder/PostMapper.xml"/>
      *
-     *   <mapper class="com.rongx.mybatis.test.dao.IUserDao"/>
+     *   <mapper class="com.lightframework.orm.test.dao.IUserDao"/>
      * </mappers>
      */
     private void mapperElement(Element mappers) throws Exception {

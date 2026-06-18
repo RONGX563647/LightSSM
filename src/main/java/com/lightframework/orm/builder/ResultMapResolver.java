@@ -1,7 +1,7 @@
-package com.rongx.mybatis.builder;
+package com.lightframework.orm.builder;
 
-import com.rongx.mybatis.mapping.ResultMap;
-import com.rongx.mybatis.mapping.ResultMapping;
+import com.lightframework.orm.mapping.ResultMap;
+import com.lightframework.orm.mapping.ResultMapping;
 
 import java.util.List;
 

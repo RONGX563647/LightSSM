@@ -1,7 +1,7 @@
-package com.rongx.mybatis.type;
+package com.lightframework.orm.type;
 
-import com.rongx.mybatis.io.Resources;
-import com.rongx.mybatis.session.Configuration;
+import com.lightframework.orm.io.Resources;
+import com.lightframework.orm.session.Configuration;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;

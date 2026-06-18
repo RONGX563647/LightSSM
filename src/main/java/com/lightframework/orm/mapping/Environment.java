@@ -1,6 +1,6 @@
-package com.rongx.mybatis.mapping;
+package com.lightframework.orm.mapping;
 
-import com.rongx.mybatis.transaction.TransactionFactory;
+import com.lightframework.orm.transaction.TransactionFactory;
 
 import javax.sql.DataSource;
 

@@ -1,9 +1,32 @@
 package com.lightframework.ioc.test;
 
+import com.lightframework.ioc.annotation.Autowired;
+import com.lightframework.ioc.annotation.Component;
 import com.lightframework.ioc.beans.BeanDefinition;
+import com.lightframework.ioc.context.AnnotationConfigApplicationContext;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+@Component
+class CircularA {
+    @Autowired
+    private CircularB b;
+
+    public CircularB getB() {
+        return b;
+    }
+}
+
+@Component
+class CircularB {
+    @Autowired
+    private CircularA a;
+
+    public CircularA getA() {
+        return a;
+    }
+}
 
 public class IoCTest {
     
@@ -161,5 +184,15 @@ public class IoCTest {
         
         String[] names = factory.getBeanDefinitionNames();
         assertEquals(2, names.length);
+    }
+    
+    @Test
+    public void testCircularDependency() throws Exception {
+        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(
+            CircularA.class, CircularB.class);
+        CircularA a = ctx.getBean(CircularA.class);
+        assertNotNull(a);
+        assertNotNull(a.getB());
+        assertSame(a, a.getB().getA());
     }
 }

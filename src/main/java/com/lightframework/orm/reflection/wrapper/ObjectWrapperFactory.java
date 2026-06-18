@@ -1,6 +1,6 @@
-package com.rongx.mybatis.reflection.wrapper;
+package com.lightframework.orm.reflection.wrapper;
 
-import com.rongx.mybatis.reflection.MetaObject;
+import com.lightframework.orm.reflection.MetaObject;
 
 
 public interface ObjectWrapperFactory {

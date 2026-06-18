@@ -1,4 +1,4 @@
-package com.rongx.mybatis.session;
+package com.lightframework.orm.session;
 
 
 public interface ResultHandler {

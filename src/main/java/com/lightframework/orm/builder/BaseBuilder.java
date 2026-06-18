@@ -1,9 +1,9 @@
-package com.rongx.mybatis.builder;
+package com.lightframework.orm.builder;
 
-import com.rongx.mybatis.session.Configuration;
-import com.rongx.mybatis.type.TypeAliasRegistry;
-import com.rongx.mybatis.type.TypeHandler;
-import com.rongx.mybatis.type.TypeHandlerRegistry;
+import com.lightframework.orm.session.Configuration;
+import com.lightframework.orm.type.TypeAliasRegistry;
+import com.lightframework.orm.type.TypeHandler;
+import com.lightframework.orm.type.TypeHandlerRegistry;
 
 public abstract class BaseBuilder {
 

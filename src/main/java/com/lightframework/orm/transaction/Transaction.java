@@ -1,4 +1,4 @@
-package com.rongx.mybatis.transaction;
+package com.lightframework.orm.transaction;
 
 import java.sql.Connection;
 import java.sql.SQLException;
