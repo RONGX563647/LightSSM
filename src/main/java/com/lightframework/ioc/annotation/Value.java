@@ -16,7 +16,9 @@ import java.lang.annotation.*;
  * {@literal @}Value("${app.port:8080}")
  * private int port;
  * </pre>
+ * @deprecated 移到了 {@link com.lightframework.di.annotation.Value}
  */
+@Deprecated
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

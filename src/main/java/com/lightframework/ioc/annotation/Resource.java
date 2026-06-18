@@ -2,6 +2,10 @@ package com.lightframework.ioc.annotation;
 
 import java.lang.annotation.*;
 
+/**
+ * @deprecated 移到了 {@link com.lightframework.di.annotation.Resource}
+ */
+@Deprecated
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

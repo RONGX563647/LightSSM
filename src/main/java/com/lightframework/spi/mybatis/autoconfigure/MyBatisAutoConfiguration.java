@@ -1,6 +1,6 @@
 package com.lightframework.spi.mybatis.autoconfigure;
 
-import com.lightframework.ioc.annotation.*;
+import com.lightframework.di.annotation.*;
 import com.lightframework.spi.annotation.ConditionalOnClass;
 import com.lightframework.spi.annotation.ConditionalOnMissingBean;
 import com.lightframework.spi.mybatis.MapperScannerConfigurer;

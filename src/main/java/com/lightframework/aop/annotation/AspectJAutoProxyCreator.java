@@ -11,7 +11,7 @@ import com.lightframework.aop.interceptor.AroundMethodInterceptor;
 import com.lightframework.aop.interceptor.BeforeMethodInterceptor;
 import com.lightframework.aop.core.MethodInterceptor;
 import com.lightframework.aop.pointcut.AspectJExpressionPointcut;
-import com.lightframework.ioc.annotation.Component;
+import com.lightframework.di.annotation.Component;
 import com.lightframework.ioc.core.BeanPostProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

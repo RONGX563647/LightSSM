@@ -1,6 +1,6 @@
 package com.lightframework.spi.mybatis;
 
-import com.lightframework.ioc.annotation.Autowired;
+import com.lightframework.di.annotation.Autowired;
 import com.lightframework.ioc.core.FactoryBean;
 import com.lightframework.ioc.core.InitializingBean;
 import org.slf4j.Logger;

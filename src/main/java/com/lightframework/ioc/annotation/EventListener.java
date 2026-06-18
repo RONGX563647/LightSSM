@@ -12,7 +12,9 @@ import java.lang.annotation.Target;
  * Annotation that marks a method as an event listener.
  * Similar to Spring Framework's @EventListener annotation.
  * The annotated method will be invoked when a matching event is published.
+ * @deprecated 移到了 {@link com.lightframework.di.annotation.EventListener}
  */
+@Deprecated
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

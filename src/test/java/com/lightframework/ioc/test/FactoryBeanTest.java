@@ -1,7 +1,7 @@
 package com.lightframework.ioc.test;
 
-import com.lightframework.ioc.annotation.Autowired;
-import com.lightframework.ioc.annotation.Component;
+import com.lightframework.di.annotation.Autowired;
+import com.lightframework.di.annotation.Component;
 import com.lightframework.ioc.beans.BeanDefinition;
 import com.lightframework.ioc.core.FactoryBean;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;

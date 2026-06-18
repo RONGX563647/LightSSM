@@ -1,6 +1,6 @@
 package com.lightframework.spi.mybatis.autoconfigure;
 
-import com.lightframework.ioc.annotation.Component;
+import com.lightframework.di.annotation.Component;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;
 import com.lightframework.ioc.core.ImportBeanDefinitionRegistrar;
 import com.lightframework.spi.mybatis.MapperScannerConfigurer;

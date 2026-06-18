@@ -1,6 +1,6 @@
 package com.lightframework.spi.mybatis.annotation;
 
-import com.lightframework.ioc.annotation.Import;
+import com.lightframework.di.annotation.Import;
 import com.lightframework.spi.mybatis.autoconfigure.MapperScanRegistrar;
 
 import java.lang.annotation.*;

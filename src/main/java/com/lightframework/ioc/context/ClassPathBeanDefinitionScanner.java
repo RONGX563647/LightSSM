@@ -1,12 +1,12 @@
 package com.lightframework.ioc.context;
 
-import com.lightframework.ioc.annotation.Component;
-import com.lightframework.ioc.annotation.DependsOn;
-import com.lightframework.ioc.annotation.Lazy;
-import com.lightframework.ioc.annotation.Primary;
-import com.lightframework.ioc.annotation.Profile;
-import com.lightframework.ioc.annotation.Qualifier;
-import com.lightframework.ioc.annotation.Scope;
+import com.lightframework.di.annotation.Component;
+import com.lightframework.di.annotation.DependsOn;
+import com.lightframework.di.annotation.Lazy;
+import com.lightframework.di.annotation.Primary;
+import com.lightframework.di.annotation.Profile;
+import com.lightframework.di.annotation.Qualifier;
+import com.lightframework.di.annotation.Scope;
 import com.lightframework.ioc.beans.BeanDefinition;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;
 import com.lightframework.ioc.core.Environment;
@@ -232,13 +232,13 @@ public class ClassPathBeanDefinitionScanner {
      */
     private boolean hasComponentAnnotation(byte[] classBytes) {
         // 先检查 @Component
-        if (scanAnnotationWithAsm(classBytes, "Lcom/lightframework/ioc/annotation/Component;")) {
+        if (scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Component;")) {
             return true;
         }
         // 检查派生注解（@Service, @Repository, @Controller 等）
-        return scanAnnotationWithAsm(classBytes, "Lcom/lightframework/ioc/annotation/Service;")
-            || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/ioc/annotation/Repository;")
-            || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/ioc/annotation/Controller;");
+        return scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Service;")
+            || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Repository;")
+            || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Controller;");
     }
 
     /**

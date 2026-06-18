@@ -1,7 +1,7 @@
 package com.lightframework.ioc.test;
 
-import com.lightframework.ioc.annotation.Component;
-import com.lightframework.ioc.annotation.Import;
+import com.lightframework.di.annotation.Component;
+import com.lightframework.di.annotation.Import;
 import com.lightframework.ioc.beans.BeanDefinition;
 import com.lightframework.ioc.context.AnnotationConfigApplicationContext;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;

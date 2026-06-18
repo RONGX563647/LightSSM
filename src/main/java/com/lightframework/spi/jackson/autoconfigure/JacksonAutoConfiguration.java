@@ -1,7 +1,7 @@
 package com.lightframework.spi.jackson.autoconfigure;
 
-import com.lightframework.ioc.annotation.Bean;
-import com.lightframework.ioc.annotation.Configuration;
+import com.lightframework.di.annotation.Bean;
+import com.lightframework.di.annotation.Configuration;
 import com.lightframework.spi.annotation.ConditionalOnClass;
 import com.lightframework.spi.annotation.ConditionalOnMissingBean;
 import com.lightframework.spi.jackson.JacksonSerializer;

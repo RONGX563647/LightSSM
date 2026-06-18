@@ -1,17 +1,17 @@
 package com.lightframework.ioc.context;
 
-import com.lightframework.ioc.annotation.Autowired;
-import com.lightframework.ioc.annotation.Bean;
-import com.lightframework.ioc.annotation.Component;
-import com.lightframework.ioc.annotation.Configuration;
-import com.lightframework.ioc.annotation.DependsOn;
+import com.lightframework.di.annotation.Autowired;
+import com.lightframework.di.annotation.Bean;
+import com.lightframework.di.annotation.Component;
+import com.lightframework.di.annotation.Configuration;
+import com.lightframework.di.annotation.DependsOn;
 import com.lightframework.ioc.annotation.EventListener;
-import com.lightframework.ioc.annotation.Import;
-import com.lightframework.ioc.annotation.Lazy;
-import com.lightframework.ioc.annotation.Primary;
-import com.lightframework.ioc.annotation.Profile;
-import com.lightframework.ioc.annotation.Qualifier;
-import com.lightframework.ioc.annotation.Scope;
+import com.lightframework.di.annotation.Import;
+import com.lightframework.di.annotation.Lazy;
+import com.lightframework.di.annotation.Primary;
+import com.lightframework.di.annotation.Profile;
+import com.lightframework.di.annotation.Qualifier;
+import com.lightframework.di.annotation.Scope;
 import com.lightframework.ioc.beans.BeanDefinition;
 import com.lightframework.ioc.core.BeanFactoryPostProcessor;
 import com.lightframework.ioc.core.BeanPostProcessor;
@@ -20,6 +20,8 @@ import com.lightframework.ioc.core.Environment;
 import com.lightframework.ioc.core.ImportBeanDefinitionRegistrar;
 import com.lightframework.ioc.core.ImportSelector;
 import com.lightframework.ioc.core.StandardEnvironment;
+import com.lightframework.ioc.core.health.HealthCheckResult;
+import com.lightframework.ioc.core.health.IoCHealthChecker;
 import com.lightframework.ioc.event.ApplicationEvent;
 import com.lightframework.ioc.event.ApplicationEventPublisher;
 import com.lightframework.ioc.event.ContextClosedEvent;
@@ -94,9 +96,13 @@ public class AnnotationConfigApplicationContext implements ApplicationContext, A
         this.startupDate = System.currentTimeMillis();
         this.active = true;
         
+        // 1. 注册 BeanDefinition
         registerBeanDefinitions();
         
-        // ★ SPI: 扫描 META-INF/lightssm.spi 自动配置
+        // ★ 运行前健康检查 — 循环依赖检测与自动修复
+        runIoCHealthCheck();
+        
+        // 2. SPI: 扫描 META-INF/lightssm.spi 自动配置
         discoverSpiAutoConfigurations();
         
         // 将 ApplicationContext 设置到 BeanFactory，用于 ApplicationContextAware 接口
@@ -121,6 +127,28 @@ public class AnnotationConfigApplicationContext implements ApplicationContext, A
         
         logger.info("ApplicationContext refreshed successfully, {} beans instantiated", 
             this.beanFactory.getBeanDefinitionCount());
+    }
+    
+    /**
+     * ★ 运行前健康检查 — 循环依赖检测与自动修复
+     */
+    private void runIoCHealthCheck() {
+        try {
+            HealthCheckResult result = IoCHealthChecker.run(this.beanFactory);
+            if (!result.healthy()) {
+                // 构造器循环未修复 → 抛出异常阻止启动
+                if (result.hasUnfixedConstructorCycles()) {
+                    throw new IllegalStateException(result.toReportString());
+                }
+                logger.warn(result.toReportString());
+            } else if (result.autoFixedCount() > 0) {
+                logger.info(result.toReportString());
+            }
+        } catch (IllegalStateException e) {
+            throw e; // 致命错误，向上传播
+        } catch (Exception e) {
+            logger.warn("IoC health check failed (non-fatal): {}", e.getMessage());
+        }
     }
     
     protected void registerBeanDefinitions() throws Exception {

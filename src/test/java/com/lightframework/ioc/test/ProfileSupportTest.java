@@ -1,7 +1,7 @@
 package com.lightframework.ioc.test;
 
-import com.lightframework.ioc.annotation.Component;
-import com.lightframework.ioc.annotation.Profile;
+import com.lightframework.di.annotation.Component;
+import com.lightframework.di.annotation.Profile;
 import com.lightframework.ioc.context.AnnotationConfigApplicationContext;
 import com.lightframework.ioc.core.Environment;
 import com.lightframework.ioc.core.StandardEnvironment;

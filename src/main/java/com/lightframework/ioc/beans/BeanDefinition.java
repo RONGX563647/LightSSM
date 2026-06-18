@@ -9,13 +9,19 @@ public class BeanDefinition {
     private static final byte FLAG_SINGLETON = 0x01;
     private static final byte FLAG_PRIMARY   = 0x02;
     private static final byte FLAG_LAZY_INIT = 0x04;
+    // Custom scope flag: when set, scopeName field holds the custom scope name
+    private static final byte FLAG_CUSTOM_SCOPE = 0x08;
 
     // 共享空数组常量，避免重复分配
     private static final String[] EMPTY_DEPENDS_ON = new String[0];
+    // 共享空字符串常量
+    private static final String EMPTY_STRING = "";
 
     private String beanName;
     private Class<?> beanClass;
     private byte flags = FLAG_SINGLETON;
+    // Custom scope name (only meaningful when FLAG_CUSTOM_SCOPE is set)
+    private String scopeName = EMPTY_STRING;
     private String[] dependsOn = EMPTY_DEPENDS_ON;
     private String qualifier;
     private String factoryMethodName;
@@ -48,23 +54,57 @@ public class BeanDefinition {
     }
 
     public String getScope() {
+        if (isCustomScope()) {
+            return scopeName;
+        }
         return isSingleton() ? "singleton" : "prototype";
     }
 
     public void setScope(String scope) {
-        if ("singleton".equals(scope)) {
-            flags |= FLAG_SINGLETON;
-        } else {
-            flags &= ~FLAG_SINGLETON;
+        if (scope == null || scope.isEmpty()) {
+            scope = "singleton";
+        }
+        // Check if it's a built-in scope
+        switch (scope) {
+            case "singleton":
+                flags |= FLAG_SINGLETON;
+                flags &= ~FLAG_CUSTOM_SCOPE;
+                scopeName = EMPTY_STRING;
+                break;
+            case "prototype":
+                flags &= ~FLAG_SINGLETON;
+                flags &= ~FLAG_CUSTOM_SCOPE;
+                scopeName = EMPTY_STRING;
+                break;
+            default:
+                // Custom scope (request, session, application, or user-defined)
+                flags &= ~FLAG_SINGLETON; // Custom scopes are never singleton
+                flags |= FLAG_CUSTOM_SCOPE;
+                scopeName = scope.intern(); // String pooling for faster comparison
+                break;
         }
     }
 
+    /**
+     * 检查是否为自定义作用域
+     */
+    public boolean isCustomScope() {
+        return (flags & FLAG_CUSTOM_SCOPE) != 0;
+    }
+
+    /**
+     * 获取原始作用域名称（不进行自定义/内置转换）
+     */
+    public String getScopeName() {
+        return scopeName;
+    }
+
     public boolean isSingleton() {
-        return (flags & FLAG_SINGLETON) != 0;
+        return !isCustomScope() && (flags & FLAG_SINGLETON) != 0;
     }
 
     public boolean isPrototype() {
-        return (flags & FLAG_SINGLETON) == 0;
+        return !isCustomScope() && (flags & FLAG_SINGLETON) == 0;
     }
 
     public boolean isPrimary() {

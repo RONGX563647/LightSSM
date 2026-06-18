@@ -1,9 +1,9 @@
 package com.lightframework.ioc.test;
 
-import com.lightframework.ioc.annotation.Autowired;
-import com.lightframework.ioc.annotation.Component;
-import com.lightframework.ioc.annotation.Primary;
-import com.lightframework.ioc.annotation.Scope;
+import com.lightframework.di.annotation.Autowired;
+import com.lightframework.di.annotation.Component;
+import com.lightframework.di.annotation.Primary;
+import com.lightframework.di.annotation.Scope;
 import com.lightframework.ioc.beans.BeanDefinition;
 import com.lightframework.ioc.context.AnnotationConfigApplicationContext;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;

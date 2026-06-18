@@ -1,6 +1,6 @@
 package com.lightframework.ioc.context;
 
-import com.lightframework.ioc.annotation.Value;
+import com.lightframework.di.annotation.Value;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;
 import com.lightframework.ioc.core.PropertyPlaceholderConfigurer;
 import java.lang.reflect.Field;

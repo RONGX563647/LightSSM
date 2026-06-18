@@ -1,6 +1,6 @@
 package com.lightframework.ioc.context;
 
-import com.lightframework.ioc.annotation.Autowired;
+import com.lightframework.di.annotation.Autowired;
 import com.lightframework.ioc.beans.BeanDefinition;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;
 

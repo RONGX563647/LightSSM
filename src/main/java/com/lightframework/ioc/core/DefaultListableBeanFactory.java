@@ -1,10 +1,11 @@
 package com.lightframework.ioc.core;
 
-import com.lightframework.ioc.annotation.Autowired;
-import com.lightframework.ioc.annotation.Lazy;
-import com.lightframework.ioc.annotation.Qualifier;
-import com.lightframework.ioc.annotation.Resource;
-import com.lightframework.ioc.annotation.Value;
+import com.lightframework.di.core.AnnotationInjectEntry;
+import com.lightframework.di.annotation.Autowired;
+import com.lightframework.di.annotation.Lazy;
+import com.lightframework.di.annotation.Qualifier;
+import com.lightframework.di.annotation.Resource;
+import com.lightframework.di.annotation.Value;
 import com.lightframework.ioc.beans.BeanDefinition;
 import com.lightframework.ioc.context.ApplicationContext;
 import com.lightframework.ioc.event.ApplicationEvent;
@@ -12,6 +13,9 @@ import com.lightframework.ioc.event.ApplicationEventPublisher;
 import com.lightframework.ioc.exception.BeanCreationException;
 import com.lightframework.ioc.exception.BeanCurrentlyInCreationException;
 import com.lightframework.ioc.exception.NoSuchBeanDefinitionException;
+import com.lightframework.ioc.scope.Scope;
+import com.lightframework.ioc.scope.ScopeRegistry;
+import com.lightframework.ioc.scope.WebScopeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +44,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.BitSet;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -70,14 +73,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
 
 
     // 注解元数据缓存：合并所有注入注解（@Autowired, @Resource, @Value）的字段和方法收集（包括父类）
-    // 使用 LRU 缓存避免无限增长（最多 512 个类）
-    private final Map<Class<?>, AnnotationMetadata> cachedAnnotationMetadata = 
-        Collections.synchronizedMap(new java.util.LinkedHashMap<Class<?>, AnnotationMetadata>(512, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(java.util.Map.Entry<Class<?>, AnnotationMetadata> eldest) {
-                return size() > 512;
-            }
-        });
+    // 使用 ConcurrentHashMap 替换旧版 synchronized LRU — 无锁读 + CAS computeIfAbsent
+    private final Map<Class<?>, AnnotationMetadata> cachedAnnotationMetadata = new ConcurrentHashMap<>(512);
 
     // SPI: 缓存每个类的 setter 方法，用于 applyPropertyValues
     private final Map<Class<?>, Map<String, java.lang.reflect.Method>> cachedSetterMethods = new ConcurrentHashMap<>(64);
@@ -118,10 +115,27 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     private final FastBeanLookup fastBeanLookup = new FastBeanLookup();
     private final DefaultTypeConverter typeConverter = new DefaultTypeConverter();
     private final BeanLifecycleManager lifecycleManager = new BeanLifecycleManager();
+    
+    // 作用域注册表（支持自定义作用域扩展）
+    private ScopeRegistry scopeRegistry = new ScopeRegistry();
     private InjectionEngine injectionEngine;
 
     public void setInjectionEngine(InjectionEngine injectionEngine) {
         this.injectionEngine = injectionEngine;
+    }
+    
+    /**
+     * 获取作用域注册表
+     */
+    public ScopeRegistry getScopeRegistry() {
+        return scopeRegistry;
+    }
+    
+    /**
+     * 设置作用域注册表（用于注入自定义作用域）
+     */
+    public void setScopeRegistry(ScopeRegistry scopeRegistry) {
+        this.scopeRegistry = scopeRegistry;
     }
 
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
@@ -302,6 +316,17 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         String actualName = name.startsWith(FACTORY_BEAN_PREFIX) ? name.substring(1) : name;
         String resolved = resolveAlias(actualName);
         return singletonCache.isBeanCreated(resolved) || this.beanDefinitionMap.containsKey(resolved);
+    }
+
+    /**
+     * 检查指定类型是否匹配某个 bean — 供健康检查使用。
+     */
+    public boolean isTypeMatch(Class<?> type, String beanName) {
+        BeanDefinition bd = this.beanDefinitionMap.get(resolveAlias(beanName));
+        if (bd != null && bd.getBeanClass() != null) {
+            return type.isAssignableFrom(bd.getBeanClass());
+        }
+        return false;
     }
 
     @Override
@@ -502,6 +527,40 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
             return requiredType != null ? requiredType.cast(instance) : (T) instance;
         }
 
+        // 处理自定义作用域（request, session, application 等）
+        if (bd.isCustomScope()) {
+            String scopeName = bd.getScopeName();
+            Scope scope = scopeRegistry.getScope(scopeName);
+            if (scope == null) {
+                throw new NoSuchBeanDefinitionException(
+                    "No scope registered for scope name '" + scopeName + "'. " +
+                    "Available scopes: " + scopeRegistry.getScopeNames() + ". " +
+                    "Did you forget to register the scope?");
+            }
+            
+            // 使用 Scope 接口获取 Bean（内部会缓存或创建新实例）
+            Object scopedBean = scope.get(beanName, () -> {
+                Object bean = createBean(beanName, bd);
+                // 注册销毁回调（如果 BeanDefinition 指定了 destroy 方法）
+                if (bd.getDestroyMethodName() != null || bd.getBeanClass().isAnnotationPresent(PreDestroy.class)) {
+                    scope.registerDestructionCallback(beanName, () -> {
+                        try {
+                            lifecycleManager.invokeDestroyMethods(beanName, bean, bd);
+                        } catch (Exception e) {
+                            logger.warn("Failed to destroy scoped bean '{}': {}", beanName, e.getMessage());
+                        }
+                    });
+                }
+                return bean;
+            });
+            
+            // FactoryBean 处理
+            if (FactoryBean.class.isAssignableFrom(bd.getBeanClass())) {
+                return getFactoryBeanObjectFromInstance(beanName, scopedBean, requiredType);
+            }
+            return requiredType != null ? requiredType.cast(scopedBean) : (T) scopedBean;
+        }
+
         if (bd.isSingleton()) {
             Object sharedInstance = getSingleton(beanName);
             if (sharedInstance == null) {
@@ -538,19 +597,17 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     protected <T> T getFactoryBeanObject(String beanName, FactoryBean<?> factory, Class<T> requiredType) throws Exception {
         Object cachedObject;
         if (factory.isSingleton()) {
-            // 单例模式：从缓存中获取，如果不存在则创建并缓存
             cachedObject = this.factoryBeanObjectCache.get(beanName);
             if (cachedObject == null) {
                 cachedObject = factory.getObject();
                 if (cachedObject != null) {
-                    // 对 FactoryBean 创建的对象也应用生命周期回调
-                    cachedObject = initializeBean(beanName + "_$factoryBean", cachedObject, 
+                    cachedObject = initializeBean(beanName + "_$factoryBean", cachedObject,
                             new BeanDefinition(beanName, cachedObject.getClass()));
                     this.factoryBeanObjectCache.put(beanName, cachedObject);
+                    indexTypeRecursive(cachedObject.getClass(), beanName);
                 }
             }
         } else {
-            // 原型模式：每次创建新对象
             cachedObject = factory.getObject();
             if (cachedObject != null) {
                 cachedObject = initializeBean(beanName + "_$factoryBean", cachedObject,
@@ -668,6 +725,10 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
             if (ctor != null) {
                 Class<?>[] paramTypes = ctor.getParameterTypes();
                 Object[] args = new Object[paramTypes.length];
+
+                // ★ 检查健康检查标记的 @Lazy 构造器参数
+                Integer healthLazyParam = (Integer) bd.getPropertyValue("lazyConstructorParams");
+
                 for (int i = 0; i < paramTypes.length; i++) {
                     String qualifier = null;
                     boolean isLazy = false;
@@ -679,8 +740,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
                             isLazy = ((Lazy) ann).value();
                         }
                     }
-                    // 支持构造器参数 @Lazy
-                    if (isLazy) {
+                    // ★ 支持构造器参数 @Lazy（显式注解 或 健康检查自动修复）
+                    if (isLazy || (healthLazyParam != null && i == healthLazyParam)) {
                         args[i] = createLazyProxy(paramTypes[i], qualifier);
                         if (args[i] == null) {
                             args[i] = resolveDependency(paramTypes[i], null, qualifier, true);
@@ -775,179 +836,172 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
             metadata = cachedAnnotationMetadata.computeIfAbsent(beanClass, clazz -> {
                 AnnotationMetadata m = new AnnotationMetadata();
                 resolveAnnotationMetadata(clazz, m);
-                m.buildFieldIndex();
                 return m;
             });
         }
 
-        Map<Object, Integer> fieldIdx = metadata.fieldIndex;
-        BitSet injectedFieldBits = new BitSet(64);
-        BitSet injectedMethodBits = new BitSet(64);
-
         // 使用统一的注入引擎处理所有注解注入
         if (injectionEngine != null) {
-            injectionEngine.injectAll(beanName, bean, metadata, fieldIdx, injectedFieldBits, injectedMethodBits);
+            injectionEngine.injectAll(beanName, bean, metadata);
         } else {
             // 回退到内联注入逻辑（单元测试场景）
-            injectResourceFields(beanName, bean, metadata, fieldIdx, injectedFieldBits);
-            injectResourceMethods(beanName, bean, metadata, fieldIdx, injectedMethodBits);
-            injectAutowiredFields(beanName, bean, metadata, fieldIdx, injectedFieldBits);
-            injectAutowiredMethods(beanName, bean, metadata, fieldIdx, injectedMethodBits);
+            injectResourceFields(beanName, bean, metadata);
+            injectResourceMethods(beanName, bean, metadata);
+            injectAutowiredFields(beanName, bean, metadata);
+            injectAutowiredMethods(beanName, bean, metadata);
             if (propertyPlaceholderConfigurer != null) {
                 injectValueFields(beanName, bean, metadata);
             }
         }
     }
 
-    private void injectResourceFields(String beanName, Object bean, AnnotationMetadata metadata,
-                                        java.util.Map<Object, Integer> fieldIdx, BitSet injectedFieldBits) throws Exception {
-        for (int i = 0; i < metadata.resourceFields.size(); i++) {
-            Field field = metadata.resourceFields.get(i);
-            AnnotationInjectEntry entry = i < metadata.resourceEntries.size() ? metadata.resourceEntries.get(i) : null;
-            Resource resource = field.getAnnotation(Resource.class);
-            if (resource == null) continue;
+    private void injectResourceFields(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+        int size = metadata.resourceFields.size();
+        if (size == 0) return;
+        boolean debugEnabled = logger.isDebugEnabled();
+        for (int i = 0; i < size; i++) {
+            AnnotationInjectEntry entry = metadata.resourceEntries.get(i);
+            // ★ 跨注解去重：如果该字段已被 @Autowired 或 @Resource 注入过，跳过
+            if (metadata.isFieldInjected(entry.field)) continue;
 
-            Lazy lazy = field.getAnnotation(Lazy.class);
-            if (lazy != null && lazy.value()) {
-                String name = resource.name().isEmpty() ? field.getName() : resource.name();
-                Class<?> type = resource.type() == Object.class ? field.getType() : resource.type();
-                Object lazyProxy = createLazyProxy(type, name);
-                if (lazyProxy != null) {
-                    if (entry != null) entry.injector.inject(bean, lazyProxy);
-                    else { field.setAccessible(true); field.set(bean, lazyProxy); }
-                    Integer bit = fieldIdx.get(field);
-                    if (bit != null) injectedFieldBits.set(bit);
-                    if (logger.isDebugEnabled()) logger.debug("@Lazy @Resource injected field {} in bean {}", field.getName(), beanName);
-                    continue;
-                }
-            }
-
-            String name = resource.name().isEmpty() ? field.getName() : resource.name();
-            Class<?> type = resource.type() == Object.class ? field.getType() : resource.type();
             Object dependency;
-            try {
-                if (containsBean(name)) {
-                    dependency = getBean(name, type);
-                } else {
-                    dependency = getBean(type);
+            // ★ 预计算的 lazyProxy 直接使用，零运行时反射
+            if (entry.lazyProxy != null) {
+                dependency = entry.lazyProxy;
+            } else {
+                // ★ 预计算的 name 和 type 直接使用
+                String name = entry.resourceName;
+                Class<?> type = entry.type;
+                try {
+                    if (containsBean(name)) {
+                        dependency = getBean(name, type);
+                    } else {
+                        dependency = getBean(type);
+                    }
+                } catch (NoSuchBeanDefinitionException e) {
+                    throw new BeanCreationException(beanName,
+                        "Required dependency not found for @Resource field: " + entry.fieldName +
+                        " (name='" + name + "', type=" + type.getSimpleName() + ")", e);
                 }
-            } catch (NoSuchBeanDefinitionException e) {
-                throw new BeanCreationException(beanName,
-                    "Required dependency not found for @Resource field: " + field.getName() +
-                    " (name='" + name + "', type=" + type.getSimpleName() + ")", e);
             }
 
             if (dependency != null) {
-                if (entry != null) entry.injector.inject(bean, dependency);
-                else { field.setAccessible(true); field.set(bean, dependency); }
-                Integer bit = fieldIdx.get(field);
-                if (bit != null) injectedFieldBits.set(bit);
-                if (logger.isDebugEnabled()) logger.debug("@Resource injected field {} in bean {}", field.getName(), beanName);
+                entry.injector.inject(bean, dependency);
+                metadata.markFieldInjected(entry.field);
+                if (debugEnabled) logger.debug("@Resource injected field {} in bean {}", entry.fieldName, beanName);
             } else {
-                throw new BeanCreationException(beanName, "Required dependency not found for @Resource field: " + field.getName());
+                throw new BeanCreationException(beanName, "Required dependency not found for @Resource field: " + entry.fieldName);
             }
         }
     }
 
-    private void injectResourceMethods(String beanName, Object bean, AnnotationMetadata metadata,
-                                        java.util.Map<Object, Integer> fieldIdx, BitSet injectedMethodBits) throws Exception {
-        for (Method method : metadata.resourceMethods) {
-            Resource resource = method.getAnnotation(Resource.class);
-            if (resource == null || method.getParameterCount() != 1) continue;
+    private void injectResourceMethods(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+        int methodCount = metadata.resourceMethods.size();
+        if (methodCount == 0) return;
+        boolean debugEnabled = logger.isDebugEnabled();
 
-            String name = resource.name();
-            if (name.isEmpty()) {
-                name = decapitalize(method.getName().startsWith("set") ? method.getName().substring(3) : method.getName());
-            }
-            Class<?> type = resource.type() == Object.class ? method.getParameterTypes()[0] : resource.type();
+        // ★ 使用预计算的 resourceEntries，resource 方法 entries 排在字段 entries 之后
+        int entryOffset = metadata.resourceFields.size();
+        for (int i = 0; i < methodCount; i++) {
+            Method method = metadata.resourceMethods.get(i);
+            // ★ 跨注解去重
+            if (metadata.isMethodInjected(method)) continue;
+
+            // ★ 预计算的资源名称和类型
+            int entryIdx = entryOffset + i;
+            AnnotationInjectEntry entry = entryIdx < metadata.resourceEntries.size() ? metadata.resourceEntries.get(entryIdx) : null;
+
             Object dependency;
-            try {
-                if (containsBean(name)) {
-                    dependency = getBean(name, type);
-                } else {
-                    dependency = getBean(type);
+            if (entry != null && entry.lazyProxy != null) {
+                dependency = entry.lazyProxy;
+            } else {
+                String name = entry != null ? entry.resourceName : null;
+                Class<?> type = entry != null ? entry.type : method.getParameterTypes()[0];
+                if (name == null) {
+                    name = decapitalize(method.getName().startsWith("set") ? method.getName().substring(3) : method.getName());
                 }
-            } catch (NoSuchBeanDefinitionException e) {
-                throw new BeanCreationException(beanName,
-                    "Required dependency not found for @Resource method: " + method.getName() +
-                    " (name='" + name + "', type=" + type.getSimpleName() + ")", e);
+                try {
+                    if (containsBean(name)) {
+                        dependency = getBean(name, type);
+                    } else {
+                        dependency = getBean(type);
+                    }
+                } catch (NoSuchBeanDefinitionException e) {
+                    throw new BeanCreationException(beanName,
+                        "Required dependency not found for @Resource method: " + method.getName() +
+                        " (name='" + name + "', type=" + type.getSimpleName() + ")", e);
+                }
             }
 
             if (dependency != null) {
                 method.setAccessible(true);
                 method.invoke(bean, dependency);
-                Integer bit = fieldIdx.get(method);
-                if (bit != null) injectedMethodBits.set(bit);
-                if (logger.isDebugEnabled()) logger.debug("@Resource injected method {} in bean {}", method.getName(), beanName);
+                metadata.markMethodInjected(method);
+                if (debugEnabled) logger.debug("@Resource injected method {} in bean {}", method.getName(), beanName);
             } else {
                 throw new BeanCreationException(beanName, "Required dependency not found for @Resource method: " + method.getName());
             }
         }
     }
 
-    private void injectAutowiredFields(String beanName, Object bean, AnnotationMetadata metadata,
-                                        java.util.Map<Object, Integer> fieldIdx, BitSet injectedFieldBits) throws Exception {
-        for (int i = 0; i < metadata.autowiredFields.size(); i++) {
-            Field field = metadata.autowiredFields.get(i);
-            AnnotationInjectEntry entry = i < metadata.autowiredEntries.size() ? metadata.autowiredEntries.get(i) : null;
-            Integer bit = fieldIdx.get(field);
-            if (bit != null && injectedFieldBits.get(bit)) continue;
+    private void injectAutowiredFields(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+        int size = metadata.autowiredFields.size();
+        if (size == 0) return;
+        boolean debugEnabled = logger.isDebugEnabled();
+        for (int i = 0; i < size; i++) {
+            AnnotationInjectEntry entry = metadata.autowiredEntries.get(i);
+            // ★ 跨注解去重：如果该字段已被 @Resource 注入过，跳过
+            if (metadata.isFieldInjected(entry.field)) continue;
 
-            Autowired autowired = field.getAnnotation(Autowired.class);
-            if (autowired == null) continue;
-
-            Lazy lazy = field.getAnnotation(Lazy.class);
-            if (lazy != null && lazy.value()) {
-                String qualifier = extractQualifier(field);
-                Object lazyProxy = createLazyProxy(field.getType(), qualifier);
-                if (lazyProxy != null) {
-                    if (entry != null) entry.injector.inject(bean, lazyProxy);
-                    else { field.setAccessible(true); field.set(bean, lazyProxy); }
-                    if (bit != null) injectedFieldBits.set(bit);
-                    if (logger.isDebugEnabled()) logger.debug("@Lazy @Autowired field {} in bean {}", field.getName(), beanName);
-                    continue;
-                }
+            Object dependency;
+            // ★ 预计算的 lazyProxy 直接使用
+            if (entry.lazyProxy != null) {
+                dependency = entry.lazyProxy;
+            } else {
+                String qualifier = entry.qualifier;
+                dependency = resolveDependencyWithGenerics(entry.field, qualifier, entry.required);
             }
-
-            String qualifier = extractQualifier(field);
-            Object dependency = resolveDependencyWithGenerics(field, qualifier, autowired.required());
             if (dependency != null) {
-                if (entry != null) entry.injector.inject(bean, dependency);
-                else { field.setAccessible(true); field.set(bean, dependency); }
-                if (bit != null) injectedFieldBits.set(bit);
-                if (logger.isDebugEnabled()) logger.debug("Autowired field {} in bean {}", field.getName(), beanName);
-            } else if (autowired.required()) {
-                throw new BeanCreationException(beanName, "Required dependency not found for field: " + field.getName());
+                entry.injector.inject(bean, dependency);
+                metadata.markFieldInjected(entry.field);
+                if (debugEnabled) logger.debug("Autowired field {} in bean {}", entry.fieldName, beanName);
+            } else if (entry.required) {
+                throw new BeanCreationException(beanName, "Required dependency not found for field: " + entry.fieldName);
             }
         }
     }
 
-    private void injectAutowiredMethods(String beanName, Object bean, AnnotationMetadata metadata,
-                                         java.util.Map<Object, Integer> fieldIdx, BitSet injectedMethodBits) throws Exception {
-        for (Method method : metadata.autowiredMethods) {
-            Integer bit = fieldIdx.get(method);
-            if (bit != null && injectedMethodBits.get(bit)) continue;
+    private void injectAutowiredMethods(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+        int methodCount = metadata.autowiredMethods.size();
+        if (methodCount == 0) return;
+        boolean debugEnabled = logger.isDebugEnabled();
 
-            Autowired autowired = method.getAnnotation(Autowired.class);
-            if (autowired == null || method.getParameterCount() != 1) continue;
+        // ★ 使用预计算的 autowiredEntries，autowired 方法 entries 排在字段 entries 之后
+        int entryOffset = metadata.autowiredFields.size();
+        for (int i = 0; i < methodCount; i++) {
+            Method method = metadata.autowiredMethods.get(i);
+            // ★ 跨注解去重
+            if (metadata.isMethodInjected(method)) continue;
 
-            Class<?> paramType = method.getParameterTypes()[0];
-            String qualifier = extractQualifier(method);
-            if (qualifier == null && method.getParameterAnnotations().length > 0) {
-                for (java.lang.annotation.Annotation ann : method.getParameterAnnotations()[0]) {
-                    if (ann instanceof Qualifier) {
-                        qualifier = ((Qualifier) ann).value();
-                        break;
-                    }
-                }
+            // ★ 预计算的 qualifier 和 required
+            int entryIdx = entryOffset + i;
+            AnnotationInjectEntry entry = entryIdx < metadata.autowiredEntries.size() ? metadata.autowiredEntries.get(entryIdx) : null;
+
+            Object dependency;
+            if (entry != null && entry.lazyProxy != null) {
+                dependency = entry.lazyProxy;
+            } else {
+                Class<?> paramType = method.getParameterTypes()[0];
+                String qualifier = entry != null ? entry.qualifier : null;
+                boolean required = entry != null ? entry.required : true;
+                dependency = resolveDependency(paramType, method.getName(), qualifier, required);
             }
-            Object dependency = resolveDependency(paramType, method.getName(), qualifier, autowired.required());
             if (dependency != null) {
                 method.setAccessible(true);
                 method.invoke(bean, dependency);
-                if (bit != null) injectedMethodBits.set(bit);
-                if (logger.isDebugEnabled()) logger.debug("Autowired setter {} in bean {}", method.getName(), beanName);
-            } else if (autowired.required()) {
+                metadata.markMethodInjected(method);
+                if (debugEnabled) logger.debug("Autowired setter {} in bean {}", method.getName(), beanName);
+            } else if (entry == null || entry.required) {
                 throw new BeanCreationException(beanName, "Required dependency not found for setter: " + method.getName());
             }
         }
@@ -1124,7 +1178,19 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     }
 
     // 单趟递归收集类层次结构中所有注入注解元数据
-    private void resolveAnnotationMetadata(Class<?> clazz, AnnotationMetadata metadata) {
+    // ★ 极致优化：预计算所有运行时所需注解信息，注入时零反射
+
+    /**
+     * 获取已缓存的注解元数据（供健康检查等外部组件使用）。
+     */
+    public AnnotationMetadata getAnnotationMetadata(Class<?> beanClass) {
+        return cachedAnnotationMetadata.get(beanClass);
+    }
+
+    /**
+     * 解析注解元数据（健康检查阶段使用，不触发 Bean 实例化）。
+     */
+    public void resolveAnnotationMetadata(Class<?> clazz, AnnotationMetadata metadata) {
         if (clazz == null || clazz == Object.class) {
             return;
         }
@@ -1136,64 +1202,129 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         if (ApplicationContextAware.class.isAssignableFrom(clazz)) metadata.awareFlags |= 0x04;
 
         for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Autowired.class)) {
+            boolean hasAutowire = false;
+            boolean hasResource = false;
+            boolean hasValue = false;
+            
+            // ★ 一次遍历收集所有注解信息，避免重复反射扫描
+            for (java.lang.annotation.Annotation ann : field.getAnnotations()) {
+                if (ann instanceof Autowired) hasAutowire = true;
+                else if (ann instanceof Resource) hasResource = true;
+                else if (ann instanceof Value) hasValue = true;
+            }
+
+            if (hasAutowire) {
+                Autowired autowired = field.getAnnotation(Autowired.class);
+                Lazy lazy = field.getAnnotation(Lazy.class);
+                String qualifier = extractQualifier(field);
+                Object lazyProxy = (lazy != null && lazy.value()) ? createLazyProxy(field.getType(), qualifier) : null;
                 metadata.autowiredFields.add(field);
-                metadata.autowiredEntries.add(new AnnotationInjectEntry(field.getType(), createFieldInjector(field)));
+                metadata.autowiredEntries.add(new AnnotationInjectEntry(
+                    field.getType(), createFieldInjector(field), field,
+                    qualifier, autowired.required(), lazyProxy, null, null));
             }
-            if (field.isAnnotationPresent(Resource.class)) {
+            if (hasResource) {
+                Resource resource = field.getAnnotation(Resource.class);
+                Lazy lazy = field.getAnnotation(Lazy.class);
+                String name = resource.name().isEmpty() ? field.getName() : resource.name();
+                Class<?> type = resource.type() == Object.class ? field.getType() : resource.type();
+                Object lazyProxy = (lazy != null && lazy.value()) ? createLazyProxy(type, name) : null;
                 metadata.resourceFields.add(field);
-                metadata.resourceEntries.add(new AnnotationInjectEntry(field.getType(), createFieldInjector(field)));
+                metadata.resourceEntries.add(new AnnotationInjectEntry(
+                    type, createFieldInjector(field), field,
+                    null, true, lazyProxy, name, null));
             }
-            if (field.isAnnotationPresent(Value.class)) {
+            if (hasValue) {
+                Value value = field.getAnnotation(Value.class);
                 metadata.valueFields.add(field);
-                metadata.valueEntries.add(new AnnotationInjectEntry(field.getType(), createFieldInjector(field)));
+                metadata.valueEntries.add(new AnnotationInjectEntry(
+                    field.getType(), createFieldInjector(field), field,
+                    null, true, null, null, value.value()));
             }
         }
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isBridge()) {
                 continue;
             }
-            if (method.isAnnotationPresent(Autowired.class)) {
-                metadata.autowiredMethods.add(method);
+            boolean hasAutowire = false;
+            boolean hasResource = false;
+
+            // ★ 一次遍历收集方法注解
+            for (java.lang.annotation.Annotation ann : method.getAnnotations()) {
+                if (ann instanceof Autowired) hasAutowire = true;
+                else if (ann instanceof Resource) hasResource = true;
             }
-            if (method.isAnnotationPresent(Resource.class)) {
+
+            if (hasAutowire) {
+                metadata.autowiredMethods.add(method);
+                // ★ 预计算方法注入元数据
+                if (method.getParameterCount() == 1) {
+                    Class<?> paramType = method.getParameterTypes()[0];
+                    String qualifier = extractQualifier(method);
+                    if (qualifier == null && method.getParameterAnnotations().length > 0) {
+                        for (java.lang.annotation.Annotation ann : method.getParameterAnnotations()[0]) {
+                            if (ann instanceof Qualifier) {
+                                qualifier = ((Qualifier) ann).value();
+                                break;
+                            }
+                        }
+                    }
+                    Lazy lazy = method.getAnnotation(Lazy.class);
+                    Object lazyProxy = (lazy != null && lazy.value()) ? createLazyProxy(paramType, qualifier) : null;
+                    metadata.autowiredEntries.add(new AnnotationInjectEntry(
+                        paramType, null, null,
+                        qualifier, method.getAnnotation(Autowired.class).required(), lazyProxy, null, null));
+                }
+            }
+            if (hasResource) {
                 metadata.resourceMethods.add(method);
+                // ★ 预计算方法注入元数据
+                if (method.getParameterCount() == 1) {
+                    Resource resource = method.getAnnotation(Resource.class);
+                    String name = resource.name();
+                    if (name.isEmpty()) {
+                        name = decapitalize(method.getName().startsWith("set") ? method.getName().substring(3) : method.getName());
+                    }
+                    Class<?> type = resource.type() == Object.class ? method.getParameterTypes()[0] : resource.type();
+                    Lazy lazy = method.getAnnotation(Lazy.class);
+                    Object lazyProxy = (lazy != null && lazy.value()) ? createLazyProxy(type, name) : null;
+                    metadata.resourceEntries.add(new AnnotationInjectEntry(
+                        type, null, null,
+                        null, true, lazyProxy, name, null));
+                }
             }
         }
     }
 
-    // 注入 @Value 注解的字段（#1: 使用 FieldInjector 加速）
+    // 注入 @Value 注解的字段 — ★ 使用预计算的 placeholder，消除运行时 getAnnotation
     private void injectValueFields(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
-        for (int i = 0; i < metadata.valueFields.size(); i++) {
-            Field field = metadata.valueFields.get(i);
-            AnnotationInjectEntry entry = i < metadata.valueEntries.size() ? metadata.valueEntries.get(i) : null;
-            Value valueAnnotation = field.getAnnotation(Value.class);
-            if (valueAnnotation != null) {
-                String placeholder = valueAnnotation.value();
-                if (placeholder.isEmpty()) {
-                    throw new BeanCreationException(beanName,
-                            "@Value annotation on field '" + field.getName() + "' has an empty value");
-                }
+        int size = metadata.valueFields.size();
+        if (size == 0) return;
+        boolean debugEnabled = logger.isDebugEnabled();
+        for (int i = 0; i < size; i++) {
+            AnnotationInjectEntry entry = metadata.valueEntries.get(i);
+            if (metadata.isFieldInjected(entry.field)) continue;
 
-                // 解析占位符
-                String resolvedValue = propertyPlaceholderConfigurer.resolvePlaceholder(placeholder);
-
-                // 类型转换
-                Object convertedValue;
-                try {
-                    convertedValue = convertValueIfNecessary(resolvedValue, field.getType());
-                } catch (Exception e) {
-                    throw new BeanCreationException(beanName, "Failed to convert @Value '" + placeholder + "' for field " + field.getName(), e);
-                }
-
-                if (entry != null) {
-                    entry.injector.inject(bean, convertedValue);
-                } else {
-                    field.setAccessible(true);
-                    field.set(bean, convertedValue);
-                }
-                if (logger.isDebugEnabled()) logger.debug("Injected @Value field {} with value '{}' in bean {}", field.getName(), resolvedValue, beanName);
+            String placeholder = entry.placeholder;
+            if (placeholder == null || placeholder.isEmpty()) {
+                throw new BeanCreationException(beanName,
+                        "@Value annotation on field '" + entry.fieldName + "' has an empty value");
             }
+
+            // 解析占位符
+            String resolvedValue = propertyPlaceholderConfigurer.resolvePlaceholder(placeholder);
+
+            // 类型转换
+            Object convertedValue;
+            try {
+                convertedValue = convertValueIfNecessary(resolvedValue, entry.type);
+            } catch (Exception e) {
+                throw new BeanCreationException(beanName, "Failed to convert @Value '" + placeholder + "' for field " + entry.fieldName, e);
+            }
+
+            entry.injector.inject(bean, convertedValue);
+            metadata.markFieldInjected(entry.field);
+            if (debugEnabled) logger.debug("Injected @Value field {} with value '{}' in bean {}", entry.fieldName, resolvedValue, beanName);
         }
     }
 
@@ -1543,6 +1674,26 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         }
     }
 
+    public String exportDependencyGraphJson() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n  \"beans\": [\n");
+        boolean first = true;
+        synchronized (this.dependencyEdges) {
+            for (String[] edge : this.dependencyEdges) {
+                if (!first) sb.append(",\n");
+                first = false;
+                sb.append("    {\"from\": \"").append(escapeJson(edge[0]))
+                  .append("\", \"to\": \"").append(escapeJson(edge[1])).append("\"}");
+            }
+        }
+        sb.append("\n  ]\n}");
+        return sb.toString();
+    }
+
+    private String escapeJson(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
     // Phase 3: record a dependency edge for dumpGraph
     public void recordDependencyEdge(String from, String to) {
         this.dependencyEdges.add(new String[]{from, to});
@@ -1579,6 +1730,24 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
             .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
             .limit(topN)
             .forEach(e -> logger.info("Bean '{}' creation time: {} ms", e.getKey(), e.getValue() / 1_000_000.0));
+    }
+
+    // 打印完整的启动耗时报告
+    public void printStartupReport() {
+        if (beanCreationTimes.isEmpty()) {
+            logger.info("No bean creation time data available");
+            return;
+        }
+        long total = beanCreationTimes.values().stream().mapToLong(Long::longValue).sum();
+        logger.info("========== Bean Creation Time Report ==========");
+        logger.info("Total beans: {}, Total time: {:.2f} ms", beanCreationTimes.size(), total / 1_000_000.0);
+        logger.info("Top 10 slowest beans:");
+        printSlowestBeans(10);
+        long avg = total / beanCreationTimes.size();
+        logger.info("Average: {:.3f} ms, Slowest: {:.2f} ms",
+            avg / 1_000_000.0,
+            beanCreationTimes.values().stream().mapToLong(Long::longValue).max().orElse(0) / 1_000_000.0);
+        logger.info("================================================");
     }
 
     public List<BeanPostProcessor> getBeanPostProcessors() {
