@@ -28,15 +28,19 @@ public class MyBatisAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(MyBatisSqlSessionTemplate.class)
-    public MyBatisSqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sqlSessionFactory) {
-        return new MyBatisSqlSessionTemplate(sqlSessionFactory);
-    }
-
-    @Bean
     @ConditionalOnMissingBean(MyBatisTransactionManager.class)
     public MyBatisTransactionManager transactionManager(DataSource dataSource) {
         return new MyBatisTransactionManager(dataSource);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(MyBatisSqlSessionTemplate.class)
+    public MyBatisSqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sqlSessionFactory,
+                                                          MyBatisTransactionManager transactionManager) {
+        MyBatisSqlSessionTemplate template = new MyBatisSqlSessionTemplate(sqlSessionFactory);
+        template.setTransactionManager(transactionManager);
+        transactionManager.setSqlSessionTemplate(template);
+        return template;
     }
 
     @Bean

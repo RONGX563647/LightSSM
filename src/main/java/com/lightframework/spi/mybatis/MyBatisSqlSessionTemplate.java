@@ -17,6 +17,8 @@ public class MyBatisSqlSessionTemplate implements SqlSession {
     private final SqlSessionFactory sqlSessionFactory;
     private final ExecutorType executorType;
     private final ThreadLocal<SqlSession> sessionHolder = new ThreadLocal<>();
+    private com.lightframework.tx.core.PlatformTransactionManager transactionManager;
+    private boolean useTransactionConnection;
 
     public MyBatisSqlSessionTemplate(SqlSessionFactory sqlSessionFactory) {
         this.sqlSessionFactory = sqlSessionFactory;
@@ -28,7 +30,30 @@ public class MyBatisSqlSessionTemplate implements SqlSession {
         this.executorType = executorType;
     }
 
+    public void setTransactionManager(com.lightframework.tx.core.PlatformTransactionManager transactionManager) {
+        this.transactionManager = transactionManager;
+        this.useTransactionConnection = true;
+    }
+
+    SqlSession getCurrentSession() {
+        return sessionHolder.get();
+    }
+
     public SqlSession getSqlSession() {
+        if (useTransactionConnection && transactionManager != null
+            && transactionManager.hasActiveTransaction()) {
+            java.sql.Connection txConn = transactionManager.getCurrentConnection();
+            SqlSession session = sessionHolder.get();
+            if (session == null || session.getConnection() != txConn) {
+                session = sqlSessionFactory.openSession(txConn);
+                sessionHolder.set(session);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Opened SqlSession with transaction Connection for thread: {}",
+                        Thread.currentThread().getName());
+                }
+            }
+            return session;
+        }
         SqlSession session = sessionHolder.get();
         if (session == null) {
             session = sqlSessionFactory.openSession(executorType);
@@ -43,6 +68,10 @@ public class MyBatisSqlSessionTemplate implements SqlSession {
     public void commit() {
         SqlSession session = sessionHolder.get();
         if (session != null) {
+            if (useTransactionConnection && transactionManager != null
+                && transactionManager.hasActiveTransaction()) {
+                return;
+            }
             try {
                 session.commit();
             } finally {
@@ -55,6 +84,10 @@ public class MyBatisSqlSessionTemplate implements SqlSession {
     public void rollback() {
         SqlSession session = sessionHolder.get();
         if (session != null) {
+            if (useTransactionConnection && transactionManager != null
+                && transactionManager.hasActiveTransaction()) {
+                return;
+            }
             try {
                 session.rollback();
             } finally {
@@ -65,7 +98,7 @@ public class MyBatisSqlSessionTemplate implements SqlSession {
     }
 
     public <T> T getMapper(Class<T> mapperInterface) {
-        return getSqlSession().getMapper(mapperInterface);
+        return getConfiguration().getMapper(mapperInterface, this);
     }
 
     // ===== SqlSession delegation =====
@@ -172,11 +205,19 @@ public class MyBatisSqlSessionTemplate implements SqlSession {
 
     @Override
     public void commit(boolean force) {
+        if (useTransactionConnection && transactionManager != null
+            && transactionManager.hasActiveTransaction()) {
+            return;
+        }
         getSqlSession().commit(force);
     }
 
     @Override
     public void rollback(boolean force) {
+        if (useTransactionConnection && transactionManager != null
+            && transactionManager.hasActiveTransaction()) {
+            return;
+        }
         getSqlSession().rollback(force);
     }
 
@@ -189,11 +230,12 @@ public class MyBatisSqlSessionTemplate implements SqlSession {
     public void close() {
         SqlSession session = sessionHolder.get();
         if (session != null) {
-            try {
+            boolean managedTx = useTransactionConnection && transactionManager != null
+                && transactionManager.hasActiveTransaction();
+            if (!managedTx) {
                 session.close();
-            } finally {
-                sessionHolder.remove();
             }
+            sessionHolder.remove();
         }
     }
 

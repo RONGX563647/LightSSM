@@ -8,25 +8,15 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 
-/**
- * 前置通知拦截器
- * 在目标方法执行前运行
- */
-public class BeforeMethodInterceptor implements MethodInterceptor {
+public class AfterThrowingMethodInterceptor implements MethodInterceptor {
 
-    private final MethodHandle aspectMethodHandle;
     private final MethodHandle adaptedHandle;
-    private final boolean takesJoinPoint;
 
-    public BeforeMethodInterceptor(Method aspectMethod, Object aspectInstance) {
-        this.takesJoinPoint = aspectMethod.getParameterCount() > 0;
-
+    public AfterThrowingMethodInterceptor(Method aspectMethod, Object aspectInstance) {
         try {
             MethodHandle mh = MethodHandles.lookup().unreflect(aspectMethod);
-            this.aspectMethodHandle = mh.bindTo(aspectInstance);
-            this.adaptedHandle = takesJoinPoint
-                ? this.aspectMethodHandle.asType(MethodType.methodType(Object.class, JoinPoint.class))
-                : this.aspectMethodHandle.asType(MethodType.methodType(Object.class));
+            mh = mh.bindTo(aspectInstance);
+            this.adaptedHandle = mh.asType(MethodType.methodType(Object.class, JoinPoint.class));
         } catch (IllegalAccessException e) {
             throw new RuntimeException("Failed to create MethodHandle for aspect method: " + aspectMethod, e);
         }
@@ -34,13 +24,12 @@ public class BeforeMethodInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        if (takesJoinPoint) {
+        try {
+            return invocation.proceed();
+        } catch (Throwable t) {
             JoinPoint joinPoint = invocation.getJoinPoint();
             adaptedHandle.invokeExact(joinPoint);
-        } else {
-            adaptedHandle.invokeExact();
+            throw t;
         }
-
-        return invocation.proceed();
     }
 }

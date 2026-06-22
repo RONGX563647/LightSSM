@@ -1,71 +1,57 @@
 package com.lightframework.spi.mybatis;
 
+import com.lightframework.tx.core.DataSourceTransactionManager;
+import com.lightframework.tx.core.TransactionStatus;
+import org.apache.ibatis.session.SqlSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 
-public class MyBatisTransactionManager {
+public class MyBatisTransactionManager extends DataSourceTransactionManager {
 
     private static final Logger logger = LoggerFactory.getLogger(MyBatisTransactionManager.class);
 
-    private final DataSource dataSource;
-    private final ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
-    private final ThreadLocal<Boolean> active = new ThreadLocal<>();
+    private MyBatisSqlSessionTemplate sqlSessionTemplate;
 
     public MyBatisTransactionManager(DataSource dataSource) {
-        this.dataSource = dataSource;
+        super(dataSource);
     }
 
-    public <T> T executeInTransaction(TransactionCallback<T> callback) throws Exception {
-        if (Boolean.TRUE.equals(active.get())) {
-            return callback.doInTransaction();
-        }
-        Connection conn = null;
-        try {
-            conn = dataSource.getConnection();
-            conn.setAutoCommit(false);
-            connectionHolder.set(conn);
-            active.set(true);
-            T result = callback.doInTransaction();
-            conn.commit();
-            if (logger.isDebugEnabled()) {
-                logger.debug("Transaction committed successfully");
-            }
-            return result;
-        } catch (Exception e) {
-            if (conn != null) {
+    public void setSqlSessionTemplate(MyBatisSqlSessionTemplate sqlSessionTemplate) {
+        this.sqlSessionTemplate = sqlSessionTemplate;
+    }
+
+    @Override
+    public void commit(TransactionStatus status) throws Exception {
+        flushSqlSessionIfNeeded();
+        super.commit(status);
+        closeSqlSession();
+    }
+
+    @Override
+    public void rollback(TransactionStatus status) throws Exception {
+        super.rollback(status);
+        closeSqlSession();
+    }
+
+    private void flushSqlSessionIfNeeded() {
+        if (sqlSessionTemplate != null) {
+            SqlSession session = sqlSessionTemplate.getCurrentSession();
+            if (session != null) {
                 try {
-                    conn.rollback();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Transaction rolled back due to: {}", e.getMessage());
-                    }
-                } catch (Exception rollbackEx) {
-                    logger.warn("Rollback failed", rollbackEx);
-                }
-            }
-            throw e;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
+                    session.flushStatements();
                 } catch (Exception e) {
-                    logger.warn("Failed to close connection", e);
+                    logger.warn("Failed to flush SqlSession statements", e);
                 }
             }
-            connectionHolder.remove();
-            active.remove();
         }
     }
 
-    public Connection getCurrentConnection() {
-        return connectionHolder.get();
-    }
-
-    public boolean hasActiveTransaction() {
-        return Boolean.TRUE.equals(active.get());
+    private void closeSqlSession() {
+        if (sqlSessionTemplate != null) {
+            sqlSessionTemplate.close();
+        }
     }
 
     @FunctionalInterface

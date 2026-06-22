@@ -5,3 +5,4 @@ com.lightframework.spi.hutool.autoconfigure.HutoolAutoConfiguration
 com.lightframework.spi.jackson.autoconfigure.JacksonAutoConfiguration
 com.lightframework.spi.caffeine.autoconfigure.CaffeineAutoConfiguration
 com.lightframework.spi.mybatis.autoconfigure.MyBatisAutoConfiguration
+com.lightframework.tx.autoconfigure.TransactionAutoConfiguration
