@@ -67,7 +67,7 @@ public class TransactionAttribute {
     public Class<? extends Throwable>[] getRetryFor() { return retryFor; }
     public int getMaxRetries() { return maxRetries; }
     public int getRetryDelayMs() { return retryDelayMs; }
-    private PlatformTransactionManager resolvedManager;
+    private volatile PlatformTransactionManager resolvedManager;
     public PlatformTransactionManager resolveManager(PlatformTransactionManager defaultTm,
                                                       Map<String, PlatformTransactionManager> managers) {
         if (resolvedManager != null) return resolvedManager;

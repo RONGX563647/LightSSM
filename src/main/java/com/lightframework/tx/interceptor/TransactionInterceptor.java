@@ -65,6 +65,14 @@ public class TransactionInterceptor implements MethodInterceptor {
         return attr.resolveManager(defaultTm, transactionManagers);
     }
 
+    private PlatformTransactionManager findActiveTm() {
+        for (PlatformTransactionManager candidate : transactionManagers.values()) {
+            if (candidate.hasActiveTransaction()) return candidate;
+        }
+        if (defaultTm.hasActiveTransaction()) return defaultTm;
+        return null;
+    }
+
     private Object runWithTransaction(TransactionAttribute attr, MethodInvocation invocation) throws Throwable {
         PlatformTransactionManager tm = resolveTm(attr);
         Propagation scopeOverride = TransactionScope.getOverride();
@@ -82,13 +90,17 @@ public class TransactionInterceptor implements MethodInterceptor {
                 }
                 return runInNewTransaction(tm, attr, invocation);
 
-            case REQUIRES_NEW:
-                SuspendResources suspended = tm.suspend();
+            case REQUIRES_NEW: {
+                PlatformTransactionManager activeTm = findActiveTm();
+                SuspendResources suspended = activeTm != null ? activeTm.suspend() : null;
                 try {
                     return runInNewTransaction(tm, attr, invocation);
                 } finally {
-                    tm.resume(suspended);
+                    if (suspended != null && activeTm != null) {
+                        activeTm.resume(suspended);
+                    }
                 }
+            }
 
             case SUPPORTS:
                 return invocation.proceed();
@@ -106,13 +118,17 @@ public class TransactionInterceptor implements MethodInterceptor {
                 }
                 return runInNewTransaction(tm, attr, invocation);
 
-            case NOT_SUPPORTED:
-                SuspendResources suspendedNotSupported = tm.suspend();
+            case NOT_SUPPORTED: {
+                PlatformTransactionManager activeTm = findActiveTm();
+                SuspendResources suspended = activeTm != null ? activeTm.suspend() : null;
                 try {
                     return invocation.proceed();
                 } finally {
-                    tm.resume(suspendedNotSupported);
+                    if (suspended != null && activeTm != null) {
+                        activeTm.resume(suspended);
+                    }
                 }
+            }
 
             case NEVER:
                 if (tm.hasActiveTransaction()) {
@@ -124,6 +140,27 @@ public class TransactionInterceptor implements MethodInterceptor {
             default:
                 return invocation.proceed();
         }
+    }
+
+    private record SuspendedTransaction(PlatformTransactionManager tm, SuspendResources resources) {}
+
+    private SuspendedTransaction suspendActiveTransaction() {
+        for (PlatformTransactionManager candidate : transactionManagers.values()) {
+            if (candidate.hasActiveTransaction()) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Suspending active transaction on {}", candidate);
+                }
+                return new SuspendedTransaction(candidate, candidate.suspend());
+            }
+        }
+        if (defaultTm.hasActiveTransaction()) {
+            return new SuspendedTransaction(defaultTm, defaultTm.suspend());
+        }
+        return null;
+    }
+
+    private void resumeActiveTransaction() {
+        // resume is called from finally; the suspended resource must be passed in
     }
 
     private Object runWithSavepoint(PlatformTransactionManager tm, TransactionAttribute attr,

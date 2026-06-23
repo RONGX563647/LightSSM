@@ -14,9 +14,13 @@ public class DataSourceTransactionManager implements PlatformTransactionManager 
 
     private final DataSource dataSource;
 
-    private final ThreadLocal<TransactionContext> txContext = ThreadLocal.withInitial(TransactionContext::new);
-    private final ThreadLocal<ArrayDeque<TransactionStatus>> statusPool = ThreadLocal.withInitial(ArrayDeque::new);
-    private final ThreadLocal<ArrayDeque<SuspendResources>> suspendPool = ThreadLocal.withInitial(ArrayDeque::new);
+    static final class ThreadLocalState {
+        final TransactionContext txContext = new TransactionContext();
+        final ArrayDeque<TransactionStatus> statusPool = new ArrayDeque<>();
+        final ArrayDeque<SuspendResources> suspendPool = new ArrayDeque<>();
+    }
+
+    private final ThreadLocal<ThreadLocalState> state = ThreadLocal.withInitial(ThreadLocalState::new);
 
     public DataSourceTransactionManager(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -45,32 +49,32 @@ public class DataSourceTransactionManager implements PlatformTransactionManager 
     }
 
     private TransactionStatus obtainStatus(boolean newTransaction, boolean readOnly) {
-        ArrayDeque<TransactionStatus> pool = statusPool.get();
-        TransactionStatus s = pool.pollFirst();
-        if (s == null) s = new TransactionStatus();
-        s.reset(newTransaction, readOnly);
-        return s;
+        ThreadLocalState s = state.get();
+        TransactionStatus st = s.statusPool.pollFirst();
+        if (st == null) st = new TransactionStatus();
+        st.reset(newTransaction, readOnly);
+        return st;
     }
 
     private void recycleStatus(TransactionStatus s) {
-        statusPool.get().addFirst(s);
+        state.get().statusPool.addFirst(s);
     }
 
     private SuspendResources obtainSuspendResources(Connection conn, int refCount, boolean wasActive) {
-        ArrayDeque<SuspendResources> pool = suspendPool.get();
-        SuspendResources sr = pool.pollFirst();
+        ThreadLocalState s = state.get();
+        SuspendResources sr = s.suspendPool.pollFirst();
         if (sr == null) sr = new SuspendResources();
         sr.fill(conn, refCount, wasActive);
         return sr;
     }
 
     private void recycleSuspendResources(SuspendResources sr) {
-        suspendPool.get().addFirst(sr);
+        state.get().suspendPool.addFirst(sr);
     }
 
     @Override
     public TransactionStatus getTransaction(TransactionAttribute definition) throws Exception {
-        TransactionContext ctx = txContext.get();
+        TransactionContext ctx = state.get().txContext;
         if (ctx.active) {
             ctx.referenceCount++;
             if (logger.isTraceEnabled()) {
@@ -94,6 +98,7 @@ public class DataSourceTransactionManager implements PlatformTransactionManager 
         ctx.referenceCount = 1;
         ctx.readOnly = definition.isReadOnly();
         TransactionStatus status = obtainStatus(true, definition.isReadOnly());
+        TransactionSynchronizationManager.onBegin();
         if (logger.isDebugEnabled()) {
             logger.debug("Began new JDBC transaction, isolation={}", definition.getIsolation());
         }
@@ -103,7 +108,7 @@ public class DataSourceTransactionManager implements PlatformTransactionManager 
     @Override
     public void commit(TransactionStatus status) throws Exception {
         if (status.isCompleted()) return;
-        TransactionContext ctx = txContext.get();
+        TransactionContext ctx = state.get().txContext;
         if (!status.isNewTransaction() && ctx.referenceCount > 1) {
             ctx.referenceCount--;
             recycleStatus(status);
@@ -125,6 +130,7 @@ public class DataSourceTransactionManager implements PlatformTransactionManager 
             }
         }
         TransactionSynchronizationManager.afterCompletion(TransactionSynchronization.STATUS_COMMITTED);
+        TransactionSynchronizationManager.onEnd();
         ctx.clear();
         recycleStatus(status);
     }
@@ -132,7 +138,7 @@ public class DataSourceTransactionManager implements PlatformTransactionManager 
     @Override
     public void rollback(TransactionStatus status) throws Exception {
         if (status.isCompleted()) return;
-        TransactionContext ctx = txContext.get();
+        TransactionContext ctx = state.get().txContext;
         if (!status.isNewTransaction() && ctx.referenceCount > 1) {
             status.setRollbackOnly(true);
             ctx.referenceCount--;
@@ -154,37 +160,41 @@ public class DataSourceTransactionManager implements PlatformTransactionManager 
             }
         }
         TransactionSynchronizationManager.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+        TransactionSynchronizationManager.onEnd();
         ctx.clear();
         recycleStatus(status);
     }
 
     @Override
     public boolean hasActiveTransaction() {
-        return txContext.get().active;
+        return state.get().txContext.active;
     }
 
     @Override
     public Connection getCurrentConnection() {
-        return txContext.get().connection;
+        return state.get().txContext.connection;
     }
 
     @Override
     public SuspendResources suspend() {
-        TransactionContext ctx = txContext.get();
+        TransactionContext ctx = state.get().txContext;
         Connection saved = ctx.connection;
         int refCount = ctx.referenceCount;
         boolean wasActive = ctx.active;
         if (saved != null && logger.isTraceEnabled()) {
             logger.trace("Suspending transaction (Connection={}, refCount={})", saved, refCount);
         }
-        txContext.remove();
+        ctx.connection = null;
+        ctx.active = false;
+        ctx.referenceCount = 0;
+        ctx.readOnly = false;
         return obtainSuspendResources(saved, refCount, wasActive);
     }
 
     @Override
     public void resume(SuspendResources resources) {
         if (resources == null || resources.connection == null) return;
-        TransactionContext ctx = txContext.get();
+        TransactionContext ctx = state.get().txContext;
         ctx.connection = resources.connection;
         ctx.active = resources.wasActive;
         ctx.referenceCount = resources.refCount;
@@ -199,9 +209,8 @@ public class DataSourceTransactionManager implements PlatformTransactionManager 
     }
 
     protected void cleanup() throws Exception {
-        TransactionContext ctx = txContext.get();
-        ctx.clear();
-        txContext.remove();
+        state.get().txContext.clear();
+        state.remove();
     }
 
     private int mapIsolation(Isolation isolation) {

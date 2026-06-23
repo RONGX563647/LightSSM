@@ -9,10 +9,10 @@ public class HandlerMethod {
     private final Method method;
     private final Class<?> beanType;
     private final ApplicationContext applicationContext;
-    
-    private Object handler;
-    
-    public HandlerMethod(String beanName, Method method, ApplicationContext applicationContext) 
+
+    private final Object handler;
+
+    public HandlerMethod(String beanName, Method method, ApplicationContext applicationContext)
         throws Exception {
         this.beanName = beanName;
         this.method = method;
@@ -20,27 +20,35 @@ public class HandlerMethod {
         this.beanType = applicationContext.getType(beanName);
         this.handler = applicationContext.getBean(beanName);
     }
-    
+
+    public HandlerMethod(Object handler, Method method) {
+        this.beanName = null;
+        this.method = method;
+        this.applicationContext = null;
+        this.beanType = handler.getClass();
+        this.handler = handler;
+    }
+
     public Object getBean() {
         return this.handler;
     }
-    
+
     public Method getMethod() {
         return this.method;
     }
-    
+
     public Class<?> getBeanType() {
         return this.beanType;
     }
-    
+
     public String getBeanName() {
         return this.beanName;
     }
-    
+
     public Class<?> getReturnType() {
         return this.method.getReturnType();
     }
-    
+
     @Override
     public String toString() {
         return this.beanType.getSimpleName() + "#" + this.method.getName();

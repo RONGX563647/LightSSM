@@ -14,11 +14,17 @@ public class RequestMappingInfo {
     private final String pattern;
     private final Pattern compiledPattern;
     private final List<String> variableNames;
+    private final String method;
 
     public RequestMappingInfo(String pattern) {
+        this(pattern, "");
+    }
+
+    public RequestMappingInfo(String pattern, String method) {
         this.pattern = pattern;
         this.variableNames = new ArrayList<>();
         this.compiledPattern = compilePattern(pattern);
+        this.method = method != null ? method.toUpperCase() : "";
     }
 
     private Pattern compilePattern(String pattern) {
@@ -45,9 +51,12 @@ public class RequestMappingInfo {
         return Pattern.compile("^" + regex + "$");
     }
 
-    public Map<String, String> match(String uri) {
+    public Map<String, String> match(String uri, String httpMethod) {
         Matcher matcher = compiledPattern.matcher(uri);
         if (!matcher.matches()) {
+            return null;
+        }
+        if (!method.isEmpty() && httpMethod != null && !method.equalsIgnoreCase(httpMethod)) {
             return null;
         }
         Map<String, String> variables = new LinkedHashMap<>();
@@ -59,5 +68,9 @@ public class RequestMappingInfo {
 
     public String getPattern() {
         return pattern;
+    }
+
+    public String getMethod() {
+        return method;
     }
 }

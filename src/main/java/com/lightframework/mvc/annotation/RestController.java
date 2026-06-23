@@ -1,12 +1,14 @@
 package com.lightframework.mvc.annotation;
 
+import com.lightframework.di.annotation.Controller;
+
 import java.lang.annotation.*;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface RequestMapping {
+@Controller
+@ResponseBody
+public @interface RestController {
     String value() default "";
-    String[] path() default {};
-    String method() default "";
 }

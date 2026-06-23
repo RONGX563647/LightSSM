@@ -1,6 +1,8 @@
 package com.lightframework.mvc.servlet;
 
 import com.lightframework.ioc.context.ApplicationContext;
+import com.lightframework.mvc.core.ContentNegotiationManager;
+import com.lightframework.mvc.core.CorsProcessor;
 import com.lightframework.mvc.core.HandlerAdapter;
 import com.lightframework.mvc.core.HandlerExecutionChain;
 import com.lightframework.mvc.core.HandlerMapping;
@@ -33,6 +35,10 @@ public class DispatcherServlet extends HttpServlet {
 
     private List<ViewResolver> viewResolvers = new ArrayList<>();
     
+    private CorsProcessor corsProcessor = new CorsProcessor();
+    
+    private ContentNegotiationManager contentNegotiationManager = new ContentNegotiationManager();
+    
     @Override
     public void init() throws ServletException {
         try {
@@ -40,6 +46,8 @@ public class DispatcherServlet extends HttpServlet {
             initHandlerMappings();
             initHandlerAdapters();
             initViewResolvers();
+            initCors();
+            initContentNegotiation();
 
             logger.info("DispatcherServlet initialized successfully");
         } catch (Exception e) {
@@ -109,6 +117,11 @@ public class DispatcherServlet extends HttpServlet {
 
         try {
             mappedHandler = getHandler(processedRequest);
+
+            if (!corsProcessor.processRequest(request, response,
+                    mappedHandler != null ? mappedHandler.getHandler() : null)) {
+                return;
+            }
             if (mappedHandler == null) {
                 noHandlerFound(processedRequest, response);
                 return;
@@ -165,9 +178,11 @@ public class DispatcherServlet extends HttpServlet {
 
         if (mv == null) {
             if (response.isCommitted()) {
+                triggerAfterCompletion(request, response, mappedHandler, null);
                 return;
             }
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            triggerAfterCompletion(request, response, mappedHandler, null);
             return;
         }
 
@@ -214,6 +229,14 @@ public class DispatcherServlet extends HttpServlet {
         }
     }
 
+    protected void initCors() {
+        logger.info("CORS processor initialized");
+    }
+    
+    protected void initContentNegotiation() {
+        logger.info("ContentNegotiationManager initialized");
+    }
+    
     protected void handleError(HttpServletRequest request, HttpServletResponse response,
             Exception ex) throws IOException {
 

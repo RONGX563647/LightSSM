@@ -1,5 +1,6 @@
 package com.lightframework.tx.core;
 
+import com.lightframework.tx.annotation.Propagation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,13 @@ public class TransactionTemplate {
     }
 
     public <T> T execute(TransactionAttribute attr, TransactionCallback<T> action) throws Throwable {
+        Propagation scopeOverride = TransactionScope.getOverride();
+        if (scopeOverride != null) {
+            attr = new TransactionAttribute(attr.getTransactionManagerName(), scopeOverride,
+                attr.getIsolation(), attr.getTimeout(), attr.isReadOnly(),
+                attr.getRollbackFor(), attr.getNoRollbackFor(), attr.getRetryFor(),
+                attr.getMaxRetries(), attr.getRetryDelayMs());
+        }
         TransactionStatus status = transactionManager.getTransaction(attr);
         try {
             T result = action.doInTransaction(status);

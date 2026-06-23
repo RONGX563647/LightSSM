@@ -2,11 +2,11 @@ package com.lightframework.mvc.annotation;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface RequestMapping {
+@RequestMapping(method = "PATCH")
+public @interface PatchMapping {
     String value() default "";
     String[] path() default {};
-    String method() default "";
 }

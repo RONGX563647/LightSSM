@@ -2,8 +2,9 @@ package com.lightframework.mvc.annotation;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface ResponseBody {
+public @interface RequestBody {
+    boolean required() default true;
 }

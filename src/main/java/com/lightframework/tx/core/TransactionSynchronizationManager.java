@@ -8,8 +8,27 @@ public class TransactionSynchronizationManager {
     private static final ThreadLocal<List<TransactionSynchronization>> synchronizations =
         ThreadLocal.withInitial(ArrayList::new);
 
+    private static final ThreadLocal<Integer> transactionDepth = ThreadLocal.withInitial(() -> 0);
+
     public static boolean isActive() {
+        return transactionDepth.get() > 0;
+    }
+
+    public static boolean hasSynchronizations() {
         return !synchronizations.get().isEmpty();
+    }
+
+    public static void onBegin() {
+        transactionDepth.set(transactionDepth.get() + 1);
+    }
+
+    public static void onEnd() {
+        int depth = transactionDepth.get() - 1;
+        if (depth <= 0) {
+            transactionDepth.remove();
+        } else {
+            transactionDepth.set(depth);
+        }
     }
 
     public static void registerSynchronization(TransactionSynchronization sync) {
@@ -37,5 +56,6 @@ public class TransactionSynchronizationManager {
 
     static void clear() {
         synchronizations.remove();
+        transactionDepth.remove();
     }
 }

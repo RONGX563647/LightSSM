@@ -34,6 +34,12 @@ public class TransactionalEventPublisher implements ApplicationEventPublisher, A
             TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
+                    public void beforeCommit(boolean readOnly) throws Exception {
+                        if (phase == TransactionPhase.BEFORE_COMMIT) {
+                            delegate.publishEvent(event);
+                        }
+                    }
+                    @Override
                     public void afterCompletion(int status) {
                         boolean shouldPublish =
                             (phase == TransactionPhase.AFTER_COMPLETION) ||

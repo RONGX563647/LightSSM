@@ -235,10 +235,11 @@ public class ClassPathBeanDefinitionScanner {
         if (scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Component;")) {
             return true;
         }
-        // 检查派生注解（@Service, @Repository, @Controller, @Aspect 等）
+        // 检查派生注解（@Service, @Repository, @Controller, @RestController, @Aspect 等）
         return scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Service;")
             || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Repository;")
             || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Controller;")
+            || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/mvc/annotation/RestController;")
             || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/aop/annotation/Aspect;");
     }
 
