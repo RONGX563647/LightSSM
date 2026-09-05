@@ -134,6 +134,7 @@ public class ScopeRegistry {
     /**
      * 销毁所有自定义作用域（不清理内置作用域）
      */
+    // TODO [L3][优化-策略模式] destroyCustomScopes 中"排除内置作用域"的多个 && 判断，可用一个 BUILTIN_SCOPES 集合 + 单次 contains 判断替代，提升可读性与扩展性。；写对标志：按策略模式完成实现，新增单测覆盖“运行时切换不同策略得到不同结果”的主路径与一条未知策略的异常路径。
     public void destroyCustomScopes() {
         scopeMap.keySet().removeIf(scopeName ->
                 !SINGLETON.equals(scopeName) &&

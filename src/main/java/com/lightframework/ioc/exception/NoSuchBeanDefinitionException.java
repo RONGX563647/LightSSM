@@ -49,6 +49,8 @@ public class NoSuchBeanDefinitionException extends BeansException {
         return sb.toString();
     }
 
+    // TODO [L1][练习] 手写 Levenshtein 距离 levenshteinDistance（经典 DP，用于给"找不到 Bean"的错误提供相似名称建议）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：levenshteinDistance("userService","userservice")<=2；与无关串距离明显更大。
     private static int levenshteinDistance(String a, String b) {
         int[][] dp = new int[a.length() + 1][b.length() + 1];
         for (int i = 0; i <= a.length(); i++) dp[i][0] = i;

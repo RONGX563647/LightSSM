@@ -17,6 +17,8 @@ public interface FactoryBean<T> {
      * @return an instance of the bean (can be {@code null})
      * @throws Exception if object creation failed
      */
+    // TODO [L2][练习] 手写一个 FactoryBean（如简化版 SqlSessionFactoryBean：getObject() 创建目标对象，getObjectType() 返回其类型，isSingleton() 返回 true）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：把该 FactoryBean 注册为 Bean 后，getBean("name") 拿到 getObject() 的产物；getBean("&name") 拿到 FactoryBean 本身。
     T getObject() throws Exception;
     
     /**

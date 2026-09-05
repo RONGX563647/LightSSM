@@ -2,7 +2,7 @@ package com.lightframework.ioc.test;
 
 import com.lightframework.di.annotation.Autowired;
 import com.lightframework.di.annotation.Component;
-import com.lightframework.ioc.annotation.EventListener;
+import com.lightframework.di.annotation.EventListener;
 import com.lightframework.ioc.context.AnnotationConfigApplicationContext;
 import com.lightframework.ioc.event.ApplicationEvent;
 import com.lightframework.ioc.event.ApplicationEventPublisher;

@@ -46,6 +46,8 @@ public class WebScopeManager {
     /**
      * 获取全局单例实例
      */
+    // TODO [L2][练习] 手写线程安全单例 getInstance（双重检查锁定 + volatile 实例字段）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：多线程并发调用 getInstance() 返回同一个实例，且构造器只执行一次。
     public static WebScopeManager getInstance() {
         if (instance == null) {
             synchronized (WebScopeManager.class) {

@@ -27,47 +27,63 @@ LightSSM是一个教育性质的轻量级SSM框架实现，旨在通过精简的
 
 ```
 com.lightframework
-├── ioc/          # 控制反转容器 - 框架基石
-│   ├── annotation/  # 注解定义
+├── di/           # 依赖注入层（注解 + 注入引擎，唯一来源）
+│   ├── annotation/  # @Component/@Autowired/@Resource/@Value/@Scope/@Lazy/@Qualifier/@Primary/@Bean/@Configuration/@Import/@Conditional/@Profile/@DependsOn/@Order/@EventListener
+│   └── core/        # InjectionEngine / InjectionMetadata / AnnotationInjectEntry / DependencyContainer / DefaultTypeConverter / PlaceholderResolver
+│
+├── ioc/          # 控制反转容器本体 - 框架基石（只保留容器，不含注解定义）
 │   ├── beans/       # Bean元数据
-│   ├── core/        # 核心工厂实现
-│   ├── context/     # 应用上下文
-│   └── exception/   # 异常体系
+│   ├── core/        # DefaultListableBeanFactory / 三级缓存 / SingletonCache / 作用域 / health 健康检查
+│   ├── context/     # AnnotationConfigApplicationContext / 扫描器 / SPI 装载
+│   ├── exception/   # 异常体系
+│   ├── event/       # 事件机制
+│   └── scope/       # 自定义作用域
 │
 ├── aop/          # 面向切面编程 - 横切关注点
-│   ├── annotation/  # 切面注解
-│   ├── core/        # 代理工厂
-│   ├── interceptor/ # 拦截器实现
+│   ├── annotation/  # 切面注解 + AspectJAutoProxyCreator
+│   ├── core/        # ProxyFactory / Jdk|CglibAopProxy / MethodInvocation 责任链
+│   ├── interceptor/ # 五种通知拦截器
 │   └── pointcut/    # 切入点表达式
 │
 ├── mvc/          # Web MVC框架 - 请求处理
-│   ├── annotation/  # MVC注解
-│   ├── core/        # 核心接口
-│   ├── handler/     # 处理器实现
-│   ├── servlet/     # 前端控制器
+│   ├── annotation/  # MVC注解（含组合注解 @GetMapping 等）
+│   ├── core/        # 核心接口 + 拦截器链 + CORS + 内容协商
+│   ├── handler/     # 处理器映射与适配
+│   ├── servlet/     # DispatcherServlet 前端控制器
 │   └── view/        # 视图解析
 │
-└── orm/          # 对象关系映射 - 数据访问
-    ├── annotations/ # SQL注解
-    ├── binding/     # Mapper代理
-    ├── builder/     # SQL构建
-    ├── datasource/  # 数据源
-    ├── executor/    # 执行器
-    ├── mapping/     # 映射定义
-    ├── plugin/      # 插件系统
-    ├── reflection/  # 反射工具
-    ├── scripting/   # 动态SQL
-    ├── session/     # 会话管理
-    ├── transaction/ # 事务管理
-    └── type/        # 类型处理
+├── orm/          # 对象关系映射 - 数据访问
+│   ├── annotations/ # SQL注解
+│   ├── binding/     # Mapper代理
+│   ├── builder/     # SQL构建（annotation/xml）
+│   ├── datasource/  # 数据源（pooled/unpooled/druid）
+│   ├── executor/    # 执行器
+│   ├── mapping/     # 映射定义
+│   ├── plugin/      # 插件系统（InterceptorChain）
+│   ├── reflection/  # 反射工具（MetaObject/Reflector）
+│   ├── scripting/   # 动态SQL
+│   ├── session/     # 会话管理
+│   ├── transaction/ # 事务
+│   └── type/        # 类型处理（TypeHandlerRegistry）
+│
+├── tx/           # 声明式事务（独立模块，依赖 ioc 生命周期）
+│
+└── spi/          # 扩展与自动配置（META-INF/lightssm.spi 装载）
+    ├── autoconfigure/  # hutool/jackson/caffeine/mybatis/tx 自动配置
+    ├── condition/      # @ConditionalOnClass / OnMissingBean
+    └── mybatis/        # MyBatis 集成适配
 ```
+
+> **`ioc` 与 `di` 已收尾为单一来源**：早期 `ioc.annotation` / `ioc.core` 内存在一批 `@Deprecated` 兼容壳（如 `ioc.core.InjectionEngine`、`ioc.annotation.Component`），本次清理已全部删除，注解与注入引擎的唯一实现落在 `di` 包；`reflect-config.json` 等 native-image 配置已同步到 `com.lightframework.di.annotation.*`。
 
 ### 2.2 模块依赖关系
 
 IoC容器是整个框架的基石：
+- `di`（注解 + 注入引擎）被 `ioc`（容器本体）驱动，二者协作完成依赖注入
 - AOP模块依赖IoC进行切面Bean的管理
 - MVC模块依赖IoC进行Controller的实例化
 - ORM模块独立运行，但可通过IoC集成
+- `tx` / `spi` 均建立在 `ioc` 之上，由 SPI 在启动时装载
 
 ## 3. 核心设计原则
 

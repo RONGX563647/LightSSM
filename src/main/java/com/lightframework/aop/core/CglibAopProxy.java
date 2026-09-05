@@ -37,6 +37,10 @@ public class CglibAopProxy implements AopProxy {
             enhancer.setClassLoader(classLoader);
             enhancer.setSuperclass(targetClass);
             enhancer.setCallback(new CglibMethodInterceptor(advised));
+            // TODO [L2][练习] 实现 CGLIB 代理类缓存——当前 enhancer.create() 每次都重新生成字节码；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+            // (类注释声称要缓存却未实现)。请缓存生成的代理 Class(注意 Enhancer 不能共享且 callback 需绑定当前 advised)，
+            // 使重复创建同类型代理不再生成字节码。验证 TODO[L2] 练习目标：用户手写实现后运行本测试应全绿
+            // （CglibAopProxyTest 验证多次 getProxy 产出不同实例但同类型、且行为一致）。
             return enhancer.create();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create CGLIB proxy", e);
@@ -83,6 +87,9 @@ public class CglibAopProxy implements AopProxy {
         }
         
         private Object handleObjectMethod(Object proxy, Method method, Object[] args) throws Throwable {
+            // TODO [L1][练习] 理解 handleObjectMethod 对 CGLIB 代理 Object 方法的透传——当前 equals/hashCode/toString；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+            // 已处理；验证 TODO[L1] 练习目标：用户手写实现后运行本测试应全绿（CglibAopProxyTest 验证
+            // 代理 toString 返回 "CGLIB Proxy: ..." 且未走拦截器链）。
             String name = method.getName();
             if ("equals".equals(name) && args != null && args.length == 1) {
                 return proxy == args[0];

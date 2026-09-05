@@ -192,6 +192,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M5</version>
+                <configuration>
+                    <!-- CGLIB 在 JDK 17 下需要访问 java.lang.ClassLoader.defineClass -->
+                    <argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

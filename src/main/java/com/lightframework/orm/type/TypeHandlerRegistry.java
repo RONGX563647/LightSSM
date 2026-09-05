@@ -92,7 +92,6 @@ public final class TypeHandlerRegistry {
         register(JdbcType.DECIMAL, new BigDecimalTypeHandler());
         register(JdbcType.BIT, new BooleanTypeHandler());
 //        register(JdbcType.TINYINT, new ByteTypeHandler());
-//        register(JdbcType.SMALLINT, new TypeHandlerSystem.ShortTypeHandler());
         register(JdbcType.INTEGER, new IntegerTypeHandler());
         register(JdbcType.BIGINT, new LongTypeHandler());
         register(JdbcType.REAL, new FloatTypeHandler());

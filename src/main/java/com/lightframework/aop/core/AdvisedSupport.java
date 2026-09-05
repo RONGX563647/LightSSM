@@ -59,6 +59,9 @@ public class AdvisedSupport {
         return this.targetClass;
     }
     
+    // TODO [L1][练习] 理解 addInterceptor/addInterceptors 在写入后会置 compiled=false 触发下次查找重新 compile()。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    // 验证 TODO[L1] 练习目标：用户手写实现后运行本测试应全绿（AdvisedSupportTest 中验证"先 getProxy 触发编译，
+    // 再 addInterceptor，再 invoke"时新拦截器能生效，且 compiled 标志位行为正确）。
     public void addInterceptor(Method method, MethodInterceptor interceptor) {
         List<MethodInterceptor> interceptors = this.methodInterceptors.computeIfAbsent(
             method, k -> new java.util.ArrayList<>());
@@ -77,6 +80,8 @@ public class AdvisedSupport {
      * 单次查找同时返回拦截器链和目标方法句柄
      * 消除原来分开调用 getInterceptorChain() + getTargetMethodHandle() 的两次查找
      */
+    // TODO [L2][优化-模板方法] findChainIndex 的"快速表 → 线性搜索 → equals 回退 → 接口-实现回退"四段查找流程；写对标志：按模板方法模式完成实现，新增单测覆盖“钩子方法被回调、算法骨架固定”的主路径与一条异常路径，断言执行顺序与结果正确。
+    // 可用模板方法定义骨架，把每类回退作为可重写钩子，便于新增匹配策略(如桥接方法、泛型擦除后的签名归一)。
     public int findChainIndex(Method method) {
         if (!compiled) {
             compile();
@@ -121,11 +126,6 @@ public class AdvisedSupport {
         return -1;
     }
     
-    public MethodInterceptor[] getInterceptorChain(Method method) {
-        int idx = findChainIndex(method);
-        return idx >= 0 ? interceptorChains[idx] : null;
-    }
-    
     public MethodHandle getTargetMethodHandle(Method method) {
         int idx = findChainIndex(method);
         return idx >= 0 ? targetMethodHandles[idx] : null;
@@ -139,6 +139,9 @@ public class AdvisedSupport {
         return findChainIndex(method);
     }
     
+    // TODO [L2][练习] 实现 compile() 中 fastLookupTable 的开放寻址冲突处理——当前 hash 冲突时只把第一个空槽；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    // 放进去(getChainIndex 快速路径只在无冲突时命中)，冲突后退化成线性搜索。请线性探测下一个空槽，使 O(1) 查找真正成立。
+    // 验证 TODO[L2] 练习目标：用户手写实现后运行本测试应全绿（AdvisedSupportTest 中验证多个方法 hash 冲突时仍能正确定位链）。
     public synchronized void compile() {
         if (compiled) return;
         
@@ -189,19 +192,8 @@ public class AdvisedSupport {
         compiled = true;
     }
     
-    public List<MethodInterceptor> getInterceptors(Method method) {
-        if (!compiled) compile();
-        int index = findChainIndex(method);
-        if (index >= 0) {
-            return new ArrayListView<>(interceptorChains[index]);
-        }
-        return this.methodInterceptors.get(method);
-    }
-    
-    public Map<Method, List<MethodInterceptor>> getMethodInterceptors() {
-        return this.methodInterceptors;
-    }
-    
+    // 清理：原 getInterceptors/getMethodInterceptors 与 ArrayListView 为未使用的冗余访问器，已删除；
+    // 外界统一通过 getChainIndex + getInterceptorChains/getTargetMethodHandles 索引访问。
     public boolean hasInterceptors() {
         return !this.methodInterceptors.isEmpty();
     }
@@ -210,6 +202,9 @@ public class AdvisedSupport {
         return compiled;
     }
     
+    // TODO [L3][优化-工厂方法] AdvisedSupport 同时承担"拦截器存储(methodInterceptors)"与"编译索引/MethodHandle 预编译"；写对标志：按工厂方法模式完成实现，新增单测覆盖“按类型/参数创建不同产品”的主路径与一条异常路径，断言返回对象类型与属性正确。
+    // 两类职责，可把高性能编译索引抽取为 ChainIndex 工厂产物(由 AdvisedSupport 工厂方法 createIndex() 生成)，
+    // 职责更单一，也便于对"编译"做缓存/失效的单元测试。
     /** 暴露拦截器链数组供外部直接索引访问 */
     public MethodInterceptor[][] getInterceptorChains() {
         return interceptorChains;
@@ -218,12 +213,5 @@ public class AdvisedSupport {
     /** 暴露 MethodHandle 数组供外部直接索引访问 */
     public MethodHandle[] getTargetMethodHandles() {
         return targetMethodHandles;
-    }
-    
-    private static class ArrayListView<T> extends java.util.AbstractList<T> {
-        private final T[] array;
-        ArrayListView(T[] array) { this.array = array; }
-        @Override public T get(int index) { return array[index]; }
-        @Override public int size() { return array.length; }
     }
 }

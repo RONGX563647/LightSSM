@@ -29,6 +29,9 @@ public class MethodInvocation {
     // 优化：使用 int[] 数组避免 ThreadLocal<Integer> 的装箱开销
     private static final ThreadLocal<int[]> POOL_INDEX = ThreadLocal.withInitial(() -> new int[]{0});
     
+    // TODO [L2][练习] 实现 obtain/release 对象池的嵌套层数保护——当前 POOL_SIZE=8 硬编码，超出后才 new 新实例；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    // 请把上限改为可配置常量并在嵌套过深(切面调切面)时优雅降级(记录日志/抛明确异常)，同时保证 release 不会把
+    // idxRef[0] 减成负数。验证 TODO[L2] 练习目标：用户手写实现后运行本测试应全绿（MethodInvocationTest 验证多层嵌套不串数据）。
     /** 获取实例（从池中取，支持嵌套调用） */
     public static MethodInvocation obtain(Object target, Method method, Object[] args, Object proxy, 
                                          MethodInterceptor[] interceptors, MethodHandle targetMethodHandle) {
@@ -109,6 +112,9 @@ public class MethodInvocation {
      * 每个拦截器的 invoke() 方法会调用 invocation.proceed() 传递到下一个拦截器
      * 这里不需要循环，因为拦截器链的传递是通过递归的 proceed() 调用完成的
      */
+    // TODO [L3][优化-责任链] MethodInvocation.proceed() 就是责任链推进核心：当前用 currentInterceptorIndex；写对标志：按责任链模式完成实现，新增单测覆盖“链上节点处理/传递/终止”的主路径与一条全链放行的路径。
+    // 数组索引迭代推进。可把"链 + 当前指针"抽取为显式 Chain 对象，支持短路(跳过后续拦截器)、重置指针、
+    // 以及异常时统一回调各拦截器的 onError 钩子，使责任链语义更清晰、更易扩展(如引入 ExposeInvocationInterceptor)。
     public Object proceed() throws Throwable {
         if (currentInterceptorIndex < interceptorCount) {
             MethodInterceptor interceptor = interceptors[currentInterceptorIndex++];
@@ -149,12 +155,12 @@ public class MethodInvocation {
     public Object getProxy() { return proxy; }
     public MethodInterceptor[] getInterceptors() { return interceptors; }
     public int getCurrentInterceptorIndex() { return currentInterceptorIndex; }
-    public MethodHandle getTargetMethodHandle() { return targetMethodHandle; }
     
-    public void setTargetMethodHandle(MethodHandle targetMethodHandle) {
-        this.targetMethodHandle = targetMethodHandle;
-    }
-    
+    // 清理：原 getTargetMethodHandle()/setTargetMethodHandle() 未使用，已删除；
+    // targetMethodHandle 仅由 obtain/reset 在创建时一次性注入。
+    // TODO [L1][练习] 理解 setArgs/reset 如何同步刷新 JoinPoint 的参数——当前 setArgs 会顺带更新 joinPoint.args；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    // 验证 TODO[L1] 练习目标：用户手写实现后运行本测试应全绿（MethodInvocationTest 验证 @Around 中
+    // joinPoint.proceed(newArgs) 修改参数后能正确传到目标方法，且 JoinPoint.getArgs() 同步可见）。
     public void setArgs(Object[] args) {
         this.args = args != null ? args : NO_ARGS;
         if (joinPoint != null) {

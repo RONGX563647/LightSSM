@@ -1,6 +1,6 @@
 package com.lightframework.spi.json;
 
-import com.lightframework.spi.Ordered;
+import com.lightframework.ioc.core.Ordered;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;

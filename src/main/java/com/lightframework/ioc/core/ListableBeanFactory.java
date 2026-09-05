@@ -1,6 +1,5 @@
 package com.lightframework.ioc.core;
 
-import com.lightframework.ioc.beans.BeanDefinition;
 import java.util.List;
 import java.util.Map;
 

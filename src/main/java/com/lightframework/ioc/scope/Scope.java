@@ -16,6 +16,8 @@ public interface Scope {
      * @param objectFactory Bean 创建工厂（延迟创建）
      * @return Bean 实例
      */
+    // TODO [L2][练习] 手写一个自定义 ThreadScope 实现 Scope 接口（每个线程持有独立实例，get 时从 ThreadLocal 取/创建，remove 时清理）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：同一线程多次 get 拿到同一实例；不同线程拿到不同实例。
     Object get(String name, ObjectFactory<?> objectFactory);
 
     /**

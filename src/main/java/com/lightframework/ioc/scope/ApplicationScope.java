@@ -38,6 +38,8 @@ public class ApplicationScope implements Scope {
      */
     private final Map<String, AtomicBoolean> registeredFlags = new ConcurrentHashMap<>(32);
 
+    // TODO [L2][练习] 手写双重检查锁定缓存 get（name.intern() 作锁，首次创建后放入 beanCache，后续直接返回，保证单例）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：并发多次 get 同一 name，objectFactory.getObject() 只被调用一次。
     @Override
     public Object get(String name, ObjectFactory<?> objectFactory) {
         // 快速路径：无锁读取

@@ -15,6 +15,9 @@ import java.lang.reflect.Proxy;
  */
 public class JdkDynamicAopProxy implements AopProxy, InvocationHandler {
     
+    // TODO [L3][优化-模板方法] JdkDynamicAopProxy.invoke 与 CglibAopProxy.CglibMethodInterceptor.intercept 的主体逻辑；写对标志：按模板方法模式完成实现，新增单测覆盖“钩子方法被回调、算法骨架固定”的主路径与一条异常路径，断言执行顺序与结果正确。
+    // (取链索引→取 chain/MethodHandle→obtain→proceed→release)高度重复，可抽取 AbstractAopProxy 基类 +
+    // 模板方法 doInvoke(proxy, method, args)，仅把"代理对象来源/Object 方法处理"留给子类实现。
     private final AdvisedSupport advised;
     
     public JdkDynamicAopProxy(AdvisedSupport advised) {
@@ -41,6 +44,10 @@ public class JdkDynamicAopProxy implements AopProxy, InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // 快速路径：跳过 Object 方法
         if (method.getDeclaringClass() == Object.class) {
+            // TODO [L2][练习] 完善 Object 方法(guarded)处理——当前已处理 equals/hashCode/toString，；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+            // 请补充 getClass 返回代理类、clone 抛 CloneNotSupportedException 等边界。
+            // 验证 TODO[L2] 练习目标：用户手写实现后运行本测试应全绿（JdkDynamicAopProxyTest 验证
+            // proxy.getClass() 与 target 类的区别、equals/hashCode/toString 行为）。
             if ("equals".equals(method.getName()) && args != null && args.length == 1) {
                 return proxy == args[0];
             }

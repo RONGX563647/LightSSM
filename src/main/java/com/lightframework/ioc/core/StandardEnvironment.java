@@ -42,6 +42,8 @@ public class StandardEnvironment implements Environment {
         activeProfiles.add(profile);
     }
     
+    // TODO [L1][练习] 手写 acceptsProfiles（参数为空返回 true；任一给定 profile 命中 activeProfiles 即返回 true）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：activeProfiles={"dev"}，acceptsProfiles("dev","test")==true；acceptsProfiles("prod")==false；acceptsProfiles()==true。
     @Override
     public boolean acceptsProfiles(String... profiles) {
         if (profiles == null || profiles.length == 0) {

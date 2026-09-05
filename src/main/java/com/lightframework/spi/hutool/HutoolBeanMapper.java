@@ -1,6 +1,6 @@
 package com.lightframework.spi.hutool;
 
-import com.lightframework.spi.Ordered;
+import com.lightframework.ioc.core.Ordered;
 import com.lightframework.spi.mapper.BeanMapper;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;

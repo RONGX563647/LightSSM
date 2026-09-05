@@ -17,16 +17,6 @@ public class TransactionMetrics {
         rollbackCauses.computeIfAbsent(name, k -> new LongAdder()).increment();
     }
 
-    public static void print() {
-        System.out.println("--- TransactionMetrics ---");
-        System.out.println("  commits:  " + commitCount.sum());
-        System.out.println("  rollbacks: " + rollbackCount.sum());
-        System.out.println("  rollback causes:");
-        rollbackCauses.forEach((cause, count) ->
-            System.out.println("    " + cause + ": " + count.sum()));
-        System.out.println("--------------------------");
-    }
-
     public static void reset() {
         commitCount.reset();
         rollbackCount.reset();

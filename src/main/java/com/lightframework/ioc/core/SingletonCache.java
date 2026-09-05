@@ -41,6 +41,8 @@ public class SingletonCache {
      * 获取单例 Bean（三级缓存查找逻辑）
      * 线程安全：使用 synchronized(this) 保证三级缓存操作的原子性，与 Spring Framework 一致
      */
+    // TODO [L3][练习] 手写三级缓存查找 getSingleton（一级无锁快路径 -> 二级 earlySingletonObjects -> 三级 singletonFactories 取工厂并提升到二级）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：先 addSingletonFactory 再放入早期引用，getSingleton 能从三级缓存拿到早期对象；并发下用 synchronized 保证只创建一个完整实例。
     public Object getSingleton(String beanName) {
         // 1. 一级缓存（无锁快速路径）
         Object singletonObject = this.singletonObjects.get(beanName);
@@ -75,6 +77,8 @@ public class SingletonCache {
     /**
      * 添加完整初始化的单例到一级缓存
      */
+    // TODO [L1][练习] 手写 addSingleton（把完整实例放入一级缓存 singletonObjects，并移除二、三级缓存、标记已创建）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：addSingleton 后 getSingleton 直接从一级缓存返回同一实例。
     public void addSingleton(String beanName, Object singletonObject) {
         synchronized (this.singletonObjects) {
             this.singletonObjects.put(beanName, singletonObject);
@@ -97,6 +101,8 @@ public class SingletonCache {
     /**
      * 标记 Bean 开始创建（带循环依赖检测）
      */
+    // TODO [L2][练习] 手写循环依赖检测 beforeSingletonCreation（用 creationStack 记录正在创建的 Bean，重入同一 bean 时拼出完整调用链并抛 BeanCurrentlyInCreationException）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：构造 A->B->A 的循环，第二次进入 A 时异常信息包含 A->B->A。
     public void beforeSingletonCreation(String beanName) {
         Deque<String> stack = creationStack.get();
         if (!this.singletonsCurrentlyInCreation.add(beanName)) {
@@ -151,6 +157,8 @@ public class SingletonCache {
     /**
      * 销毁所有单例 Bean 并清空缓存
      */
+    // TODO [L1][练习] 手写逆序销毁 destroySingletons（按 singletonObjects 的注册逆序执行 destroyCallback）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：注册 a,b 后销毁，回调顺序为 b 先于 a。
     public void destroySingletons(BiConsumer<String, Object> destroyCallback) {
         List<String> beanNames;
         synchronized (this.singletonObjects) {

@@ -1,7 +1,7 @@
 package com.lightframework.ioc.core.health;
 
 import com.lightframework.di.core.AnnotationInjectEntry;
-import com.lightframework.ioc.core.AnnotationMetadata;
+import com.lightframework.di.core.InjectionMetadata;
 import com.lightframework.ioc.beans.BeanDefinition;
 import com.lightframework.ioc.core.DefaultListableBeanFactory;
 
@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 从 BeanDefinition 和 AnnotationMetadata 构建完整依赖图。
- * 复用已缓存的 AnnotationMetadata，零额外反射。
+ * 从 BeanDefinition 和 InjectionMetadata 构建完整依赖图。
+ * 复用已缓存的 InjectionMetadata，零额外反射。
  * <p>
  * 性能优化：使用 BeanFactory.typeIndex 进行 O(1) 类型查找，
  * 替代原有的 O(V) 全量遍历。
@@ -30,6 +30,8 @@ public final class DependencyGraphBuilder {
      * 构建依赖图 — 入口方法。
      * 时间复杂度：O(V + E)，V=bean 数量，E=依赖边数量。
      */
+    // TODO [L3][练习] 手写依赖图构建 build（建立 name->index 映射，遍历每个 Bean 的 @DependsOn/字段/构造器依赖生成邻接表，区分边类型）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：对 A 依赖 B 的图，adj[A] 包含 B 的索引且边类型正确。
     public DependencyGraph build() {
         String[] beanNames = beanFactory.getBeanDefinitionNames();
         int n = beanNames.length;
@@ -67,7 +69,7 @@ public final class DependencyGraphBuilder {
     }
 
     /**
-     * 收集单个 Bean 的所有依赖 — 复用 AnnotationMetadata 缓存。
+     * 收集单个 Bean 的所有依赖 — 复用 InjectionMetadata 缓存。
      */
     private void collectDependencies(String beanName, int selfIdx, Map<String, Integer> nameToIndex,
                                       List<Integer> depList, List<Byte> typeList) {
@@ -85,7 +87,7 @@ public final class DependencyGraphBuilder {
         }
 
         // 2. 收集注解元数据（即时收集，不触发 Bean 实例化）
-        AnnotationMetadata meta = resolveMetadata(beanClass);
+        InjectionMetadata meta = resolveMetadata(beanClass);
         if (meta != null) {
             // @Autowired 字段依赖
             for (AnnotationInjectEntry entry : meta.autowiredEntries) {
@@ -141,15 +143,15 @@ public final class DependencyGraphBuilder {
      * 即时收集注解元数据（不触发 Bean 实例化）。
      * 如果缓存中没有，即时解析。
      */
-    private AnnotationMetadata resolveMetadata(Class<?> beanClass) {
+    private InjectionMetadata resolveMetadata(Class<?> beanClass) {
         // 尝试从缓存获取
-        AnnotationMetadata meta = beanFactory.getAnnotationMetadata(beanClass);
+        InjectionMetadata meta = beanFactory.getInjectionMetadata(beanClass);
         if (meta != null) {
             return meta;
         }
         // 缓存未命中，即时解析（不触发 Bean 实例化）
-        meta = new AnnotationMetadata();
-        beanFactory.resolveAnnotationMetadata(beanClass, meta);
+        meta = new InjectionMetadata();
+        beanFactory.resolveInjectionMetadata(beanClass, meta);
         return meta;
     }
 
@@ -179,7 +181,7 @@ public final class DependencyGraphBuilder {
         Constructor<?> autowiredCtor = null;
         Constructor<?> maxParamCtor = ctors[0];
         for (Constructor<?> ctor : ctors) {
-            if (ctor.isAnnotationPresent(com.lightframework.ioc.annotation.Autowired.class)) {
+            if (ctor.isAnnotationPresent(com.lightframework.di.annotation.Autowired.class)) {
                 autowiredCtor = ctor;
                 break;
             }

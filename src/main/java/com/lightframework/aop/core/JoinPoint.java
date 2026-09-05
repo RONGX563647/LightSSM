@@ -28,6 +28,9 @@ public class JoinPoint {
     });
     private static final ThreadLocal<int[]> POOL_INDEX = ThreadLocal.withInitial(() -> new int[]{0});
     
+    // TODO [L2][练习] 实现 JoinPoint.obtain 的嵌套对象池保护——与 MethodInvocation 同理，POOL_SIZE=8 超出时；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    // new 临时实例；请保证多层嵌套调用(切面调切面)时内层 JoinPoint 数据不被外层 reset 覆盖，并写测试验证嵌套 AOP 的
+    // args 正确。验证 TODO[L2] 练习目标：用户手写实现后运行本测试应全绿（JoinPointTest 验证嵌套调用数据隔离）。
     public static JoinPoint obtain(Object target, Method method, Object[] args, Object proxy) {
         JoinPoint[] pool = POOL.get();
         int[] idxRef = POOL_INDEX.get();
@@ -77,6 +80,9 @@ public class JoinPoint {
     public String getMethodName() { return methodName; }
     public Class<?> getTargetClass() { return targetClass; }
     public String getSignature() { return signature; }
+    // TODO [L1][练习] 理解 JoinPoint.getSignature()/getArgsString() 的构建——当前用 targetClass.methodName 拼签名；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    // 验证 TODO[L1] 练习目标：用户手写实现后运行本测试应全绿（JoinPointTest 验证 getTarget() 返回真实 target、
+    // getArgs() 返回调用参数、getSignature() 形如 "类.方法"）。
     public String getArgsString() { return Arrays.toString(args); }
     
     public void setArgs(Object[] args) {

@@ -235,6 +235,7 @@ public class ClassPathBeanDefinitionScanner {
         if (scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Component;")) {
             return true;
         }
+        // TODO [L3][优化-策略模式] 下面多个 || 的硬编码注解描述符扫描，可改成"候选注解描述符列表 + 循环"，或用注解元数据注册表，消除这段重复且易遗漏的 if 链。；写对标志：按策略模式完成实现，新增单测覆盖“运行时切换不同策略得到不同结果”的主路径与一条未知策略的异常路径。
         // 检查派生注解（@Service, @Repository, @Controller, @RestController, @Aspect 等）
         return scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Service;")
             || scanAnnotationWithAsm(classBytes, "Lcom/lightframework/di/annotation/Repository;")
@@ -284,6 +285,8 @@ public class ClassPathBeanDefinitionScanner {
     /**
      * 注册 BeanDefinition 到 Factory 或收集到 Map（并行扫描时使用）
      */
+    // TODO [L2][练习] 手写 BeanDefinition 解析 registerOrCollectBeanDefinition（从类读取 @Scope/@Primary/@Qualifier/@Lazy/@DependsOn 填充 BeanDefinition）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：扫描带 @Lazy @Primary 的类，得到的 BeanDefinition 对应标志位均为 true。
     protected void registerOrCollectBeanDefinition(Class<?> beanClass, Component component, Map<String, BeanDefinition> collectTo) {
         String beanName = component.value();
         if (beanName.isEmpty()) {
@@ -346,6 +349,8 @@ public class ClassPathBeanDefinitionScanner {
         }
     }
 
+    // TODO [L1][练习] 手写 Bean 名称生成 generateBeanName（首字母小写；连续大写如 "URL" 保持原样）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：UserService->userService，URLHandler->URLHandler。
     protected String generateBeanName(Class<?> beanClass) {
         String shortName = beanClass.getSimpleName();
         // 处理特殊情况：如 XMLParser -> xmlParser, URLHandler -> urlHandler
@@ -354,14 +359,5 @@ public class ClassPathBeanDefinitionScanner {
             return shortName;
         }
         return shortName.substring(0, 1).toLowerCase() + shortName.substring(1);
-    }
-
-    // Legacy aliases for backward compatibility
-    protected int findAndRegisterComponentsInDirectory(File directory, String basePackage) throws Exception {
-        return scanDirectory(directory, basePackage, null);
-    }
-
-    protected int findAndRegisterComponentsInJar(URL jarUrl, String packagePath, String basePackage) throws Exception {
-        return scanJar(jarUrl, packagePath, basePackage, null);
     }
 }

@@ -1,6 +1,6 @@
 package com.lightframework.spi.validate;
 
-import com.lightframework.spi.Ordered;
+import com.lightframework.ioc.core.Ordered;
 import java.util.Set;
 
 public interface Validator extends Ordered {

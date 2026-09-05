@@ -175,6 +175,8 @@ public class PropertyPlaceholderConfigurer implements BeanFactoryPostProcessor {
      * @return the resolved value
      * @throws IllegalArgumentException if key not found and no default provided
      */
+    // TODO [L1][练习] 手写 ${key:default} 占位符解析 resolvePlaceholderKey（拆分 key 与默认值，解析嵌套占位符，找不到且默认缺失时抛异常）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：已加载 app.name=foo，${app.name}->"foo"，${app.name:bar}->"foo"，${missing:bar}->"bar"，${missing}->抛 IllegalArgumentException。
     private String resolvePlaceholderKey(String placeholderContent, int depth) {
         String key;
         String defaultValue = null;

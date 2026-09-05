@@ -49,6 +49,8 @@ public class FastBeanLookup {
      * 快速查找 Bean（O(1) 数组线性探测）
      * @return null 表示不在快速路径中
      */
+    // TODO [L1][练习] 手写 O(1) 快速查找 lookup（用开放寻址哈希表替代当前小数组线性扫描，正确处理 hash 冲突）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：build 后 lookup 对任意已注册 name 返回正确 bean；冲突 key 仍能命中。
     public Object lookup(String name) {
         FastBeanTable t = this.table;
         if (t == null) return null;

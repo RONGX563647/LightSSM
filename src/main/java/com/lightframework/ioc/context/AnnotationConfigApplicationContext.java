@@ -5,7 +5,7 @@ import com.lightframework.di.annotation.Bean;
 import com.lightframework.di.annotation.Component;
 import com.lightframework.di.annotation.Configuration;
 import com.lightframework.di.annotation.DependsOn;
-import com.lightframework.ioc.annotation.EventListener;
+import com.lightframework.di.annotation.EventListener;
 import com.lightframework.di.annotation.Import;
 import com.lightframework.di.annotation.Lazy;
 import com.lightframework.di.annotation.Primary;
@@ -157,6 +157,8 @@ public class AnnotationConfigApplicationContext implements ApplicationContext, A
         }
     }
     
+    // TODO [L3][优化-模板方法] registerComponent 中读取 @Primary/@Qualifier/@Lazy/@DependsOn 的代码片段可抽取为统一的 applyAnnotationMetadata(bd, clazz) 模板方法，；写对标志：按模板方法模式完成实现，新增单测覆盖“钩子方法被回调、算法骨架固定”的主路径与一条异常路径，断言执行顺序与结果正确。
+    //   消除与 ClassPathBeanDefinitionScanner.registerOrCollectBeanDefinition 的重复逻辑。
     protected void registerComponent(Class<?> componentClass) {
         // Phase 4: 检查 @Conditional 注解
         if (!evaluateConditions(componentClass)) {
@@ -223,6 +225,8 @@ public class AnnotationConfigApplicationContext implements ApplicationContext, A
         logger.debug("Registered bean definition: {} -> {}", beanName, componentClass.getName());
     }
     
+    // TODO [L3][练习] 手写 @Import 解析 processImports（迭代处理 ImportSelector/ImportBeanDefinitionRegistrar/普通配置类，直到无新类，限制最大轮次防环）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：@Import 一个含 @Component 的配置类后，其 Bean 被注册；@Import 自引用的环不会死循环。
     protected void processImports() throws Exception {
         Set<String> processedClasses = new HashSet<>();
         int maxIterations = 100; // 防止无限循环
@@ -329,8 +333,8 @@ public class AnnotationConfigApplicationContext implements ApplicationContext, A
      * Phase 4: 评估 @Conditional 条件
      */
     protected boolean evaluateConditions(Class<?> componentClass) {
-        com.lightframework.ioc.annotation.Conditional conditional = 
-            componentClass.getAnnotation(com.lightframework.ioc.annotation.Conditional.class);
+        com.lightframework.di.annotation.Conditional conditional = 
+            componentClass.getAnnotation(com.lightframework.di.annotation.Conditional.class);
         if (conditional == null) {
             return true;  // 没有 @Conditional 注解，直接通过
         }
@@ -382,14 +386,15 @@ public class AnnotationConfigApplicationContext implements ApplicationContext, A
      * ★ SPI: 评估 @Bean 方法上的 @Conditional 条件
      */
     protected boolean evaluateMethodConditions(java.lang.reflect.Method method) {
-        com.lightframework.ioc.annotation.Conditional conditional =
-            method.getAnnotation(com.lightframework.ioc.annotation.Conditional.class);
+        com.lightframework.di.annotation.Conditional conditional =
+            method.getAnnotation(com.lightframework.di.annotation.Conditional.class);
         if (conditional == null) {
             return true;
         }
         com.lightframework.spi.condition.OnClassCondition.currentClassName.set(method.getDeclaringClass().getName());
         com.lightframework.spi.condition.OnMissingBeanCondition.currentClassName.set(method.getDeclaringClass().getName());
         try {
+            // TODO [L2][优化-工厂方法] 与 evaluateConditions 中的匿名 ConditionContext 完全相同：应抽取 createConditionContext() 工厂方法，两处共用，避免重复且易不一致。；写对标志：按工厂方法模式完成实现，新增单测覆盖“按类型/参数创建不同产品”的主路径与一条异常路径，断言返回对象类型与属性正确。
             com.lightframework.ioc.core.ConditionContext context = new com.lightframework.ioc.core.ConditionContext() {
                 @Override
                 public com.lightframework.ioc.core.BeanDefinitionRegistry getRegistry() {
@@ -639,6 +644,11 @@ public class AnnotationConfigApplicationContext implements ApplicationContext, A
     }
     
     protected void registerBeanPostProcessors() throws Exception {
+        // TODO [L1][缺陷] 本方法早于 processBeanMethods() 运行，因此 @Configuration 中 @Bean 声明的；写对标志：先写一个“修复前失败、修复后通过”的复现单测；在注释记录根因、触发条件与边界（如并发/空值/创建顺序），CI 全绿。
+        // BeanPostProcessor（如事务的 TransactionalBeanPostProcessor）此时尚无 Bean 定义，不会被收集进 BPP 链，
+        // 导致声明式事务在真实容器内不织入。AOP 用「SPI 直接登记具体 @Component 类」绕过了该缺陷。
+        // 彻底修复：将 @Bean 形式 BPP 的方法提前到 preInstantiateSingletons() 之前处理，或在此处触发一次
+        // @Bean 方法预扫描。验收标准：仅靠 TransactionAutoConfiguration 的 @Bean，容器内 @Transactional 也能织入。
         String[] postProcessorNames = this.beanFactory.getBeanNamesForType(BeanPostProcessor.class);
         for (String ppName : postProcessorNames) {
             BeanPostProcessor pp = this.beanFactory.getBean(ppName, BeanPostProcessor.class);

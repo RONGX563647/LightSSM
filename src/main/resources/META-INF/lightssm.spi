@@ -6,3 +6,8 @@ com.lightframework.spi.jackson.autoconfigure.JacksonAutoConfiguration
 com.lightframework.spi.caffeine.autoconfigure.CaffeineAutoConfiguration
 com.lightframework.spi.mybatis.autoconfigure.MyBatisAutoConfiguration
 com.lightframework.tx.autoconfigure.TransactionAutoConfiguration
+# AOP 自动代理创建器：必须作为 @Component 直接登记（而非 @Configuration 的 @Bean），
+# 因为本容器的 registerBeanPostProcessors() 在 processBeanMethods() 之前运行，@Bean 形式的
+# BeanPostProcessor 永远不会进入 BPP 链。这里直接登记具体 BPP 类，由 discoverSpiAutoConfigurations
+# 注册为普通 @Component bean 定义，再被 registerBeanPostProcessors() 收集进 BPP 链，从而在真实容器内织入 @Aspect。
+com.lightframework.aop.annotation.AspectJAutoProxyCreator

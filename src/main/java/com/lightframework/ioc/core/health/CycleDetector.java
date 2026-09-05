@@ -42,6 +42,8 @@ public final class CycleDetector {
     /**
      * 迭代版 Tarjan DFS — 使用显式调用栈模拟递归。
      */
+    // TODO [L3][练习] 手写迭代版 Tarjan 强连通分量算法 tarjanIterative（用显式栈模拟递归 DFS，找出所有循环依赖环，避免大图递归 StackOverflow）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：对含 A->B->A 的图，能检测出一个长度为 2 的环。
     private static void tarjanIterative(int start, DependencyGraph graph, int[] disc, int[] low,
                                          boolean[] onStack, Deque<Integer> stack,
                                          int[] timer, List<CycleInfo> cycles) {

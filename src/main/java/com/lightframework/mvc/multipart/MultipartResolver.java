@@ -21,6 +21,9 @@ public class MultipartResolver {
     }
 
     public Map<String, List<MultipartFile>> resolveMultipart(HttpServletRequest request) throws Exception {
+        // TODO [L3][练习] 当前把整个请求体一次性读入 byte[]（readStream），既占内存也不支持嵌套多部分（multipart/mixed）；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+        //   请改为基于 InputStream 的流式解析（边读边切分 part），并支持解析嵌套 multipart 与普通表单字段混合的场景。
+        //   验收标准：大文件上传内存占用稳定，且 multipart/mixed 内层 part 也能被解析。
         Map<String, List<MultipartFile>> files = new LinkedHashMap<>();
 
         String contentType = request.getContentType();
@@ -134,6 +137,9 @@ public class MultipartResolver {
         if (filename != null && !filename.isEmpty()) {
             MultipartFile multipartFile = new MultipartFile(name, filename, contentType, fileContent);
             files.computeIfAbsent(name, k -> new ArrayList<>()).add(multipartFile);
+        } else {
+            // TODO [L2][练习] 当前 parsePart 只处理"有 filename 的文件域"；请补充处理"普通表单字段"（无 filename 的 part），；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+            //   将其 name/value 存入一个表单参数字典，供后续参数绑定使用。验收标准：multipart 表单里的普通文本字段也能被 @RequestParam 取到。
         }
     }
 

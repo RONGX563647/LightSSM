@@ -1,6 +1,6 @@
 package com.lightframework.spi.mapper;
 
-import com.lightframework.spi.Ordered;
+import com.lightframework.ioc.core.Ordered;
 import java.util.List;
 
 public interface BeanMapper extends Ordered {

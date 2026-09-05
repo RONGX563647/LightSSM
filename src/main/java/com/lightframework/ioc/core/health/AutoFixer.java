@@ -24,6 +24,8 @@ public final class AutoFixer {
      * 修复所有构造器循环依赖。
      * @return 修复数量
      */
+    // TODO [L3][练习] 手写构造器循环自动修复 fix（在环的断点 Bean 上标记需要 @Lazy 的构造器参数下标，使容器注入代理打破构造期循环）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：A<->B 构造器循环，对其中一个标记 lazyConstructorParams 后，容器能成功实例化两者。
     public static int fix(DefaultListableBeanFactory beanFactory,
                           List<CycleInfo> cycles) {
         int fixed = 0;

@@ -78,6 +78,8 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
     }
     
     protected HandlerExecutionChain buildExecutionChain(HandlerMethod handlerMethod) {
+        // TODO [L3][优化-责任链] 当前所有 globalInterceptors 无差别地挂到每个 chain；可引入"拦截器匹配规则"（按 path pattern / HTTP 方法选择），；写对标志：按责任链模式完成实现，新增单测覆盖“链上节点处理/传递/终止”的主路径与一条全链放行的路径。
+        //   用责任链/选择器在装配 chain 时只加入命中的拦截器，使不同路径组拥有不同的拦截器集合。
         HandlerExecutionChain chain = new HandlerExecutionChain(handlerMethod);
         for (com.lightframework.mvc.core.HandlerInterceptor interceptor : globalInterceptors) {
             chain.addInterceptor(interceptor);
@@ -112,6 +114,9 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
                     if (metaMapping != null) {
                         methodPath = resolveComposedPath(ann);
                         httpMethod = metaMapping.method();
+                        // TODO [L2][练习] 当前组合注解（@GetMapping 等）只取了 path 与 method；请补充解析 RequestMapping 的；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+                        //   params / headers / consumes / produces 条件，使映射能按"请求参数/请求头/Content-Type/Accept"进一步匹配。
+                        //   验收标准：@PostMapping(consumes="application/json") 只接收 JSON 请求，其他 Content-Type 不匹配。
                         break;
                     }
                 }
@@ -141,6 +146,8 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
     }
     
     protected String resolveClassPrefix(Class<?> handlerType) {
+        // TODO [L1][练习] 类级 @RequestMapping 前缀拼接（补前导 "/"，去尾部 "/"）目前逻辑分散；请抽取为 normalizePath(path) 工具方法，；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+        //   统一处理空串、重复 "//"、以及多级拼接（/api + /v1）的规范化。验收标准：输入 "api/" 与 "/api" 都规范成 "/api"。
         RequestMapping classMapping = handlerType.getAnnotation(RequestMapping.class);
         if (classMapping != null) {
             String prefix = getPath(classMapping);
@@ -159,6 +166,8 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
         throws Exception {
         HandlerMethod handlerMethod = new HandlerMethod(beanName, method, applicationContext);
         
+        // TODO [L3][优化-工厂方法] 当前 RequestMappingInfo 的创建散落在多处（registerHandlerMethod、warmupHandlerCache、getHandler）；写对标志：按工厂方法模式完成实现，新增单测覆盖“按类型/参数创建不同产品”的主路径与一条异常路径，断言返回对象类型与属性正确。
+        //   可用工厂方法 createMappingInfo(annotation, path, httpMethod) 统一构造并缓存，便于集中补充匹配条件（params/headers/consumes）。
         this.handlerMethods.put(new RequestMappingInfo(path, httpMethod), handlerMethod);
         logger.debug("Mapped \"{}\" [{}] to {}", path, httpMethod, handlerMethod);
     }
@@ -175,7 +184,10 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
     public HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
         String lookupPath = getLookupPath(request);
         String httpMethod = request.getMethod();
-        
+
+        // TODO [L2][练习] 当前遍历 handlerMethods 用第一个 match 胜出，没有"匹配优先级"；请实现优先级：；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+        //   精确路径 > 带路径变量的模板（/user/{id}）> 含正则/通配的模板，使更具体的路由优先命中。
+        //   验收标准：同时注册 /user/profile 与 /user/{id} 时，请求 /user/profile 命中前者。
         String cacheKey = httpMethod + ":" + lookupPath;
         HandlerExecutionChain handlerChain = this.handlerCache.get(cacheKey);
         if (handlerChain != null) {

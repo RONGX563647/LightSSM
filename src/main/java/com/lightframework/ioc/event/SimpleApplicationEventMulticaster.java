@@ -51,6 +51,8 @@ public class SimpleApplicationEventMulticaster implements ApplicationEventPublis
         }
     }
     
+    // TODO [L2][练习] 手写事件广播 publishEvent（遍历类型索引匹配监听器，支持父类事件类型命中，可选异步执行）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：发布一个具体事件，精确匹配与父类匹配的监听器都被触发；设了 executor 则异步执行不阻塞。
     @Override
     public void publishEvent(ApplicationEvent event) {
         if (event == null) {
@@ -126,6 +128,8 @@ public class SimpleApplicationEventMulticaster implements ApplicationEventPublis
     /**
      * 解析监听器的事件类型
      */
+    // TODO [L2][练习] 手写监听器事件类型解析 resolveListenerEventType（从 ApplicationListener<T> 的泛型参数取出 T，找不到时回退 ApplicationEvent）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：实现 ApplicationListener<UserEvent> 的监听器被识别为监听 UserEvent。
     private Class<?> resolveListenerEventType(Object listener) {
         Class<?> clazz = listener.getClass();
         

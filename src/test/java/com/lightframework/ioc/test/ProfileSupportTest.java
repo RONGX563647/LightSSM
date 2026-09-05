@@ -231,12 +231,12 @@ public class ProfileSupportTest {
                      MultiProfileBean.class, NoProfileBean.class);
         ctx.refresh();
         
-        // dev profile active: DefaultProfileBean (default), DevProfileBean (dev), 
+        // dev profile active: DefaultProfileBean (default), DevProfileBean (dev),
         // MultiProfileBean (dev|test), NoProfileBean (no profile)
         // ProdProfileBean should be excluded
-        // Plus 5 SPI auto-configuration classes (Hutool, Jackson, Caffeine, MyBatis, Transaction)
-        assertEquals(9, ctx.getBeanDefinitionCount(), 
-            "Expected 9 beans with 'dev' profile active");
+        // Plus 6 SPI auto-configuration classes (Hutool, Jackson, Caffeine, MyBatis, Transaction, AOP)
+        assertEquals(10, ctx.getBeanDefinitionCount(),
+            "Expected 10 beans with 'dev' profile active");
         
         ctx.close();
     }

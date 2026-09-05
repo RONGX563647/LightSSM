@@ -184,6 +184,8 @@ public class BeanDefinition {
         getPropertyValues().put(name, value);
     }
 
+    // TODO [L1][练习] 手写 BeanDefinition 的 equals/hashCode（以 beanName 为主、beanClass 为辅，保证容器中两个同名 BD 视为等价）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：new BeanDefinition("a", A.class).equals(new BeanDefinition("a", A.class))==true；beanName 不同则为 false。
     public Object getPropertyValue(String name) {
         return propertyValues != null ? propertyValues.get(name) : null;
     }

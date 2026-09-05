@@ -11,15 +11,14 @@ import com.lightframework.ioc.context.ApplicationContext;
 import com.lightframework.ioc.event.ApplicationEvent;
 import com.lightframework.ioc.event.ApplicationEventPublisher;
 import com.lightframework.ioc.exception.BeanCreationException;
-import com.lightframework.ioc.exception.BeanCurrentlyInCreationException;
 import com.lightframework.ioc.exception.NoSuchBeanDefinitionException;
 import com.lightframework.ioc.scope.Scope;
 import com.lightframework.ioc.scope.ScopeRegistry;
-import com.lightframework.ioc.scope.WebScopeManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.annotation.PostConstruct;
+
 import jakarta.annotation.PreDestroy;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -29,7 +28,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -38,14 +36,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 import java.util.LinkedHashSet;
-import java.util.function.Function;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import com.lightframework.di.core.DefaultTypeConverter;
+import com.lightframework.di.core.FieldInjector;
+import com.lightframework.di.core.InjectionEngine;
+import com.lightframework.di.core.InjectionMetadata;
 
 public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefinitionRegistry {
 
@@ -74,7 +71,7 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
 
     // 注解元数据缓存：合并所有注入注解（@Autowired, @Resource, @Value）的字段和方法收集（包括父类）
     // 使用 ConcurrentHashMap 替换旧版 synchronized LRU — 无锁读 + CAS computeIfAbsent
-    private final Map<Class<?>, AnnotationMetadata> cachedAnnotationMetadata = new ConcurrentHashMap<>(512);
+    private final Map<Class<?>, InjectionMetadata> cachedInjectionMetadata = new ConcurrentHashMap<>(512);
 
     // SPI: 缓存每个类的 setter 方法，用于 applyPropertyValues
     private final Map<Class<?>, Map<String, java.lang.reflect.Method>> cachedSetterMethods = new ConcurrentHashMap<>(64);
@@ -155,6 +152,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         if (logger.isDebugEnabled()) logger.debug("Registered bean definition: {}", beanName);
     }
 
+    // TODO [L2][练习] 手写类型索引的增量构建 indexTypeRecursive（递归收集 beanClass 的所有接口与父类到 typeIndex）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：注册一个实现 UserService 接口、继承 BaseService 的类后，getBeanNamesForType(UserService.class) 能命中它。
     private void indexTypeRecursive(Class<?> type, String beanName) {
         if (type == null || type == Object.class) return;
         indexType(type, beanName);
@@ -191,6 +190,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     }
 
     // 解析别名（支持链式别名，带循环检测）
+    // TODO [L2][练习] 手写别名链解析 resolveAlias（支持链式别名 + 循环检测 + 最大深度限制）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：aliasMap={a->b, b->c} 时 resolveAlias("a")=="c"；出现环时抛 IllegalArgumentException。
     protected String resolveAlias(String name) {
         String resolved = name;
         Set<String> visited = new java.util.HashSet<>();
@@ -220,8 +221,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     }
     
     private int getOrderValue(Object obj) {
-        if (obj.getClass().isAnnotationPresent(com.lightframework.ioc.annotation.Order.class)) {
-            return obj.getClass().getAnnotation(com.lightframework.ioc.annotation.Order.class).value();
+        if (obj.getClass().isAnnotationPresent(com.lightframework.di.annotation.Order.class)) {
+            return obj.getClass().getAnnotation(com.lightframework.di.annotation.Order.class).value();
         }
         // 检查 Ordered 接口
         if (obj instanceof com.lightframework.ioc.core.Ordered) {
@@ -456,6 +457,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     }
 
     @Override
+    // TODO [L2][练习] 手写按类型收集所有 Bean getBeansOfType（遍历 BeanDefinition，过滤 type.isAssignableFrom(beanClass)，逐个 getBean 收集，跳过创建中的）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：注册两个同类型 Bean，getBeansOfType(X.class) 返回 size==2 的列表。
     public <T> List<T> getBeansOfType(Class<T> type) throws Exception {
         return new ArrayList<>(getBeansOfTypeAsMap(type).values());
     }
@@ -528,6 +531,9 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         }
 
         // 处理自定义作用域（request, session, application 等）
+        // TODO [L3][优化-策略模式] doGetBean 中 singleton/prototype/customScope 三分支可用 Scope 策略统一：；写对标志：按策略模式完成实现，新增单测覆盖“运行时切换不同策略得到不同结果”的主路径与一条未知策略的异常路径。
+        //   将 singleton、prototype 也建模为 Scope 实现，doGetBean 只调用 scope.get(name, factory)，消除此处 if-else。
+        // TODO [L3][特性] 自定义作用域（request/session）Bean 当前直接返回 scope.get() 的真实实例；若某 singleton/prototype Bean 依赖一个 request-scoped Bean，注入的是“固定实例”而非“每次请求新实例”，作用域语义被破坏。需引入作用域代理（如基于 CGLIB 的代理，方法调用时从当前 Scope 取真实实例），并在 populateBean 注入点按需生成代理。；写对标志：单测注册一个 request-scoped Bean A 与一个 singleton Bean B（B 持有 A 引用），在同一线程连续两次绑定不同 RequestScope 上下文取 B.getA()，断言两次返回的 A 实例不同且各自等于当时作用域内的实例。
         if (bd.isCustomScope()) {
             String scopeName = bd.getScopeName();
             Scope scope = scopeRegistry.getScope(scopeName);
@@ -681,6 +687,10 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         }
     }
 
+    // TODO [L3][练习] 手写构造器解析与实例化 instantiateBean。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   规则：优先唯一 @Autowired 构造器（多个需报错）；否则无参；否则参数最多的构造器。
+    //   并把结果缓存到 cachedAutowiredConstructors/cachedDefaultConstructors，注意并发下的双重检查。
+    //   验收标准：用带 @Autowired 多参构造器的类注册为 Bean，getBean 能注入依赖并拿到同一实例。
     protected Object instantiateBean(String beanName, BeanDefinition bd) throws Exception {
         Class<?> beanClass = bd.getBeanClass();
         try {
@@ -787,6 +797,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     /**
      * ★ SPI: 应用 BeanDefinition 中的属性值到 bean 实例
      */
+    // TODO [L2][练习] 手写 setter 注入 applyPropertyValues（扫描 setXxx 方法得到属性名，按名匹配 propertyValues 并反射调用）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：注册带 setAge(int) 的 BeanDefinition，设 propertyValues.put("age", 18)，getBean 后 age==18。
     protected void applyPropertyValues(String beanName, Object beanInstance, BeanDefinition bd) throws Exception {
         Map<String, Object> propertyValues = bd.getPropertyValues();
         if (propertyValues.isEmpty()) {
@@ -831,11 +843,11 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
             throw new BeanCreationException(beanName, "Bean class is null, cannot populate bean");
         }
 
-        AnnotationMetadata metadata = cachedAnnotationMetadata.get(beanClass);
+        InjectionMetadata metadata = cachedInjectionMetadata.get(beanClass);
         if (metadata == null) {
-            metadata = cachedAnnotationMetadata.computeIfAbsent(beanClass, clazz -> {
-                AnnotationMetadata m = new AnnotationMetadata();
-                resolveAnnotationMetadata(clazz, m);
+            metadata = cachedInjectionMetadata.computeIfAbsent(beanClass, clazz -> {
+                InjectionMetadata m = new InjectionMetadata();
+                resolveInjectionMetadata(clazz, m);
                 return m;
             });
         }
@@ -855,7 +867,7 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         }
     }
 
-    private void injectResourceFields(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+    private void injectResourceFields(String beanName, Object bean, InjectionMetadata metadata) throws Exception {
         int size = metadata.resourceFields.size();
         if (size == 0) return;
         boolean debugEnabled = logger.isDebugEnabled();
@@ -895,7 +907,7 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         }
     }
 
-    private void injectResourceMethods(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+    private void injectResourceMethods(String beanName, Object bean, InjectionMetadata metadata) throws Exception {
         int methodCount = metadata.resourceMethods.size();
         if (methodCount == 0) return;
         boolean debugEnabled = logger.isDebugEnabled();
@@ -944,7 +956,7 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         }
     }
 
-    private void injectAutowiredFields(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+    private void injectAutowiredFields(String beanName, Object bean, InjectionMetadata metadata) throws Exception {
         int size = metadata.autowiredFields.size();
         if (size == 0) return;
         boolean debugEnabled = logger.isDebugEnabled();
@@ -971,7 +983,7 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         }
     }
 
-    private void injectAutowiredMethods(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+    private void injectAutowiredMethods(String beanName, Object bean, InjectionMetadata metadata) throws Exception {
         int methodCount = metadata.autowiredMethods.size();
         if (methodCount == 0) return;
         boolean debugEnabled = logger.isDebugEnabled();
@@ -1183,18 +1195,18 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     /**
      * 获取已缓存的注解元数据（供健康检查等外部组件使用）。
      */
-    public AnnotationMetadata getAnnotationMetadata(Class<?> beanClass) {
-        return cachedAnnotationMetadata.get(beanClass);
+    public InjectionMetadata getInjectionMetadata(Class<?> beanClass) {
+        return cachedInjectionMetadata.get(beanClass);
     }
 
     /**
      * 解析注解元数据（健康检查阶段使用，不触发 Bean 实例化）。
      */
-    public void resolveAnnotationMetadata(Class<?> clazz, AnnotationMetadata metadata) {
+    public void resolveInjectionMetadata(Class<?> clazz, InjectionMetadata metadata) {
         if (clazz == null || clazz == Object.class) {
             return;
         }
-        resolveAnnotationMetadata(clazz.getSuperclass(), metadata);
+        resolveInjectionMetadata(clazz.getSuperclass(), metadata);
 
         // Aware 类型位掩码检测
         if (BeanNameAware.class.isAssignableFrom(clazz)) metadata.awareFlags |= 0x01;
@@ -1297,7 +1309,7 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     }
 
     // 注入 @Value 注解的字段 — ★ 使用预计算的 placeholder，消除运行时 getAnnotation
-    private void injectValueFields(String beanName, Object bean, AnnotationMetadata metadata) throws Exception {
+    private void injectValueFields(String beanName, Object bean, InjectionMetadata metadata) throws Exception {
         int size = metadata.valueFields.size();
         if (size == 0) return;
         boolean debugEnabled = logger.isDebugEnabled();
@@ -1332,6 +1344,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         return typeConverter.convert(value, targetType);
     }
 
+    // TODO [L2][练习] 手写 Bean 初始化骨架 initializeBean（依次：BPP.postProcessBeforeInitialization -> 调 Aware 接口 -> @PostConstruct/InitializingBean -> BPP.postProcessAfterInitialization）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：一个同时实现 BeanPostProcessor 与 InitializingBean 的 Bean，初始化顺序符合上述约定。
     public Object initializeBean(String beanName, Object bean, BeanDefinition bd) throws Exception {
         // 1. 执行 BeanPostProcessor 前置处理
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean, beanName);
@@ -1349,8 +1363,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     }
 
     protected void invokeAwareMethods(String beanName, Object bean) throws Exception {
-        // Phase 2: use precomputed awareFlags from AnnotationMetadata — no instanceof chain
-        AnnotationMetadata meta = cachedAnnotationMetadata.get(bean.getClass());
+        // Phase 2: use precomputed awareFlags from InjectionMetadata — no instanceof chain
+        InjectionMetadata meta = cachedInjectionMetadata.get(bean.getClass());
         byte flags = meta != null ? meta.awareFlags : 0;
         if (flags != 0) {
             if ((flags & 0x01) != 0) ((BeanNameAware) bean).setBeanName(beanName);
@@ -1385,6 +1399,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     }
 
     // 支持泛型类型解析的依赖解析
+    // TODO [L3][练习] 手写泛型依赖解析 resolveDependencyWithGenerics（支持 List<T> 注入所有 T 类型 Bean、Map<String,T> 注入 name->bean）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：字段 List<UserService> 能被注入容器中全部 UserService 实例；理解 ParameterizedType 取值。
     protected Object resolveDependencyWithGenerics(Field field, String qualifier, boolean required) throws Exception {
         Type genericType = field.getGenericType();
         
@@ -1470,7 +1486,7 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
         this.factoryBeanObjectCache.clear();
         this.cachedAutowiredConstructors.clear();
         this.cachedDefaultConstructors.clear();
-        this.cachedAnnotationMetadata.clear();
+        this.cachedInjectionMetadata.clear();
         this.cachedSetterMethods.clear();
         this.cachedBeanNamesForType.clear();
         this.typeIndex.clear();
@@ -1572,6 +1588,8 @@ public class DefaultListableBeanFactory implements ListableBeanFactory, BeanDefi
     }
 
     // 基于 @DependsOn 的拓扑排序，保证依赖项先实例化；循环依赖时跳过
+    // TODO [L3][练习] 手写基于 @DependsOn 的拓扑排序 topologicalSort（DFS 访问，记录 visited/inProgress，遇到 inProgress 中的依赖即视为循环依赖抛异常）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：A dependsOn B，则排序结果中 B 出现在 A 之前；A<->B 循环应抛 IllegalStateException。
     private List<String> topologicalSort(List<String> beanNames) {
         Map<String, Set<String>> dependencyGraph = new LinkedHashMap<>();
         for (String beanName : beanNames) {

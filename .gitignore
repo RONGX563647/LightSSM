@@ -38,3 +38,12 @@ Thumbs.db
 *.tmp
 *.bak
 *.cache
+
+# 工具缓存（codegraph 等）
+.codegraph/
+.workbuddy/
+tmpdbg/
+
+# 根目录临时构建产物
+test-output.txt
+RunMvcTests.java

@@ -45,6 +45,7 @@ public abstract class BaseExecutor implements Executor {
         if (closed) {
             throw new RuntimeException("Executor was closed.");
         }
+        // TODO [L3][特性] BaseExecutor 每次都直接 doQuery，未利用 MappedStatement.useCache/flushCache 做一级缓存：引入 PerpetualCache（key = statementId + RowBounds + 参数 hashCode + environment），命中则直接返回；update/commit/rollback/close 时按 flushCache 清空。注意同一 SqlSession 内缓存可见、跨 SqlSession 不共享。；写对标志：单测覆盖三条路径——「同参数两次 query 只命中一次 doQuery」「flushCache=true 的 statement 每次都查库」「update 后同 key 缓存失效」，断言 doQuery 调用次数与返回对象一致性。
         return doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
     }
 

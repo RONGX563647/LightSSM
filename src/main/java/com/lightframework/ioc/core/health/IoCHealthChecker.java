@@ -20,6 +20,8 @@ public final class IoCHealthChecker {
     /**
      * 运行健康检查。
      */
+    // TODO [L2][练习] 手写容器健康检查 run（构建依赖图 -> 检测循环 -> 自动修复构造器环 -> 判定是否健康）。；写对标志：实现后运行本类/本包对应单测（无则新建一个），断言目标行为成立且运行期不抛异常；若是框架扩展点，给出容器内可复现的最小示例。
+    //   验收标准：仅有 setter 循环依赖时判定为健康；存在未修复的构造器循环时判定为不健康并报告。
     public static HealthCheckResult run(DefaultListableBeanFactory beanFactory) {
         long start = System.currentTimeMillis();
 
